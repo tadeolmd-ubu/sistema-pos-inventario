@@ -9,6 +9,7 @@
         <conv:VistaActualConverter x:Key="VistaFondo"/>
         <conv:VistaActualConverter x:Key="VistaTexto" Modo="texto"/>
         <conv:VistaActualConverter x:Key="VistaBarra" Modo="barra"/>
+        <conv:InicialesConverter x:Key="Iniciales"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -74,15 +75,68 @@
                         </Grid>
                     </Button>
 
+                    <Button Classes="navPill"
+                            IsVisible="{Binding PuedeGestionarUsuarios}"
+                            Command="{Binding IrAUsuariosCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=UsuariosViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=UsuariosViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Usuarios"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=UsuariosViewModel}"/>
+                        </Grid>
+                    </Button>
+
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Padding="18,10" Background="#26000000">
-                <TextBlock Text="{Binding TextoVersionMenu}"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource NavyBrush}"
-                           HorizontalAlignment="Center"/>
+            <Border Grid.Row="2" Padding="18,12" Background="#26000000">
+                <StackPanel Spacing="8">
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Border Width="34" Height="34" CornerRadius="17"
+                                Background="{StaticResource NavyBrush}">
+                            <TextBlock Text="{Binding NombreUsuarioActual, Converter={StaticResource Iniciales}}"
+                                       FontSize="13"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource SurfaceBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="0">
+                            <TextBlock Text="{Binding NombreUsuarioActual}"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource NavyBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding RolUsuarioActual}"
+                                       FontSize="11"
+                                       Foreground="{StaticResource NavyBrush}"
+                                       Opacity="0.75"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Content="Cerrar sesión"
+                            Classes="secondary small"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding CerrarSesionCommand}"/>
+
+                    <TextBlock Text="{Binding TextoVersionMenu}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource NavyBrush}"
+                               HorizontalAlignment="Center"/>
+
+                </StackPanel>
             </Border>
 
         </Grid>
