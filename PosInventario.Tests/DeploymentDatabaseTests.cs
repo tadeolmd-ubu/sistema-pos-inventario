@@ -29,10 +29,6 @@ public class DeploymentDatabaseTests
             {
                 await db.Database.MigrateAsync();
 
-                var categoriaService = new CategoriaService(db);
-                var creada = await categoriaService.AgregarAsync("Sucursal");
-                Assert.True(creada.Correcta, creada.Mensaje);
-
                 var respaldoService = new RespaldoService(db);
                 var respaldo = await respaldoService.CrearRespaldoAsync(carpeta);
 

@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="using:PosInventario.Controls"
              xmlns:dt="using:PosInventario.Views.DesignTime"
              xmlns:vm="using:PosInventario.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
@@ -16,37 +15,10 @@
 
                 <TextBlock Text="Inicio" Classes="sectionTitle"/>
 
-                <controls:ResponsiveColumnsGrid WideColumns="2"
-                                                NarrowColumns="1"
-                                                Breakpoint="760"
-                                                Spacing="18">
-
-                    <Border Classes="card" Padding="22">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Elementos" Classes="caption"/>
-                            <TextBlock Text="{Binding TotalElementos}"
-                                       FontSize="30"
-                                       FontWeight="ExtraBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Classes="card" Padding="22">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Categorías" Classes="caption"/>
-                            <TextBlock Text="{Binding TotalCategorias}"
-                                       FontSize="30"
-                                       FontWeight="ExtraBold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"/>
-                        </StackPanel>
-                    </Border>
-
-                </controls:ResponsiveColumnsGrid>
-
                 <Border Classes="card" Padding="24">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Base lista" Classes="subsection"/>
-                        <TextBlock Text="Este es el esqueleto genérico. Reemplazá el módulo Elemento por el dominio real."
+                        <TextBlock Text="El modelo de datos está mapeado. El próximo paso es implementar los servicios del dominio."
                                    Classes="caption"
                                    TextWrapping="Wrap"/>
                     </StackPanel>

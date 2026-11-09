@@ -1,8 +1,8 @@
 # Sistema de inventario
 
 Aplicación de escritorio construida con Avalonia, MVVM (CommunityToolkit),
-EF Core y SQLite. El dominio está vacío: incluye la infraestructura base y un
-módulo `Elemento` de referencia que sirve como molde para los módulos reales.
+EF Core y SQLite. El modelo de datos está mapeado y la migración base creada;
+los servicios y las pantallas se implementan por fases.
 
 ## Requisitos
 
