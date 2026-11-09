@@ -1,0 +1,118 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <Color x:Key="BrandPrimaryColor">#2BC5F0</Color>
+        <Color x:Key="BrandSecondaryColor">#1FBFB3</Color>
+        <Color x:Key="NavyColor">#0A2E4F</Color>
+        <Color x:Key="NavyDarkColor">#071F36</Color>
+
+        <SolidColorBrush x:Key="NavyBrush" Color="{StaticResource NavyColor}"/>
+        <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#F4F7FA"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SurfaceAltBrush" Color="#EDF3F8"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#E3EAF1"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#142B3C"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5C6F80"/>
+        <SolidColorBrush x:Key="ErrorBrush" Color="#E4573D"/>
+        <SolidColorBrush x:Key="SuccessBrush" Color="#2EBD85"/>
+        <SolidColorBrush x:Key="WarningBrush" Color="#F0A030"/>
+        <SolidColorBrush x:Key="InfoBrush" Color="#2F8FD1"/>
+        <SolidColorBrush x:Key="SidebarTextBrush" Color="#F4FBFF"/>
+        <SolidColorBrush x:Key="AccentBarBrush" Color="{StaticResource NavyColor}"/>
+
+        <LinearGradientBrush x:Key="SidebarGradientBrush"
+                             StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="{StaticResource BrandPrimaryColor}"/>
+            <GradientStop Offset="1" Color="{StaticResource BrandSecondaryColor}"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="NavyGradientBrush"
+                             StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Offset="0" Color="{StaticResource NavyColor}"/>
+            <GradientStop Offset="1" Color="{StaticResource NavyDarkColor}"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="PrimaryButtonBrush"
+                             StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Offset="0" Color="{StaticResource BrandPrimaryColor}"/>
+            <GradientStop Offset="1" Color="{StaticResource BrandSecondaryColor}"/>
+        </LinearGradientBrush>
+    </Styles.Resources>
+
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.subsection">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.caption">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.fieldLabel">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="BoxShadow" Value="0 6 18 0 #140A2E4F"/>
+    </Style>
+
+    <Style Selector="Border.cardFlat">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+    </Style>
+
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="16,9"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="16,9"/>
+    </Style>
+
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{StaticResource ErrorBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="16,9"/>
+    </Style>
+
+    <Style Selector="Button.small">
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="ListBox.entityList">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <Style Selector="TextBox.search">
+        <Setter Property="CornerRadius" Value="10"/>
+    </Style>
+</Styles>

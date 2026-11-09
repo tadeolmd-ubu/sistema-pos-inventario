@@ -1,0 +1,64 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Calcular versión
+        id: version
+        shell: pwsh
+        run: echo "value=1.0.${{ github.run_number }}" >> $env:GITHUB_OUTPUT
+
+      - name: Test
+        run: dotnet test PosInventario.sln -c Release
+
+      - name: Publish
+        run: >
+          dotnet publish PosInventario/PosInventario.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishTrimmed=false
+          -p:Version=${{ steps.version.outputs.value }}
+          -p:AssemblyVersion=${{ steps.version.outputs.value }}.0
+          -p:FileVersion=${{ steps.version.outputs.value }}.0
+          -o publish
+
+      - name: Verificar ejecutable
+        shell: pwsh
+        run: |
+          if (!(Test-Path "publish/PosInventario.exe")) {
+            throw "No se generó publish/PosInventario.exe"
+          }
+
+      - name: Comprimir
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path publish/*
+          -DestinationPath PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          files: PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
