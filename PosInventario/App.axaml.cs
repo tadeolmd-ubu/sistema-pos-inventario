@@ -54,16 +54,13 @@ public partial class App : Application
             var dbContext = new AppDbContext(opciones);
 
             // 1. Un servicio por entidad.
-            var categoriaService = new CategoriaService(dbContext);
-            var elementoService = new ElementoService(dbContext);
             var respaldoService = new RespaldoService(dbContext);
 
             // 2. Un ViewModel por pantalla.
-            var inicioViewModel = new InicioViewModel(elementoService, categoriaService);
-            var elementosViewModel = new ElementosViewModel(elementoService, categoriaService);
+            var inicioViewModel = new InicioViewModel();
 
             // 3. Shell principal.
-            var mainViewModel = new MainViewModel(inicioViewModel, elementosViewModel);
+            var mainViewModel = new MainViewModel(inicioViewModel);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

@@ -16,9 +16,6 @@
         <DataTemplate DataType="vm:InicioViewModel">
             <views:InicioView/>
         </DataTemplate>
-        <DataTemplate DataType="vm:ElementosViewModel">
-            <views:ElementosView/>
-        </DataTemplate>
     </Window.DataTemplates>
 
     <Grid ColumnDefinitions="262,*">

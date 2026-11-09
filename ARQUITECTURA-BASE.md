@@ -1,8 +1,8 @@
 # Arquitectura base
 
 Documento operativo del esqueleto implementado. Resume las decisiones y las
-reglas que deben respetarse al agregar módulos. El dominio real todavía no
-existe: `Elemento` + `Categoria` son el módulo de referencia.
+reglas que deben respetarse al agregar módulos. El modelo de datos ya está
+mapeado; los servicios y las pantallas se implementan por fases.
 
 ## Variables del proyecto
 
@@ -36,11 +36,11 @@ PosInventario/
 ├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane
 ├── Data/                      AppDbContext, AppDbContextFactory
 ├── Migrations/                generadas con dotnet-ef
-├── Models/                    Categoria, Elemento, Enums/
-├── Service/                   Resultado, CategoriaService, ElementoService, RespaldoService
+├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
+├── Service/                   Resultado, RespaldoService
 ├── Styles/                    Styles.axaml, Converters.cs
-├── ViewModels/                OperacionViewModel, MainViewModel, InicioViewModel, ElementosViewModel
-├── Views/                     SidebarView, InicioView, ElementosView, MensajeWindow, DesignTime/
+├── ViewModels/                OperacionViewModel, MainViewModel, InicioViewModel
+├── Views/                     SidebarView, InicioView, MensajeWindow, DesignTime/
 ├── App.axaml(.cs)
 ├── MainWindow.axaml(.cs)
 ├── Program.cs
@@ -97,11 +97,24 @@ Views → ViewModels → Service → Data + Models
 - Diálogos mediante `MensajeSolicitado` → `MensajeWindow` (nunca `MessageBox`).
 - `DesignTimeData` permite abrir el diseñador sin base de datos.
 
+## Modelo de datos
+
+```text
+Usuario        Producto       Proveedor      Compra
+DetalleCompra  MovimientoInventario            Caja
+MovimientoCaja Venta          DetalleVenta
+```
+
+- `Producto` no tiene categoría.
+- No hay entidad `Cliente`: la venta es a consumidor final.
+- Enums: `RolUsuario`, `EstadoCompra`, `EstadoVenta`, `EstadoCaja`,
+  `TipoMovimiento`, `TipoMovimientoCaja`, `MetodoPago`.
+
 ## Cómo agregar un módulo
 
 1. `Models/<Entidad>.cs` (y enum en `Models/Enums/` si aplica).
 2. `DbSet` + mapeo en `Data/AppDbContext.cs`.
-3. `Service/<Entidad>Service.cs` con el patrón de `ElementoService`.
+3. `Service/<Entidad>Service.cs` con el patrón de `RespaldoService` y `Resultado`.
 4. `ViewModels/<Entidades>ViewModel.cs` heredando `OperacionViewModel`.
 5. `Views/<Entidades>View.axaml` + code-behind.
 6. `DataTemplate` en `MainWindow.axaml`, botón en `SidebarView.axaml`,
@@ -111,11 +124,10 @@ Views → ViewModels → Service → Data + Models
 9. Test en `PosInventario.Tests/<Entidad>ServiceTests.cs`.
 10. `dotnet build PosInventario.sln` y `dotnet test PosInventario.sln`.
 
-## Cómo borrar el módulo de referencia
+## Próximo paso
 
-Borrar `Elemento`/`Categoria` de Models, Data, Service, ViewModels, Views,
-DesignTimeData, navegación y tests; luego generar una migración que refleje el
-cambio.
+Implementar los servicios por fase: `Usuario` y sesión, catálogos
+(`Producto`, `Proveedor`), inventario, compras, caja y ventas.
 
 ## Invariantes
 

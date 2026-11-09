@@ -7,17 +7,11 @@ namespace PosInventario.ViewModels;
 public partial class MainViewModel : OperacionViewModel
 {
     private readonly InicioViewModel _inicioViewModel;
-    private readonly ElementosViewModel _elementosViewModel;
 
-    public MainViewModel(
-        InicioViewModel inicioViewModel,
-        ElementosViewModel elementosViewModel)
+    public MainViewModel(InicioViewModel inicioViewModel)
     {
         _inicioViewModel = inicioViewModel;
-        _elementosViewModel = elementosViewModel;
-
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
-        _elementosViewModel.MensajeSolicitado += SolicitarMensaje;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         TextoVersionMenu = $"v{version?.ToString(3) ?? "1.0.0"} · Sistema de inventario";
@@ -38,13 +32,5 @@ public partial class MainViewModel : OperacionViewModel
         VistaActual = _inicioViewModel;
         TituloVistaActual = "Inicio";
         await _inicioViewModel.CargarAsync();
-    }
-
-    [RelayCommand]
-    private async Task IrAElementosAsync()
-    {
-        VistaActual = _elementosViewModel;
-        TituloVistaActual = "Elementos";
-        await _elementosViewModel.CargarAsync();
     }
 }

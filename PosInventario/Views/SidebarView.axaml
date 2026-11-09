@@ -74,26 +74,6 @@
                         </Grid>
                     </Button>
 
-                    <Button Classes="navPill"
-                            Command="{Binding IrAElementosCommand}"
-                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ElementosViewModel}">
-                        <Grid ColumnDefinitions="3,Auto,*">
-                            <Border Grid.Column="0"
-                                    Width="3" Height="24" CornerRadius="2"
-                                    Background="{StaticResource AccentBarBrush}"
-                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ElementosViewModel}"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="Elementos"
-                                       Margin="14,0,0,0"
-                                       VerticalAlignment="Center"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ElementosViewModel}"/>
-                        </Grid>
-                    </Button>
-
                 </StackPanel>
             </ScrollViewer>
 
