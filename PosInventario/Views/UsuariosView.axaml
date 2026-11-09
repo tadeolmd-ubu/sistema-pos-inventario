@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:conv="using:PosInventario.Styles"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:enums="using:PosInventario.Models.Enums"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Usuarios}"
+             x:DataType="vm:UsuariosViewModel"
+             x:Class="PosInventario.Views.UsuariosView">
+
+    <UserControl.Resources>
+        <conv:ActivoConverter x:Key="EstadoNombre"/>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <controls:ResponsiveTwoPane ExpandedListWidth="390"
+                                    MinListWidth="240"
+                                    ListWidthRatio="0.42"
+                                    Spacing="22">
+
+            <!-- Panel izquierdo: búsqueda + listado -->
+            <Border Classes="cardFlat" Padding="16">
+                <Grid RowDefinitions="Auto,*" RowSpacing="14">
+
+                    <StackPanel Grid.Row="0" Spacing="10">
+                        <TextBlock Text="Usuarios" Classes="sectionTitle"/>
+                        <TextBox Text="{Binding Busqueda}"
+                                 PlaceholderText="Buscar..."
+                                 Classes="search"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding UsuariosItems}"
+                             SelectedItem="{Binding SelectedUsuario}"
+                             Classes="entityList">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Usuario">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding NombreUsuario}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Rol}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Activo, Converter={StaticResource EstadoNombre}, ConverterParameter=nombre}"
+                                                   Classes="caption"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                </Grid>
+            </Border>
+
+            <!-- Panel derecho: formulario + acciones -->
+            <Border Classes="cardFlat" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+
+                        <TextBlock Text="Detalle" Classes="subsection"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nombre de usuario" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding NombreUsuario}" PlaceholderText="usuario"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nombre" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Nombre}" PlaceholderText="Nombre y apellido"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Rol" Classes="fieldLabel"/>
+                            <ComboBox ItemsSource="{Binding Roles}"
+                                      SelectedItem="{Binding Rol}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="enums:RolUsuario">
+                                        <TextBlock Text="{Binding}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6" IsVisible="{Binding EsModoCreacion}">
+                            <TextBlock Text="Contraseña" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Contrasena}" PasswordChar="●"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6" IsVisible="{Binding EsModoCreacion}">
+                            <TextBlock Text="Confirmar contraseña" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding ConfirmarContrasena}" PasswordChar="●"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Guardar"
+                                    Classes="primary"
+                                    Command="{Binding GuardarCommand}"/>
+                            <Button Content="Limpiar"
+                                    Classes="secondary"
+                                    Command="{Binding LimpiarFormularioCommand}"/>
+                            <Button Content="Restablecer contraseña"
+                                    Classes="secondary"
+                                    IsVisible="{Binding !EsModoCreacion}"
+                                    Command="{Binding RestablecerContrasenaCommand}"/>
+                            <Button Content="Activar"
+                                    Classes="secondary"
+                                    IsVisible="{Binding PuedeActivar}"
+                                    Command="{Binding ActivarCommand}"/>
+                            <Button Content="Desactivar"
+                                    Classes="danger"
+                                    IsVisible="{Binding PuedeDesactivar}"
+                                    Command="{Binding DesactivarCommand}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding MensajeOperacion}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </controls:ResponsiveTwoPane>
+    </Border>
+</UserControl>

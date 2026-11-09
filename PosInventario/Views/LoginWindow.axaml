@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:LoginViewModel"
+        x:Class="PosInventario.Views.LoginWindow"
+        Title="Iniciar sesión — Sistema de inventario"
+        Width="420"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="28">
+        <StackPanel Spacing="16">
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Sistema de inventario" Classes="sectionTitle"/>
+                <TextBlock Text="Ingresá tus credenciales para continuar." Classes="caption"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Usuario" Classes="fieldLabel"/>
+                <TextBox Text="{Binding NombreUsuario}" PlaceholderText="usuario"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Contraseña" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Contrasena}" PasswordChar="●"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Ingresar"
+                        Classes="primary"
+                        IsDefault="True"
+                        Command="{Binding IngresarCommand}"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"/>
+
+        </StackPanel>
+    </Border>
+</Window>

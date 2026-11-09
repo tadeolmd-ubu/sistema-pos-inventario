@@ -1,17 +1,27 @@
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PosInventario.Service;
 
 namespace PosInventario.ViewModels;
 
 public partial class MainViewModel : OperacionViewModel
 {
     private readonly InicioViewModel _inicioViewModel;
+    private readonly UsuariosViewModel _usuariosViewModel;
+    private readonly SesionActual _sesion;
 
-    public MainViewModel(InicioViewModel inicioViewModel)
+    public MainViewModel(
+        InicioViewModel inicioViewModel,
+        UsuariosViewModel usuariosViewModel,
+        SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
+        _usuariosViewModel = usuariosViewModel;
+        _sesion = sesion;
+
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
+        _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         TextoVersionMenu = $"v{version?.ToString(3) ?? "1.0.0"} · Sistema de inventario";
@@ -23,8 +33,23 @@ public partial class MainViewModel : OperacionViewModel
     [ObservableProperty] private object vistaActual = null!;
     [ObservableProperty] private string tituloVistaActual = string.Empty;
     [ObservableProperty] private string textoVersionMenu = string.Empty;
+    [ObservableProperty] private bool puedeGestionarUsuarios;
+    [ObservableProperty] private string nombreUsuarioActual = string.Empty;
+    [ObservableProperty] private string rolUsuarioActual = string.Empty;
+
+    /// <summary>
+    /// Lo escucha App para cerrar la sesión y volver al login.
+    /// </summary>
+    public event Action? CerrarSesionSolicitado;
 
     public Task InicializarAsync() => IrAInicioAsync();
+
+    public void AplicarSesion()
+    {
+        NombreUsuarioActual = _sesion.Usuario?.Nombre ?? string.Empty;
+        RolUsuarioActual = _sesion.Usuario?.Rol.ToString() ?? string.Empty;
+        PuedeGestionarUsuarios = _sesion.EsAdministrador;
+    }
 
     [RelayCommand]
     private async Task IrAInicioAsync()
@@ -33,4 +58,17 @@ public partial class MainViewModel : OperacionViewModel
         TituloVistaActual = "Inicio";
         await _inicioViewModel.CargarAsync();
     }
+
+    [RelayCommand]
+    private async Task IrAUsuariosAsync()
+    {
+        if (!PuedeGestionarUsuarios) return;
+
+        VistaActual = _usuariosViewModel;
+        TituloVistaActual = "Usuarios";
+        await _usuariosViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private void CerrarSesion() => CerrarSesionSolicitado?.Invoke();
 }

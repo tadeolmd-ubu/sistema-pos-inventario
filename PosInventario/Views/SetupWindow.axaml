@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:SetupViewModel"
+        x:Class="PosInventario.Views.SetupWindow"
+        Title="Configuración inicial — Sistema de inventario"
+        Width="460"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="28">
+        <StackPanel Spacing="16">
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Configuración inicial" Classes="sectionTitle"/>
+                <TextBlock Text="Creá el primer administrador del sistema. Este asistente no vuelve a aparecer."
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Nombre de usuario" Classes="fieldLabel"/>
+                <TextBox Text="{Binding NombreUsuario}" PlaceholderText="admin"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Nombre" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Nombre}" PlaceholderText="Nombre y apellido"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Contraseña" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Contrasena}" PasswordChar="●"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Confirmar contraseña" Classes="fieldLabel"/>
+                <TextBox Text="{Binding ConfirmarContrasena}" PasswordChar="●"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button Content="Salir"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Crear administrador"
+                        Classes="primary"
+                        IsDefault="True"
+                        Command="{Binding CrearCommand}"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"/>
+
+        </StackPanel>
+    </Border>
+</Window>
