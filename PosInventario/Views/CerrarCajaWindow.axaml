@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:CerrarCajaViewModel"
+        x:Class="PosInventario.Views.CerrarCajaWindow"
+        Title="Cerrar caja"
+        Width="480"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="14">
+
+            <TextBlock Text="Cerrar caja" Classes="subsection"/>
+
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                <TextBlock Grid.Row="0" Text="Abierta por" Classes="fieldLabel"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding UsuarioAperturaTexto}"/>
+
+                <TextBlock Grid.Row="1" Text="Fecha" Classes="fieldLabel"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding FechaAperturaTexto}"/>
+
+                <TextBlock Grid.Row="2" Text="Monto inicial" Classes="fieldLabel"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MontoInicialTexto}"/>
+
+                <TextBlock Grid.Row="3" Text="Efectivo esperado" Classes="fieldLabel"/>
+                <TextBlock Grid.Row="3"
+                           Grid.Column="1"
+                           Text="{Binding MontoEsperadoTexto}"
+                           FontWeight="ExtraBold"/>
+            </Grid>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Monto contado" Classes="fieldLabel"/>
+                <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="Ingresa una cantidad"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Observaciones" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Observaciones}"
+                         PlaceholderText="Opcional"
+                         AcceptsReturn="True"
+                         Height="70"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Cerrar caja"
+                        Classes="danger"
+                        IsDefault="True"
+                        Command="{Binding CerrarCommand}"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

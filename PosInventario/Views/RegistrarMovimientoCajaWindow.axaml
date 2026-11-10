@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:enums="using:PosInventario.Models.Enums"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:RegistrarMovimientoCajaViewModel"
+        x:Class="PosInventario.Views.RegistrarMovimientoCajaWindow"
+        Title="Registrar movimiento de efectivo"
+        Width="460"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="14">
+
+            <TextBlock Text="Registrar movimiento de efectivo" Classes="subsection"/>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Efectivo esperado" Classes="fieldLabel"/>
+                    <TextBlock Text="{Binding MontoEsperadoTexto}"
+                               FontSize="20"
+                               FontWeight="ExtraBold"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Tipo" Classes="fieldLabel"/>
+                <ComboBox ItemsSource="{Binding TiposMovimiento}"
+                          SelectedItem="{Binding TipoMovimientoSeleccionado}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="enums:TipoMovimientoCaja">
+                            <TextBlock Text="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Monto" Classes="fieldLabel"/>
+                <TextBox Text="{Binding MontoTexto}" PlaceholderText="Ingresa una cantidad"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Descripción" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Descripcion}"
+                         PlaceholderText="Obligatoria para retiros"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Registrar"
+                        Classes="primary"
+                        IsDefault="True"
+                        Command="{Binding RegistrarCommand}"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

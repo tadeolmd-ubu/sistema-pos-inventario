@@ -7,6 +7,7 @@ namespace PosInventario.Views.DesignTime;
 public sealed class DesignTimeData
 {
     public static readonly InicioDesignTime Inicio = new();
+    public static readonly CajaDesignTime Caja = new();
     public static readonly ProductosDesignTime Productos = new();
     public static readonly ProveedoresDesignTime Proveedores = new();
     public static readonly InventarioDesignTime Inventario = new();
@@ -16,6 +17,90 @@ public sealed class DesignTimeData
 
 public sealed class InicioDesignTime : InicioViewModel
 {
+}
+
+public sealed class CajaDesignTime : CajaViewModel
+{
+    public CajaDesignTime()
+    {
+        var usuario = new Usuario
+        {
+            Id = 1,
+            NombreUsuario = "admin",
+            Nombre = "Administrador General",
+            Rol = RolUsuario.Administrador,
+            Activo = 1,
+            FechaCreacion = DateTime.Now
+        };
+
+        var caja = new Caja
+        {
+            Id = 1,
+            IdUsuarioApertura = usuario.Id,
+            UsuarioApertura = usuario,
+            FechaApertura = DateTime.Now.AddHours(-2),
+            MontoInicial = 1000.00m,
+            Estado = EstadoCaja.Abierta
+        };
+
+        CajaAbierta = caja;
+        MontoEsperado = 1300.00m;
+
+        MovimientosItems.Add(new MovimientoCaja
+        {
+            Id = 1,
+            IdCaja = caja.Id,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            Tipo = TipoMovimientoCaja.Ingreso,
+            Monto = 500.00m,
+            Descripcion = "Fondo adicional",
+            Fecha = DateTime.Now.AddHours(-1)
+        });
+
+        MovimientosItems.Add(new MovimientoCaja
+        {
+            Id = 2,
+            IdCaja = caja.Id,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            Tipo = TipoMovimientoCaja.Retiro,
+            Monto = 200.00m,
+            Descripcion = "Retiro parcial",
+            Fecha = DateTime.Now.AddMinutes(-30)
+        });
+
+        var producto = new Producto
+        {
+            Id = 1,
+            Sku = "ABC-001",
+            Nombre = "Producto de ejemplo",
+            PrecioVenta = 1500.00m,
+            Costo = 900.00m,
+            Stock = 12,
+            StockMinimo = 5,
+            FechaCreacion = DateTime.Now,
+            FechaModificacion = DateTime.Now
+        };
+
+        LineasVentaItems.Add(new LineaVentaItem(
+            producto, 2, _ => { }, _ => { }, _ => { }));
+        MontoRecibidoTexto = "3500.00";
+
+        HistorialItems.Add(new Caja
+        {
+            Id = 2,
+            IdUsuarioApertura = usuario.Id,
+            UsuarioApertura = usuario,
+            FechaApertura = DateTime.Now.AddDays(-1),
+            FechaCierre = DateTime.Now.AddDays(-1).AddHours(8),
+            MontoInicial = 800.00m,
+            MontoEsperado = 1200.00m,
+            MontoFinal = 1180.00m,
+            Diferencia = -20.00m,
+            Estado = EstadoCaja.Cerrada
+        });
+    }
 }
 
 public sealed class ProductosDesignTime : ProductosViewModel

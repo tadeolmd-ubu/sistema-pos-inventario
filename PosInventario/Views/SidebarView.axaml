@@ -76,6 +76,26 @@
                     </Button>
 
                     <Button Classes="navPill"
+                            Command="{Binding IrACajaCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=CajaViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=CajaViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Caja"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=CajaViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
                             IsVisible="{Binding EsAdministrador}"
                             Command="{Binding IrAProductosCommand}"
                             Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ProductosViewModel}">

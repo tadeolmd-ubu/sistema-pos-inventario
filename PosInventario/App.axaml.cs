@@ -60,8 +60,12 @@ public partial class App : Application
             var proveedorService = new ProveedorService(dbContext, sesion);
             var inventarioService = new InventarioService(dbContext, sesion);
             var compraService = new CompraService(dbContext, sesion);
+            var cajaService = new CajaService(dbContext, sesion);
+            var ventaService = new VentaService(dbContext, sesion);
 
             var inicioViewModel = new InicioViewModel();
+            var cajaViewModel = new CajaViewModel(
+                cajaService, ventaService, productoService, sesion);
             var productosViewModel = new ProductosViewModel(productoService);
             var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
@@ -70,8 +74,9 @@ public partial class App : Application
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
 
             var mainViewModel = new MainViewModel(
-                inicioViewModel, productosViewModel, proveedoresViewModel,
-                inventarioViewModel, comprasViewModel, usuariosViewModel, sesion);
+                inicioViewModel, cajaViewModel, productosViewModel,
+                proveedoresViewModel, inventarioViewModel, comprasViewModel,
+                usuariosViewModel, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 
