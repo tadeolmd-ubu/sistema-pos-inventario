@@ -297,9 +297,13 @@ public partial class CajaViewModel : OperacionViewModel
         var resultado = await _ventaService.RegistrarAsync(
             lineas, MetodoPagoSeleccionado, montoRecibido);
 
-        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
+        if (!resultado.Correcta)
+        {
+            MensajeOperacion = Notificar(resultado.Mensaje);
+            return;
+        }
 
-        if (!resultado.Correcta) return;
+        MensajeOperacion = resultado.Mensaje;
 
         LineasVentaItems.Clear();
         MontoRecibidoTexto = string.Empty;
