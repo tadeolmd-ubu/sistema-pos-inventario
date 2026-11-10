@@ -56,11 +56,14 @@ public partial class App : Application
             var sesion = new SesionActual();
             var respaldoService = new RespaldoService(dbContext);
             var usuarioService = new UsuarioService(dbContext, sesion);
+            var productoService = new ProductoService(dbContext, sesion);
 
             var inicioViewModel = new InicioViewModel();
+            var productosViewModel = new ProductosViewModel(productoService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
 
-            var mainViewModel = new MainViewModel(inicioViewModel, usuariosViewModel, sesion);
+            var mainViewModel = new MainViewModel(
+                inicioViewModel, productosViewModel, usuariosViewModel, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

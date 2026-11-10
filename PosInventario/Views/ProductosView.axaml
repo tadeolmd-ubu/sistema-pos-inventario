@@ -1,0 +1,134 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Productos}"
+             x:DataType="vm:ProductosViewModel"
+             x:Class="PosInventario.Views.ProductosView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <controls:ResponsiveTwoPane ExpandedListWidth="390"
+                                    MinListWidth="240"
+                                    ListWidthRatio="0.42"
+                                    Spacing="22">
+
+            <!-- Panel izquierdo: búsqueda + listado -->
+            <Border Classes="cardFlat" Padding="16">
+                <Grid RowDefinitions="Auto,*" RowSpacing="14">
+
+                    <StackPanel Grid.Row="0" Spacing="10">
+                        <TextBlock Text="Productos" Classes="sectionTitle"/>
+                        <TextBox Text="{Binding Busqueda}"
+                                 PlaceholderText="Buscar por SKU o nombre..."
+                                 Classes="search"/>
+                        <CheckBox Content="Ver archivados"
+                                  IsChecked="{Binding VerArchivados}"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ProductosItems}"
+                             SelectedItem="{Binding SelectedProducto}"
+                             Classes="entityList">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Producto">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Sku}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding PrecioVenta, StringFormat='{}{0:0.00}'}"
+                                                   Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                                   Classes="caption"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                </Grid>
+            </Border>
+
+            <!-- Panel derecho: formulario + acciones -->
+            <Border Classes="cardFlat" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+
+                        <TextBlock Text="Detalle" Classes="subsection"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="SKU" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Sku}" PlaceholderText="ABC-001"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nombre" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Nombre}" PlaceholderText="Nombre del producto"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Descripción" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Descripcion}"
+                                     PlaceholderText="Descripción opcional"
+                                     AcceptsReturn="True"
+                                     Height="80"
+                                     TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Precio de venta" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding PrecioVentaTexto}" PlaceholderText="0.00"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Costo" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="0.00"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Stock mínimo" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding StockMinimoTexto}" PlaceholderText="0"/>
+                        </StackPanel>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}"
+                                CornerRadius="10"
+                                Padding="12">
+                            <TextBlock Text="{Binding StockActual}" Classes="caption" TextWrapping="Wrap"/>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Guardar"
+                                    Classes="primary"
+                                    IsVisible="{Binding PuedeGuardar}"
+                                    Command="{Binding GuardarCommand}"/>
+                            <Button Content="Limpiar"
+                                    Classes="secondary"
+                                    Command="{Binding LimpiarFormularioCommand}"/>
+                            <Button Content="Archivar"
+                                    Classes="danger"
+                                    IsVisible="{Binding PuedeArchivar}"
+                                    Command="{Binding ArchivarCommand}"/>
+                            <Button Content="Restaurar"
+                                    Classes="secondary"
+                                    IsVisible="{Binding PuedeRestaurar}"
+                                    Command="{Binding RestaurarCommand}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding MensajeOperacion}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </controls:ResponsiveTwoPane>
+    </Border>
+</UserControl>

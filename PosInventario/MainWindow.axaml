@@ -16,6 +16,9 @@
         <DataTemplate DataType="vm:InicioViewModel">
             <views:InicioView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:ProductosViewModel">
+            <views:ProductosView/>
+        </DataTemplate>
         <DataTemplate DataType="vm:UsuariosViewModel">
             <views:UsuariosView/>
         </DataTemplate>
