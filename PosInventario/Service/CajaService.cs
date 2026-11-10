@@ -21,36 +21,17 @@ public class CajaService
     }
 
     /// <summary>
-    /// Caja abierta visible para el usuario: el administrador ve cualquiera y
-    /// el cajero solo la que él abrió.
+    /// Caja abierta del sistema. Es compartida: cualquier usuario con sesión
+    /// iniciada puede verla y operarla, aunque la haya abierto otro.
     /// </summary>
     public async Task<Caja?> ObtenerCajaAbiertaAsync()
     {
         if (!_sesion.Iniciada) return null;
 
-        var query = _db.Cajas
+        return await _db.Cajas
             .AsNoTracking()
             .Include(c => c.UsuarioApertura)
-            .Where(c => c.Estado == EstadoCaja.Abierta);
-
-        if (!_sesion.EsAdministrador)
-            query = query.Where(c => c.IdUsuarioApertura == _sesion.IdUsuario);
-
-        return await query.FirstOrDefaultAsync();
-    }
-
-    /// <summary>
-    /// Indica si otro usuario tiene una caja abierta (solo para no
-    /// administradores).
-    /// </summary>
-    public async Task<bool> HayOtraCajaAbiertaAsync()
-    {
-        if (!_sesion.Iniciada || _sesion.EsAdministrador)
-            return false;
-
-        return await _db.Cajas.AnyAsync(c =>
-            c.Estado == EstadoCaja.Abierta &&
-            c.IdUsuarioApertura != _sesion.IdUsuario);
+            .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
     }
 
     public async Task<List<Caja>> ObtenerHistorialAsync(int limite = LimiteHistorial)
@@ -60,15 +41,10 @@ public class CajaService
         if (limite <= 0)
             limite = LimiteHistorial;
 
-        var query = _db.Cajas
+        return await _db.Cajas
             .AsNoTracking()
             .Include(c => c.UsuarioApertura)
-            .Where(c => c.Estado == EstadoCaja.Cerrada);
-
-        if (!_sesion.EsAdministrador)
-            query = query.Where(c => c.IdUsuarioApertura == _sesion.IdUsuario);
-
-        return await query
+            .Where(c => c.Estado == EstadoCaja.Cerrada)
             .OrderByDescending(c => c.FechaCierre)
             .ThenByDescending(c => c.Id)
             .Take(limite)
@@ -84,9 +60,6 @@ public class CajaService
             .FirstOrDefaultAsync(c => c.Id == idCaja);
 
         if (caja is null)
-            return [];
-
-        if (!_sesion.EsAdministrador && caja.IdUsuarioApertura != _sesion.IdUsuario)
             return [];
 
         return await _db.MovimientosCaja
@@ -114,9 +87,6 @@ public class CajaService
             .FirstOrDefaultAsync(c => c.Id == idCaja);
 
         if (caja is null)
-            return null;
-
-        if (!_sesion.EsAdministrador && caja.IdUsuarioApertura != _sesion.IdUsuario)
             return null;
 
         return await CalcularMontoEsperadoInternoAsync(caja.Id, caja.MontoInicial);
@@ -244,18 +214,8 @@ public class CajaService
     }
 
     private async Task<Caja?> ObtenerCajaAbiertaParaOperarAsync()
-    {
-        var caja = await _db.Cajas
+        => await _db.Cajas
             .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
-
-        if (caja is null)
-            return null;
-
-        if (!_sesion.EsAdministrador && caja.IdUsuarioApertura != _sesion.IdUsuario)
-            return null;
-
-        return caja;
-    }
 
     private async Task<decimal> CalcularMontoEsperadoInternoAsync(
         int idCaja, decimal montoInicial)

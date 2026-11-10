@@ -17,16 +17,6 @@
 
                 <TextBlock Text="Caja" Classes="sectionTitle"/>
 
-                <!-- Aviso: caja abierta por otro usuario -->
-                <Border Classes="card" Padding="20" IsVisible="{Binding HayCajaAjena}">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Caja abierta por otro usuario" Classes="subsection"/>
-                        <TextBlock Text="No podés abrir ni operar la caja mientras otro usuario tenga una abierta."
-                                   Classes="caption"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-
                 <!-- Abrir caja -->
                 <Border Classes="cardFlat" Padding="22" IsVisible="{Binding SinCajaAbierta}">
                     <StackPanel Spacing="12">
@@ -201,47 +191,11 @@
                                 <Button Content="Realizar venta"
                                         Classes="primary"
                                         Command="{Binding CobrarCommand}"/>
-                                <Button Content="Cancelar venta"
+                                <Button Content="Limpiar"
                                         Classes="secondary"
                                         Command="{Binding LimpiarVentaCommand}"/>
                             </StackPanel>
 
-                        </StackPanel>
-                    </Border>
-
-                    <Border Classes="cardFlat" Padding="22">
-                        <StackPanel Spacing="12">
-                            <TextBlock Text="Movimiento de efectivo" Classes="subsection"/>
-
-                            <Grid ColumnDefinitions="*,*,2*" ColumnSpacing="12">
-                                <StackPanel Grid.Column="0" Spacing="6">
-                                    <TextBlock Text="Tipo" Classes="fieldLabel"/>
-                                    <ComboBox ItemsSource="{Binding TiposMovimiento}"
-                                              SelectedItem="{Binding TipoMovimientoSeleccionado}">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="enums:TipoMovimientoCaja">
-                                                <TextBlock Text="{Binding}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="1" Spacing="6">
-                                    <TextBlock Text="Monto" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoMovimientoTexto}" PlaceholderText="0.00"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2" Spacing="6">
-                                    <TextBlock Text="Descripción" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding DescripcionMovimiento}"
-                                             PlaceholderText="Obligatoria para retiros"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <Button Content="Registrar movimiento"
-                                    Classes="primary"
-                                    HorizontalAlignment="Left"
-                                    Command="{Binding RegistrarMovimientoCommand}"/>
                         </StackPanel>
                     </Border>
 
@@ -277,32 +231,6 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Classes="cardFlat" Padding="22">
-                        <StackPanel Spacing="12">
-                            <TextBlock Text="Cerrar caja" Classes="subsection"/>
-
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <StackPanel Grid.Column="0" Spacing="6">
-                                    <TextBlock Text="Monto contado" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="0.00"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="6">
-                                    <TextBlock Text="Observaciones" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding ObservacionesCierre}"
-                                             PlaceholderText="Opcional"
-                                             AcceptsReturn="True"
-                                             Height="70"
-                                             TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <Button Content="Cerrar caja"
-                                    Classes="danger"
-                                    HorizontalAlignment="Left"
-                                    Click="CerrarCaja_Click"/>
-                        </StackPanel>
-                    </Border>
-
                 </StackPanel>
 
                 <TextBlock Text="{Binding MensajeOperacion}"
@@ -315,6 +243,7 @@
                         <TextBlock Text="Historial de cajas cerradas" Classes="subsection"/>
 
                         <ListBox ItemsSource="{Binding HistorialItems}"
+                                 SelectionChanged="Historial_SelectionChanged"
                                  MaxHeight="220"
                                  Classes="entityList">
                             <ListBox.ItemTemplate>
@@ -342,6 +271,21 @@
                         </ListBox>
                     </StackPanel>
                 </Border>
+
+                <StackPanel Spacing="10" IsVisible="{Binding HayCajaAbierta}">
+                    <Button Content="Cancelar venta"
+                            Classes="danger"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarCancelarVentaCommand}"/>
+                    <Button Content="Registrar movimiento de efectivo"
+                            Classes="secondary"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarRegistrarMovimientoCommand}"/>
+                    <Button Content="Cerrar caja"
+                            Classes="danger"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarCerrarCajaCommand}"/>
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>

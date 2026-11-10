@@ -15,38 +15,32 @@ public partial class CajaViewModel : OperacionViewModel
     private readonly CajaService? _cajaService;
     private readonly VentaService? _ventaService;
     private readonly ProductoService? _productoService;
+    private readonly SesionActual? _sesion;
 
     public CajaViewModel() { }
 
     public CajaViewModel(
         CajaService cajaService,
         VentaService ventaService,
-        ProductoService productoService)
+        ProductoService productoService,
+        SesionActual sesion)
     {
         _cajaService = cajaService;
         _ventaService = ventaService;
         _productoService = productoService;
+        _sesion = sesion;
     }
 
     public ObservableCollection<MovimientoCaja> MovimientosItems { get; } = [];
     public ObservableCollection<Caja> HistorialItems { get; } = [];
     public ObservableCollection<LineaVentaItem> LineasVentaItems { get; } = [];
 
-    public IReadOnlyList<TipoMovimientoCaja> TiposMovimiento { get; } =
-        [TipoMovimientoCaja.Ingreso, TipoMovimientoCaja.Retiro];
-
     public IReadOnlyList<MetodoPago> MetodosPago { get; } =
         [MetodoPago.Efectivo, MetodoPago.Tarjeta, MetodoPago.Transferencia];
 
     [ObservableProperty] private Caja? cajaAbierta;
-    [ObservableProperty] private bool hayCajaAjena;
     [ObservableProperty] private decimal montoEsperado;
-    [ObservableProperty] private TipoMovimientoCaja tipoMovimientoSeleccionado = TipoMovimientoCaja.Ingreso;
     [ObservableProperty] private string montoInicialTexto = "0.00";
-    [ObservableProperty] private string montoMovimientoTexto = "0.00";
-    [ObservableProperty] private string descripcionMovimiento = string.Empty;
-    [ObservableProperty] private string montoFinalTexto = "0.00";
-    [ObservableProperty] private string observacionesCierre = string.Empty;
 
     [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
     [ObservableProperty] private string montoRecibidoTexto = string.Empty;
@@ -66,9 +60,19 @@ public partial class CajaViewModel : OperacionViewModel
     /// </summary>
     public event Action<Venta>? TicketSolicitado;
 
+    /// <summary>
+    /// La vista abre la ventana para registrar un ingreso o retiro.
+    /// </summary>
+    public event Action<RegistrarMovimientoCajaViewModel>? RegistrarMovimientoSolicitado;
+
+    /// <summary>
+    /// La vista abre la ventana de cierre de caja.
+    /// </summary>
+    public event Action<CerrarCajaViewModel>? CerrarCajaSolicitado;
+
     public bool HayCajaAbierta => CajaAbierta is not null;
 
-    public bool SinCajaAbierta => CajaAbierta is null && !HayCajaAjena;
+    public bool SinCajaAbierta => CajaAbierta is null;
 
     public string UsuarioAperturaTexto =>
         CajaAbierta?.UsuarioApertura?.Nombre ?? "—";
@@ -91,6 +95,8 @@ public partial class CajaViewModel : OperacionViewModel
     public bool EsPagoEfectivo =>
         MetodoPagoSeleccionado == MetodoPago.Efectivo;
 
+    public event Action<CancelarVentaViewModel>? CancelarVentaSolicitado;
+
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
 
@@ -100,8 +106,6 @@ public partial class CajaViewModel : OperacionViewModel
 
         var caja = await _cajaService.ObtenerCajaAbiertaAsync();
         CajaAbierta = caja;
-
-        HayCajaAjena = caja is null && await _cajaService.HayOtraCajaAbiertaAsync();
 
         if (caja is null)
         {
@@ -118,8 +122,6 @@ public partial class CajaViewModel : OperacionViewModel
 
             MontoEsperado = await _cajaService.CalcularMontoEsperadoAsync(caja.Id)
                 ?? caja.MontoInicial;
-
-            MontoFinalTexto = MontoEsperado.ToString("0.00", Cultura);
         }
 
         var historial = await _cajaService.ObtenerHistorialAsync();
@@ -134,9 +136,6 @@ public partial class CajaViewModel : OperacionViewModel
         OnPropertyChanged(nameof(FechaAperturaTexto));
         OnPropertyChanged(nameof(MontoInicialMostrar));
     }
-
-    partial void OnHayCajaAjenaChanged(bool value)
-        => OnPropertyChanged(nameof(SinCajaAbierta));
 
     partial void OnMontoEsperadoChanged(decimal value)
         => OnPropertyChanged(nameof(MontoEsperadoTexto));
@@ -162,8 +161,6 @@ public partial class CajaViewModel : OperacionViewModel
         if (!resultado.Correcta) return;
 
         MontoInicialTexto = "0.00";
-        MontoMovimientoTexto = "0.00";
-        DescripcionMovimiento = string.Empty;
         await CargarDatosAsync();
     });
 
@@ -316,55 +313,42 @@ public partial class CajaViewModel : OperacionViewModel
     });
 
     [RelayCommand]
-    private Task RegistrarMovimientoAsync() => EjecutarSeguroAsync(async () =>
+    private void SolicitarRegistrarMovimiento()
     {
-        if (_cajaService is null) return;
+        if (_cajaService is null || CajaAbierta is null) return;
 
-        if (!TryParseDecimal(MontoMovimientoTexto, out var monto) || monto <= 0)
-        {
-            MensajeOperacion = Notificar("El monto debe ser un número mayor que 0.");
-            return;
-        }
+        RegistrarMovimientoSolicitado?.Invoke(
+            new RegistrarMovimientoCajaViewModel(_cajaService, MontoEsperado));
+    }
 
-        var resultado = TipoMovimientoSeleccionado == TipoMovimientoCaja.Retiro
-            ? await _cajaService.RegistrarRetiroAsync(monto, DescripcionMovimiento)
-            : await _cajaService.RegistrarIngresoAsync(monto, DescripcionMovimiento);
+    [RelayCommand]
+    private void SolicitarCancelarVenta()
+    {
+        if (_ventaService is null || _sesion is null || CajaAbierta is null) return;
 
-        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
+        CancelarVentaSolicitado?.Invoke(
+            new CancelarVentaViewModel(_ventaService, _sesion, CajaAbierta.Id));
+    }
 
-        if (!resultado.Correcta) return;
+    [RelayCommand]
+    private void SolicitarCerrarCaja()
+    {
+        if (_cajaService is null || CajaAbierta is null) return;
 
-        MontoMovimientoTexto = "0.00";
-        DescripcionMovimiento = string.Empty;
-        await CargarDatosAsync();
-    });
+        CerrarCajaSolicitado?.Invoke(
+            new CerrarCajaViewModel(_cajaService, CajaAbierta, MontoEsperado));
+    }
 
     /// <summary>
-    /// La llama la vista después de confirmar el cierre.
+    /// La vista lo usa al seleccionar una caja del historial.
     /// </summary>
-    public Task CerrarCajaAsync() => EjecutarSeguroAsync(async () =>
+    public async Task<CajaHistorialViewModel?> CrearHistorialViewModelAsync(Caja caja)
     {
-        if (_cajaService is null) return;
+        if (_ventaService is null) return null;
 
-        if (!TryParseDecimal(MontoFinalTexto, out var montoFinal) || montoFinal < 0)
-        {
-            MensajeOperacion = Notificar("El monto contado debe ser un número mayor o igual a 0.");
-            return;
-        }
-
-        var resultado = await _cajaService.CerrarAsync(montoFinal, ObservacionesCierre);
-
-        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
-
-        if (!resultado.Correcta) return;
-
-        ObservacionesCierre = string.Empty;
-        MontoFinalTexto = "0.00";
-        MontoMovimientoTexto = "0.00";
-        DescripcionMovimiento = string.Empty;
-        LimpiarVenta();
-        await CargarDatosAsync();
-    });
+        var ventas = await _ventaService.ObtenerPorCajaAsync(caja.Id);
+        return new CajaHistorialViewModel(caja, ventas);
+    }
 
     private void NotificarVenta()
     {

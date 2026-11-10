@@ -16,6 +16,15 @@ public class VentaService
         _sesion = sesion;
     }
 
+    public async Task<List<Venta>> ObtenerPorCajaAsync(int idCaja)
+        => await _db.Ventas
+            .AsNoTracking()
+            .Include(v => v.Usuario)
+            .Where(v => v.IdCaja == idCaja)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .ToListAsync();
+
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
         MetodoPago metodoPago,
@@ -34,10 +43,6 @@ public class VentaService
         if (caja is null)
             return new Resultado<Venta>(
                 false, "No hay una caja abierta para cobrar.", null);
-
-        if (!_sesion.EsAdministrador && caja.IdUsuarioApertura != _sesion.IdUsuario)
-            return new Resultado<Venta>(
-                false, "La caja está abierta por otro usuario.", null);
 
         if (lineas.Select(l => l.IdProducto).Distinct().Count() != lineas.Count)
             return new Resultado<Venta>(
@@ -174,5 +179,83 @@ public class VentaService
         var mensaje = "Venta registrada.";
 
         return new Resultado<Venta>(true, mensaje, venta);
+    }
+
+    public async Task<Resultado> AnularAsync(int idVenta)
+    {
+        if (!_sesion.Iniciada)
+            return new Resultado(false, "La sesión no está iniciada.");
+
+        var venta = await _db.Ventas
+            .Include(v => v.Caja)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .FirstOrDefaultAsync(v => v.Id == idVenta);
+
+        if (venta is null)
+            return new Resultado(false, "La venta no existe.");
+
+        if (venta.Estado == EstadoVenta.Anulada)
+            return new Resultado(false, "La venta ya está anulada.");
+
+        if (!_sesion.EsAdministrador && venta.IdUsuario != _sesion.IdUsuario)
+            return new Resultado(
+                false, "Solo quien realizó la venta o un administrador puede anularla.");
+
+        if (venta.Caja is null || venta.Caja.Estado != EstadoCaja.Abierta)
+            return new Resultado(
+                false, "Solo se pueden anular ventas de la caja abierta.");
+
+        foreach (var detalle in venta.Detalles)
+        {
+            if (detalle.Producto is null)
+                return new Resultado(false, "Uno de los productos de la venta no existe.");
+        }
+
+        var momento = DateTime.Now;
+
+        foreach (var detalle in venta.Detalles)
+        {
+            var producto = detalle.Producto;
+            var stockAnterior = producto.Stock;
+
+            producto.Stock += detalle.Cantidad;
+            producto.FechaModificacion = momento;
+
+            _db.MovimientosInventario.Add(new MovimientoInventario
+            {
+                IdProducto = producto.Id,
+                IdUsuario = _sesion.IdUsuario,
+                Tipo = TipoMovimiento.AnulacionVenta,
+                Cantidad = detalle.Cantidad,
+                StockAnterior = stockAnterior,
+                StockResultante = producto.Stock,
+                Referencia = $"Anulación venta V-{venta.Id:000000}",
+                IdVenta = venta.Id,
+                Fecha = momento
+            });
+        }
+
+        if (venta.MetodoPago == MetodoPago.Efectivo && venta.Total > 0)
+        {
+            _db.MovimientosCaja.Add(new MovimientoCaja
+            {
+                IdCaja = venta.IdCaja,
+                IdUsuario = _sesion.IdUsuario,
+                Tipo = TipoMovimientoCaja.AnulacionVenta,
+                Monto = venta.Total,
+                Descripcion = $"Anulación venta V-{venta.Id:000000}",
+                IdVenta = venta.Id,
+                Fecha = momento
+            });
+        }
+
+        venta.Estado = EstadoVenta.Anulada;
+        venta.FechaAnulacion = momento;
+        venta.IdUsuarioAnulacion = _sesion.IdUsuario;
+
+        await _db.SaveChangesAsync();
+
+        return new Resultado(true, "Venta anulada.");
     }
 }

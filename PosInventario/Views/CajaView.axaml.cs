@@ -28,6 +28,9 @@ public partial class CajaView : UserControl
             _viewModel.SeleccionarProductoSolicitado -= OnSeleccionarProducto;
             _viewModel.EliminarLineaSolicitada -= OnEliminarLinea;
             _viewModel.TicketSolicitado -= OnTicket;
+            _viewModel.RegistrarMovimientoSolicitado -= OnRegistrarMovimiento;
+            _viewModel.CerrarCajaSolicitado -= OnCerrarCaja;
+            _viewModel.CancelarVentaSolicitado -= OnCancelarVenta;
         }
 
         _viewModel = viewModel;
@@ -37,6 +40,9 @@ public partial class CajaView : UserControl
             _viewModel.SeleccionarProductoSolicitado += OnSeleccionarProducto;
             _viewModel.EliminarLineaSolicitada += OnEliminarLinea;
             _viewModel.TicketSolicitado += OnTicket;
+            _viewModel.RegistrarMovimientoSolicitado += OnRegistrarMovimiento;
+            _viewModel.CerrarCajaSolicitado += OnCerrarCaja;
+            _viewModel.CancelarVentaSolicitado += OnCancelarVenta;
         }
     }
 
@@ -78,6 +84,44 @@ public partial class CajaView : UserControl
         }.ShowDialog(ventana);
     }
 
+    private async void OnRegistrarMovimiento(RegistrarMovimientoCajaViewModel viewModel)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var registrado = await new RegistrarMovimientoCajaWindow { DataContext = viewModel }
+            .ShowDialog<bool>(ventana);
+
+        if (registrado && _viewModel is not null)
+            await _viewModel.CargarAsync();
+    }
+
+    private async void OnCerrarCaja(CerrarCajaViewModel viewModel)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var cerrada = await new CerrarCajaWindow { DataContext = viewModel }
+            .ShowDialog<bool>(ventana);
+
+        if (cerrada && _viewModel is not null)
+            await _viewModel.CargarAsync();
+    }
+
+    private async void OnCancelarVenta(CancelarVentaViewModel viewModel)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        await viewModel.CargarAsync();
+
+        var cancelada = await new CancelarVentaWindow { DataContext = viewModel }
+            .ShowDialog<bool>(ventana);
+
+        if (cancelada && _viewModel is not null)
+            await _viewModel.CargarAsync();
+    }
+
     private async void Movimientos_SelectionChanged(
         object? sender, SelectionChangedEventArgs e)
     {
@@ -96,20 +140,23 @@ public partial class CajaView : UserControl
         }.ShowDialog(ventana);
     }
 
-    private async void CerrarCaja_Click(object? sender, RoutedEventArgs e)
+    private async void Historial_SelectionChanged(
+        object? sender, SelectionChangedEventArgs e)
     {
-        if (DataContext is not CajaViewModel viewModel || viewModel.CajaAbierta is null)
+        if (sender is not ListBox lista || lista.SelectedItem is not Caja caja)
             return;
 
-        if (TopLevel.GetTopLevel(this) is not Window ventana)
+        lista.SelectedIndex = -1;
+
+        if (_viewModel is null || TopLevel.GetTopLevel(this) is not Window ventana)
             return;
 
-        var confirmacion = new ConfirmacionWindow(
-            "Cerrar caja",
-            $"¿Cerrar la caja abierta por {viewModel.UsuarioAperturaTexto}? " +
-            "Se guardará el monto esperado y la diferencia con el monto contado.");
+        var detalle = await _viewModel.CrearHistorialViewModelAsync(caja);
 
-        if (await confirmacion.ShowDialog<bool>(ventana))
-            await viewModel.CerrarCajaAsync();
+        if (detalle is null)
+            return;
+
+        await new CajaHistorialWindow { DataContext = detalle }
+            .ShowDialog(ventana);
     }
 }
