@@ -92,6 +92,9 @@ public class CajaService
         return await _db.MovimientosCaja
             .AsNoTracking()
             .Include(m => m.Usuario)
+            .Include(m => m.Venta)
+                .ThenInclude(v => v!.Detalles)
+                .ThenInclude(d => d.Producto)
             .Where(m => m.IdCaja == idCaja)
             .OrderByDescending(m => m.Fecha)
             .ThenByDescending(m => m.Id)

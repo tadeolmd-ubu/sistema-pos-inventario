@@ -49,8 +49,7 @@ public partial class CajaViewModel : OperacionViewModel
     [ObservableProperty] private string observacionesCierre = string.Empty;
 
     [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
-    [ObservableProperty] private string montoRecibidoTexto = "0.00";
-    [ObservableProperty] private string ultimoCambioTexto = string.Empty;
+    [ObservableProperty] private string montoRecibidoTexto = string.Empty;
 
     /// <summary>
     /// La vista abre la ventana de selección de productos.
@@ -91,33 +90,6 @@ public partial class CajaViewModel : OperacionViewModel
 
     public bool EsPagoEfectivo =>
         MetodoPagoSeleccionado == MetodoPago.Efectivo;
-
-    public bool HayUltimoCambio => !string.IsNullOrEmpty(UltimoCambioTexto);
-
-    public decimal Vuelto
-    {
-        get
-        {
-            if (!EsPagoEfectivo) return 0m;
-
-            return TryParseDecimal(MontoRecibidoTexto, out var monto) &&
-                   monto > TotalVenta
-                ? monto - TotalVenta
-                : 0m;
-        }
-    }
-
-    public string VueltoTexto => Vuelto.ToString("0.00", Cultura);
-
-    public bool PagoSuficiente
-    {
-        get
-        {
-            if (!EsPagoEfectivo) return true;
-            return TryParseDecimal(MontoRecibidoTexto, out var monto) &&
-                   monto >= TotalVenta;
-        }
-    }
 
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
@@ -169,12 +141,8 @@ public partial class CajaViewModel : OperacionViewModel
     partial void OnMontoEsperadoChanged(decimal value)
         => OnPropertyChanged(nameof(MontoEsperadoTexto));
 
-    partial void OnMontoRecibidoTextoChanged(string value) => NotificarPago();
-
-    partial void OnMetodoPagoSeleccionadoChanged(MetodoPago value) => NotificarPago();
-
-    partial void OnUltimoCambioTextoChanged(string value)
-        => OnPropertyChanged(nameof(HayUltimoCambio));
+    partial void OnMetodoPagoSeleccionadoChanged(MetodoPago value)
+        => OnPropertyChanged(nameof(EsPagoEfectivo));
 
     [RelayCommand]
     private Task AbrirAsync() => EjecutarSeguroAsync(async () =>
@@ -208,6 +176,10 @@ public partial class CajaViewModel : OperacionViewModel
             new SeleccionarProductoViewModel(_productoService));
     }
 
+    [RelayCommand]
+    private void SeleccionarDenominacion(string denominacion)
+        => MontoRecibidoTexto = denominacion;
+
     /// <summary>
     /// La llama la vista cuando la ventana de selección devuelve un producto.
     /// </summary>
@@ -238,7 +210,6 @@ public partial class CajaViewModel : OperacionViewModel
                 producto, 1, AumentarLinea, DisminuirLinea, SolicitarEliminarLinea));
         }
 
-        UltimoCambioTexto = string.Empty;
         NotificarVenta();
         MensajeOperacion = string.Empty;
     }
@@ -283,9 +254,8 @@ public partial class CajaViewModel : OperacionViewModel
     private void LimpiarVenta()
     {
         LineasVentaItems.Clear();
-        MontoRecibidoTexto = "0.00";
+        MontoRecibidoTexto = string.Empty;
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
-        UltimoCambioTexto = string.Empty;
         NotificarVenta();
     }
 
@@ -334,10 +304,8 @@ public partial class CajaViewModel : OperacionViewModel
 
         if (!resultado.Correcta) return;
 
-        UltimoCambioTexto = (resultado.Valor?.Vuelto ?? 0m).ToString("0.00", Cultura);
-
         LineasVentaItems.Clear();
-        MontoRecibidoTexto = "0.00";
+        MontoRecibidoTexto = string.Empty;
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
         NotificarVenta();
 
@@ -403,15 +371,6 @@ public partial class CajaViewModel : OperacionViewModel
         OnPropertyChanged(nameof(TotalVenta));
         OnPropertyChanged(nameof(TotalVentaTexto));
         OnPropertyChanged(nameof(HayLineasVenta));
-        NotificarPago();
-    }
-
-    private void NotificarPago()
-    {
-        OnPropertyChanged(nameof(EsPagoEfectivo));
-        OnPropertyChanged(nameof(Vuelto));
-        OnPropertyChanged(nameof(VueltoTexto));
-        OnPropertyChanged(nameof(PagoSuficiente));
     }
 
     private static bool TryParseDecimal(string? texto, out decimal valor)

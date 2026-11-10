@@ -32,7 +32,8 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
         if (_productoService is null) return;
 
         _cargados.Clear();
-        _cargados.AddRange(await _productoService.ObtenerTodosAsync());
+        _cargados.AddRange((await _productoService.ObtenerTodosAsync())
+            .Where(p => p.Stock > 0));
         Filtrar();
     });
 

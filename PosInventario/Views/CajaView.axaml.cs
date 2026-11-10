@@ -78,6 +78,24 @@ public partial class CajaView : UserControl
         }.ShowDialog(ventana);
     }
 
+    private async void Movimientos_SelectionChanged(
+        object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ListBox lista ||
+            lista.SelectedItem is not MovimientoCaja movimiento)
+            return;
+
+        lista.SelectedIndex = -1;
+
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        await new MovimientoCajaWindow
+        {
+            DataContext = new MovimientoCajaViewModel(movimiento)
+        }.ShowDialog(ventana);
+    }
+
     private async void CerrarCaja_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not CajaViewModel viewModel || viewModel.CajaAbierta is null)

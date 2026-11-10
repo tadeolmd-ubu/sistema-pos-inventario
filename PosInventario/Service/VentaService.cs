@@ -171,9 +171,7 @@ public class VentaService
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync();
 
-        var mensaje = metodoPago == MetodoPago.Efectivo
-            ? $"Venta registrada. Cambio: {vuelto:0.00}"
-            : "Venta registrada.";
+        var mensaje = "Venta registrada.";
 
         return new Resultado<Venta>(true, mensaje, venta);
     }
