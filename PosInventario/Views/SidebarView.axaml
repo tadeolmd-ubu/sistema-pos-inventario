@@ -98,6 +98,27 @@
 
                     <Button Classes="navPill"
                             IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAProveedoresCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ProveedoresViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ProveedoresViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Proveedores"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ProveedoresViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
                             Command="{Binding IrAUsuariosCommand}"
                             Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=UsuariosViewModel}">
                         <Grid ColumnDefinitions="3,Auto,*">

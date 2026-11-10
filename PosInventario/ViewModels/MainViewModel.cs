@@ -9,22 +9,26 @@ public partial class MainViewModel : OperacionViewModel
 {
     private readonly InicioViewModel _inicioViewModel;
     private readonly ProductosViewModel _productosViewModel;
+    private readonly ProveedoresViewModel _proveedoresViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly SesionActual _sesion;
 
     public MainViewModel(
         InicioViewModel inicioViewModel,
         ProductosViewModel productosViewModel,
+        ProveedoresViewModel proveedoresViewModel,
         UsuariosViewModel usuariosViewModel,
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
         _productosViewModel = productosViewModel;
+        _proveedoresViewModel = proveedoresViewModel;
         _usuariosViewModel = usuariosViewModel;
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
         _productosViewModel.MensajeSolicitado += SolicitarMensaje;
+        _proveedoresViewModel.MensajeSolicitado += SolicitarMensaje;
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -71,6 +75,16 @@ public partial class MainViewModel : OperacionViewModel
         VistaActual = _productosViewModel;
         TituloVistaActual = "Productos";
         await _productosViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAProveedoresAsync()
+    {
+        if (!EsAdministrador) return;
+
+        VistaActual = _proveedoresViewModel;
+        TituloVistaActual = "Proveedores";
+        await _proveedoresViewModel.CargarAsync();
     }
 
     [RelayCommand]
