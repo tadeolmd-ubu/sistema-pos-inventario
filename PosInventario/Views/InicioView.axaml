@@ -113,6 +113,7 @@
 
                         <Grid>
                             <ListBox ItemsSource="{Binding UltimasVentas}"
+                                     SelectionChanged="Ventas_SelectionChanged"
                                      MaxHeight="320"
                                      Classes="entityList">
                                 <ListBox.ItemTemplate>

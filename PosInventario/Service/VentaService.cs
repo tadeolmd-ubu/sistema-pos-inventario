@@ -48,6 +48,8 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
             .OrderByDescending(v => v.Fecha)
             .ThenByDescending(v => v.Id)
             .Take(limite)
