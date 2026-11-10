@@ -17,6 +17,124 @@ public sealed class DesignTimeData
 
 public sealed class InicioDesignTime : InicioViewModel
 {
+    public InicioDesignTime()
+    {
+        EsAdministrador = true;
+        VentasDelDia = 12;
+        TotalDelDia = 15400.00m;
+        TicketPromedio = 1283.33m;
+        TotalEfectivo = 8200.00m;
+        TotalTarjeta = 5200.00m;
+        TotalTransferencia = 2000.00m;
+        CajaAbierta = true;
+        EstadoCajaTexto = "Abierta";
+        UsuarioCajaTexto = "Administrador General";
+        FechaAperturaCajaTexto = DateTime.Now.AddHours(-3).ToString("dd/MM/yyyy HH:mm");
+        EfectivoEsperado = 9200.00m;
+        ProductosActivos = 25;
+        ProductosStockBajo = 2;
+
+        var usuario = new Usuario
+        {
+            Id = 1,
+            NombreUsuario = "admin",
+            Nombre = "Administrador General",
+            Rol = RolUsuario.Administrador,
+            Activo = 1,
+            FechaCreacion = DateTime.Now
+        };
+
+        UltimasVentas.Add(new Venta
+        {
+            Id = 12,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            IdCaja = 1,
+            Fecha = DateTime.Now.AddMinutes(-15),
+            Subtotal = 450.00m,
+            Total = 450.00m,
+            MetodoPago = MetodoPago.Efectivo,
+            MontoRecibido = 500.00m,
+            Vuelto = 50.00m,
+            Estado = EstadoVenta.Completada
+        });
+
+        UltimasVentas.Add(new Venta
+        {
+            Id = 11,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            IdCaja = 1,
+            Fecha = DateTime.Now.AddMinutes(-40),
+            Subtotal = 250.00m,
+            Total = 250.00m,
+            MetodoPago = MetodoPago.Tarjeta,
+            MontoRecibido = 250.00m,
+            Estado = EstadoVenta.Completada
+        });
+
+        UltimasVentas.Add(new Venta
+        {
+            Id = 10,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            IdCaja = 1,
+            Fecha = DateTime.Now.AddMinutes(-70),
+            Subtotal = 100.00m,
+            Total = 100.00m,
+            MetodoPago = MetodoPago.Efectivo,
+            MontoRecibido = 100.00m,
+            Estado = EstadoVenta.Anulada
+        });
+
+        StockBajo.Add(new Producto
+        {
+            Id = 1,
+            Sku = "ABC-001",
+            Nombre = "Producto con stock bajo",
+            PrecioVenta = 150.00m,
+            Costo = 90.00m,
+            Stock = 2,
+            StockMinimo = 5,
+            FechaCreacion = DateTime.Now,
+            FechaModificacion = DateTime.Now
+        });
+
+        StockBajo.Add(new Producto
+        {
+            Id = 2,
+            Sku = "ABC-002",
+            Nombre = "Otro producto bajo",
+            PrecioVenta = 80.00m,
+            Costo = 40.00m,
+            Stock = 0,
+            StockMinimo = 3,
+            FechaCreacion = DateTime.Now,
+            FechaModificacion = DateTime.Now
+        });
+
+        var proveedor = new Proveedor
+        {
+            Id = 1,
+            Nombre = "Distribuidora Central",
+            Telefono = "11 5555-1000",
+            Activo = 1,
+            FechaCreacion = DateTime.Now
+        };
+
+        UltimasCompras.Add(new Compra
+        {
+            Id = 1,
+            IdProveedor = proveedor.Id,
+            Proveedor = proveedor,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            Fecha = DateTime.Now.AddDays(-1),
+            NumeroComprobante = "FAC-001",
+            Total = 1800.00m,
+            Estado = EstadoCompra.Completada
+        });
+    }
 }
 
 public sealed class CajaDesignTime : CajaViewModel
