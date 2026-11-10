@@ -70,6 +70,8 @@
                                                    Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
                                         <TextBlock Text="{Binding MetodoPago}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Estado}" Classes="caption"/>
                                     </StackPanel>
                                 </StackPanel>
                                 <TextBlock Grid.Column="1"
@@ -80,6 +82,29 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <StackPanel Spacing="6" IsVisible="{Binding HayVentasCanceladas}">
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+                    <TextBlock Text="Ventas canceladas" Classes="fieldLabel"/>
+
+                    <ItemsControl ItemsSource="{Binding VentasCanceladas}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:Venta">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{Binding Id, StringFormat='V-{0:000000}'}"
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                   Classes="caption"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Total, StringFormat='{}{0:0.00}'}"
+                                               FontWeight="SemiBold"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
 
                 <Button Content="Cerrar"
                         Classes="primary"
