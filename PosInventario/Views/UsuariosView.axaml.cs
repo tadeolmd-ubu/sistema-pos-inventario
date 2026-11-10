@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using PosInventario.ViewModels;
 using PosInventario.Views.DesignTime;
 
@@ -31,9 +33,22 @@ public partial class UsuariosView : UserControl
 
     private void OnRestablecerContrasena(RestablecerContrasenaViewModel viewModel)
     {
-        if (TopLevel.GetTopLevel(this) is not Window ventana) return;
+        var ventana = new RestablecerContrasenaWindow { DataContext = viewModel };
 
-        _ = ventana.ShowDialog(
-            new RestablecerContrasenaWindow { DataContext = viewModel });
+        var owner = TopLevel.GetTopLevel(this) as Window;
+
+        if (owner is { IsVisible: true })
+        {
+            _ = owner.ShowDialog(ventana);
+            return;
+        }
+
+        var mainWindow = (Application.Current?.ApplicationLifetime
+            as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+        if (mainWindow is { IsVisible: true })
+            _ = mainWindow.ShowDialog(ventana);
+        else
+            ventana.Show();
     }
 }
