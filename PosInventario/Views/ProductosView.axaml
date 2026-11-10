@@ -84,17 +84,17 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <StackPanel Grid.Column="0" Spacing="6">
                                 <TextBlock Text="Precio de venta" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding PrecioVentaTexto}" PlaceholderText="0.00"/>
+                                <TextBox Text="{Binding PrecioVentaTexto}" PlaceholderText="Precio de venta"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="6">
                                 <TextBlock Text="Costo" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="0.00"/>
+                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="Costo"/>
                             </StackPanel>
                         </Grid>
 
                         <StackPanel Spacing="6">
                             <TextBlock Text="Stock mínimo" Classes="fieldLabel"/>
-                            <TextBox Text="{Binding StockMinimoTexto}" PlaceholderText="0"/>
+                            <TextBox Text="{Binding StockMinimoTexto}" PlaceholderText="Stock mínimo"/>
                         </StackPanel>
 
                         <Border Background="{StaticResource SurfaceAltBrush}"

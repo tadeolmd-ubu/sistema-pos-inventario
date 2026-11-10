@@ -21,7 +21,6 @@ public partial class CerrarCajaViewModel : OperacionViewModel
         FechaAperturaTexto = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm", Cultura);
         MontoInicialTexto = caja.MontoInicial.ToString("0.00", Cultura);
         MontoEsperadoTexto = montoEsperado.ToString("0.00", Cultura);
-        MontoFinalTexto = montoEsperado.ToString("0.00", Cultura);
     }
 
     [ObservableProperty] private string usuarioAperturaTexto = string.Empty;

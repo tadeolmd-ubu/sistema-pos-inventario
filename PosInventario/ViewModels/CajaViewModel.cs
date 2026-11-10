@@ -40,7 +40,7 @@ public partial class CajaViewModel : OperacionViewModel
 
     [ObservableProperty] private Caja? cajaAbierta;
     [ObservableProperty] private decimal montoEsperado;
-    [ObservableProperty] private string montoInicialTexto = "0.00";
+    [ObservableProperty] private string montoInicialTexto = string.Empty;
 
     [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
     [ObservableProperty] private string montoRecibidoTexto = string.Empty;
@@ -160,7 +160,7 @@ public partial class CajaViewModel : OperacionViewModel
 
         if (!resultado.Correcta) return;
 
-        MontoInicialTexto = "0.00";
+        MontoInicialTexto = string.Empty;
         await CargarDatosAsync();
     });
 

@@ -34,7 +34,7 @@
 
             <StackPanel Spacing="6">
                 <TextBlock Text="Monto contado" Classes="fieldLabel"/>
-                <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="Ingresa una cantidad"/>
+                <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="Monto contado"/>
             </StackPanel>
 
             <StackPanel Spacing="6">

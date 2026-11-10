@@ -40,8 +40,8 @@ public partial class InventarioViewModel : OperacionViewModel
     [ObservableProperty] private string busqueda = string.Empty;
     [ObservableProperty] private TipoMovimiento tipoSeleccionado = TipoMovimiento.Entrada;
     [ObservableProperty] private string motivoSeleccionado = string.Empty;
-    [ObservableProperty] private string cantidadTexto = "1";
-    [ObservableProperty] private string stockContadoTexto = "0";
+    [ObservableProperty] private string cantidadTexto = string.Empty;
+    [ObservableProperty] private string stockContadoTexto = string.Empty;
     [ObservableProperty] private bool verTodosLosMovimientos;
 
     public IReadOnlyList<string> MotivosDisponibles =>
@@ -98,8 +98,6 @@ public partial class InventarioViewModel : OperacionViewModel
 
     partial void OnSelectedProductoChanged(Producto? value)
     {
-        StockContadoTexto = (value?.Stock ?? 0).ToString(Cultura);
-
         OnPropertyChanged(nameof(StockActualTexto));
         OnPropertyChanged(nameof(TituloMovimientos));
 
@@ -174,8 +172,8 @@ public partial class InventarioViewModel : OperacionViewModel
     {
         TipoSeleccionado = TipoMovimiento.Entrada;
         MotivoSeleccionado = MotivosInventario.Entrada[0];
-        CantidadTexto = "1";
-        StockContadoTexto = SelectedProducto?.Stock.ToString(Cultura) ?? "0";
+        CantidadTexto = string.Empty;
+        StockContadoTexto = string.Empty;
     }
 
     private async Task CargarMovimientosAsync()
