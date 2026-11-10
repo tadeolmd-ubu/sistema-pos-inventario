@@ -47,7 +47,9 @@ public partial class ProductosViewModel : OperacionViewModel
         : $"Stock actual: {SelectedProducto.Stock}";
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+
+    private async Task CargarDatosAsync()
     {
         if (_productoService is null) return;
 
@@ -57,7 +59,7 @@ public partial class ProductosViewModel : OperacionViewModel
             : await _productoService.ObtenerTodosAsync());
 
         Filtrar();
-    });
+    }
 
     partial void OnVerArchivadosChanged(bool value) => _ = CargarAsync();
 
@@ -138,7 +140,7 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -151,7 +153,7 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -164,7 +166,7 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     private void Filtrar()

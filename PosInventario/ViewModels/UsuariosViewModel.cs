@@ -49,14 +49,16 @@ public partial class UsuariosViewModel : OperacionViewModel
     public event Action<RestablecerContrasenaViewModel>? RestablecerContrasenaSolicitado;
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+
+    private async Task CargarDatosAsync()
     {
         if (_usuarioService is null) return;
 
         _cargados.Clear();
         _cargados.AddRange(await _usuarioService.ObtenerTodosAsync());
         Filtrar();
-    });
+    }
 
     partial void OnBusquedaChanged(string value) => Filtrar();
 
@@ -115,7 +117,7 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -128,7 +130,7 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -141,7 +143,7 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]

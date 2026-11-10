@@ -22,6 +22,12 @@
         <DataTemplate DataType="vm:ProveedoresViewModel">
             <views:ProveedoresView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:InventarioViewModel">
+            <views:InventarioView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ComprasViewModel">
+            <views:ComprasView/>
+        </DataTemplate>
         <DataTemplate DataType="vm:UsuariosViewModel">
             <views:UsuariosView/>
         </DataTemplate>

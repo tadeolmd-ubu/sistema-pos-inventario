@@ -1,0 +1,169 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:enums="using:PosInventario.Models.Enums"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Inventario}"
+             x:DataType="vm:InventarioViewModel"
+             x:Class="PosInventario.Views.InventarioView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <controls:ResponsiveTwoPane ExpandedListWidth="360"
+                                    MinListWidth="230"
+                                    ListWidthRatio="0.38"
+                                    Spacing="22">
+
+            <!-- Panel izquierdo: productos -->
+            <Border Classes="cardFlat" Padding="16">
+                <Grid RowDefinitions="Auto,*" RowSpacing="14">
+
+                    <StackPanel Grid.Row="0" Spacing="10">
+                        <TextBlock Text="Inventario" Classes="sectionTitle"/>
+                        <TextBox Text="{Binding Busqueda}"
+                                 PlaceholderText="Buscar producto..."
+                                 Classes="search"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ProductosItems}"
+                             SelectedItem="{Binding SelectedProducto}"
+                             Classes="entityList">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Producto">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Sku}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                                   Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding StockMinimo, StringFormat='mín. {0}'}"
+                                                   Classes="caption"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                </Grid>
+            </Border>
+
+            <!-- Panel derecho: movimiento + historial -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16">
+
+                    <Border Classes="cardFlat" Padding="22">
+                        <StackPanel Spacing="16">
+
+                            <TextBlock Text="Registrar movimiento" Classes="subsection"/>
+
+                            <Border Background="{StaticResource SurfaceAltBrush}"
+                                    CornerRadius="10"
+                                    Padding="12">
+                                <TextBlock Text="{Binding StockActualTexto}"
+                                           Classes="caption"
+                                           TextWrapping="Wrap"/>
+                            </Border>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <TextBlock Text="Tipo" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding Tipos}"
+                                              SelectedItem="{Binding TipoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:TipoMovimiento">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Motivo" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding MotivosDisponibles}"
+                                              SelectedItem="{Binding MotivoSeleccionado}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Spacing="6" IsVisible="{Binding !EsAjuste}">
+                                <TextBlock Text="Cantidad" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="1"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6" IsVisible="{Binding EsAjuste}">
+                                <TextBlock Text="Stock contado" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding StockContadoTexto}" PlaceholderText="0"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="Registrar"
+                                        Classes="primary"
+                                        Command="{Binding RegistrarCommand}"/>
+                                <Button Content="Limpiar"
+                                        Classes="secondary"
+                                        Command="{Binding LimpiarFormularioCommand}"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding MensajeOperacion}"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"/>
+
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="cardFlat" Padding="22">
+                        <StackPanel Spacing="12">
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="{Binding TituloMovimientos}" Classes="subsection"/>
+                                <CheckBox Grid.Column="1"
+                                          Content="Ver todos"
+                                          IsChecked="{Binding VerTodosLosMovimientos}"/>
+                            </Grid>
+
+                            <ListBox ItemsSource="{Binding MovimientosItems}"
+                                     MaxHeight="320"
+                                     Classes="entityList">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MovimientoInventario">
+                                        <StackPanel Spacing="2">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="{Binding Producto.Nombre}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Tipo}"
+                                                           Classes="caption"/>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockAnterior}" Classes="caption"/>
+                                                <TextBlock Text="→" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockResultante}" Classes="caption"/>
+                                                <TextBlock Text="·" Classes="caption"/>
+                                                <TextBlock Text="{Binding Referencia}" Classes="caption"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                           Classes="caption"/>
+                                                <TextBlock Text="·" Classes="caption"/>
+                                                <TextBlock Text="{Binding Usuario.Nombre}" Classes="caption"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+        </controls:ResponsiveTwoPane>
+    </Border>
+</UserControl>
