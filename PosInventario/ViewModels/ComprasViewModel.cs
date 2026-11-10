@@ -157,10 +157,7 @@ public partial class ComprasViewModel : OperacionViewModel
 
         var idCompra = resultado.Valor?.Id;
 
-        LineasItems.Clear();
-        SelectedLinea = null;
-        NumeroComprobante = string.Empty;
-        NotificarTotal();
+        LimpiarFormulario();
 
         await CargarDatosAsync();
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == idCompra);
@@ -173,6 +170,7 @@ public partial class ComprasViewModel : OperacionViewModel
         SelectedLinea = null;
         SelectedProveedor = null;
         SelectedProducto = null;
+        SelectedCompra = null;
         NumeroComprobante = string.Empty;
         CantidadTexto = string.Empty;
         CostoTexto = string.Empty;
@@ -193,9 +191,20 @@ public partial class ComprasViewModel : OperacionViewModel
 
         if (!resultado.Correcta) return;
 
+        LimpiarFormulario();
         await CargarDatosAsync();
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == id);
     });
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        ComprasItems.Clear();
+        ProveedoresItems.Clear();
+        ProductosItems.Clear();
+        LimpiarFormulario();
+    }
 
     private void NotificarTotal()
     {

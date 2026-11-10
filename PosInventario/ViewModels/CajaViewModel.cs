@@ -354,6 +354,26 @@ public partial class CajaViewModel : OperacionViewModel
         return new CajaHistorialViewModel(caja, ventas);
     }
 
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        LineasVentaItems.Clear();
+        MovimientosItems.Clear();
+        HistorialItems.Clear();
+
+        MontoInicialTexto = string.Empty;
+        MontoRecibidoTexto = string.Empty;
+        MetodoPagoSeleccionado = MetodoPago.Efectivo;
+
+        CajaAbierta = null;
+        MontoEsperado = 0;
+
+        OnPropertyChanged(nameof(TotalVenta));
+        OnPropertyChanged(nameof(TotalVentaTexto));
+        OnPropertyChanged(nameof(HayLineasVenta));
+    }
+
     private void NotificarVenta()
     {
         OnPropertyChanged(nameof(TotalVenta));

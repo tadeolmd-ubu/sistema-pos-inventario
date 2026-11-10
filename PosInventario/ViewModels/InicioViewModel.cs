@@ -158,6 +158,35 @@ public partial class InicioViewModel : OperacionViewModel
         OnPropertyChanged(nameof(HayCompras));
     }
 
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        UltimasVentas.Clear();
+        StockBajo.Clear();
+        UltimasCompras.Clear();
+
+        VentasDelDia = 0;
+        TotalDelDia = 0;
+        TicketPromedio = 0;
+        TotalEfectivo = 0;
+        TotalTarjeta = 0;
+        TotalTransferencia = 0;
+
+        CajaAbierta = false;
+        EstadoCajaTexto = "Cerrada";
+        UsuarioCajaTexto = "—";
+        FechaAperturaCajaTexto = "—";
+        EfectivoEsperado = 0;
+
+        ProductosActivos = 0;
+        ProductosStockBajo = 0;
+
+        OnPropertyChanged(nameof(HayUltimasVentas));
+        OnPropertyChanged(nameof(HayStockBajo));
+        OnPropertyChanged(nameof(HayCompras));
+    }
+
     private static void ReemplazarItems<T>(
         ObservableCollection<T> destino, IEnumerable<T> origen)
     {

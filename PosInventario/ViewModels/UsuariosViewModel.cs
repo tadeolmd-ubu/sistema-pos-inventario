@@ -120,7 +120,10 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -133,7 +136,10 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -146,7 +152,10 @@ public partial class UsuariosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -156,6 +165,17 @@ public partial class UsuariosViewModel : OperacionViewModel
 
         RestablecerContrasenaSolicitado?.Invoke(
             new RestablecerContrasenaViewModel(_usuarioService, SelectedUsuario));
+    }
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        _cargados.Clear();
+        UsuariosItems.Clear();
+        LimpiarFormulario();
+        Busqueda = string.Empty;
+        VerInactivos = false;
     }
 
     private void Filtrar()

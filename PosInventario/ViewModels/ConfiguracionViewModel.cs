@@ -31,6 +31,12 @@ public partial class ConfiguracionViewModel : OperacionViewModel
 
     public bool HayUltimoRespaldo => !string.IsNullOrEmpty(UltimoRespaldoTexto);
 
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+        UltimoRespaldoTexto = string.Empty;
+    }
+
     partial void OnUltimoRespaldoTextoChanged(string value)
         => OnPropertyChanged(nameof(HayUltimoRespaldo));
 

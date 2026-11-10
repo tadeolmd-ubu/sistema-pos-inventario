@@ -13,6 +13,7 @@ public partial class ProductosViewModel : OperacionViewModel
 
     private readonly ProductoService? _productoService;
     private readonly List<Producto> _cargados = [];
+    private bool _limpiando;
 
     public ProductosViewModel() { }
 
@@ -61,7 +62,11 @@ public partial class ProductosViewModel : OperacionViewModel
         Filtrar();
     }
 
-    partial void OnVerArchivadosChanged(bool value) => _ = CargarAsync();
+    partial void OnVerArchivadosChanged(bool value)
+    {
+        if (!_limpiando)
+            _ = CargarAsync();
+    }
 
     partial void OnBusquedaChanged(string value) => Filtrar();
 
@@ -140,7 +145,10 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -153,7 +161,10 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -166,8 +177,24 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        _limpiando = true;
+        _cargados.Clear();
+        ProductosItems.Clear();
+        LimpiarFormulario();
+        Busqueda = string.Empty;
+        VerArchivados = false;
+        _limpiando = false;
+    }
 
     private void Filtrar()
     {
