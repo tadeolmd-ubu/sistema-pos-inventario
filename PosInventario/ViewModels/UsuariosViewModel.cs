@@ -26,6 +26,7 @@ public partial class UsuariosViewModel : OperacionViewModel
 
     [ObservableProperty] private Usuario? selectedUsuario;
     [ObservableProperty] private string busqueda = string.Empty;
+    [ObservableProperty] private bool verInactivos;
     [ObservableProperty] private string nombreUsuario = string.Empty;
     [ObservableProperty] private string nombre = string.Empty;
     [ObservableProperty] private RolUsuario rol = RolUsuario.Cajero;
@@ -61,6 +62,8 @@ public partial class UsuariosViewModel : OperacionViewModel
     }
 
     partial void OnBusquedaChanged(string value) => Filtrar();
+
+    partial void OnVerInactivosChanged(bool value) => Filtrar();
 
     partial void OnSelectedUsuarioChanged(Usuario? value)
     {
@@ -159,9 +162,13 @@ public partial class UsuariosViewModel : OperacionViewModel
     {
         var texto = (Busqueda ?? string.Empty).Trim();
 
-        var filtrados = string.IsNullOrWhiteSpace(texto)
-            ? _cargados
-            : _cargados.Where(u =>
+        var filtrados = _cargados.AsEnumerable();
+
+        if (!VerInactivos)
+            filtrados = filtrados.Where(u => u.Activo == 1);
+
+        if (!string.IsNullOrWhiteSpace(texto))
+            filtrados = filtrados.Where(u =>
                 u.NombreUsuario.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 u.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase));
 

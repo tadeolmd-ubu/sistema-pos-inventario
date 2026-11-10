@@ -32,6 +32,8 @@
                         <TextBox Text="{Binding Busqueda}"
                                  PlaceholderText="Buscar..."
                                  Classes="search"/>
+                        <CheckBox Content="Ver desactivados"
+                                  IsChecked="{Binding VerInactivos}"/>
                     </StackPanel>
 
                     <ListBox Grid.Row="1"
