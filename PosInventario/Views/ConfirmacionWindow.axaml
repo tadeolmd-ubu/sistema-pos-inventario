@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PosInventario.Views.ConfirmacionWindow"
+        Title="Confirmar"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="16">
+
+            <TextBlock x:Name="TituloTexto"
+                       Classes="subsection"
+                       TextWrapping="Wrap"/>
+
+            <TextBlock x:Name="MensajeTexto"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Confirmar"
+                        Classes="danger"
+                        IsDefault="True"
+                        Click="Confirmar_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

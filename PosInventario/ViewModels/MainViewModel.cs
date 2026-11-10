@@ -10,6 +10,8 @@ public partial class MainViewModel : OperacionViewModel
     private readonly InicioViewModel _inicioViewModel;
     private readonly ProductosViewModel _productosViewModel;
     private readonly ProveedoresViewModel _proveedoresViewModel;
+    private readonly InventarioViewModel _inventarioViewModel;
+    private readonly ComprasViewModel _comprasViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly SesionActual _sesion;
 
@@ -17,18 +19,24 @@ public partial class MainViewModel : OperacionViewModel
         InicioViewModel inicioViewModel,
         ProductosViewModel productosViewModel,
         ProveedoresViewModel proveedoresViewModel,
+        InventarioViewModel inventarioViewModel,
+        ComprasViewModel comprasViewModel,
         UsuariosViewModel usuariosViewModel,
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
         _productosViewModel = productosViewModel;
         _proveedoresViewModel = proveedoresViewModel;
+        _inventarioViewModel = inventarioViewModel;
+        _comprasViewModel = comprasViewModel;
         _usuariosViewModel = usuariosViewModel;
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
         _productosViewModel.MensajeSolicitado += SolicitarMensaje;
         _proveedoresViewModel.MensajeSolicitado += SolicitarMensaje;
+        _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
+        _comprasViewModel.MensajeSolicitado += SolicitarMensaje;
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -85,6 +93,26 @@ public partial class MainViewModel : OperacionViewModel
         VistaActual = _proveedoresViewModel;
         TituloVistaActual = "Proveedores";
         await _proveedoresViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAInventarioAsync()
+    {
+        if (!EsAdministrador) return;
+
+        VistaActual = _inventarioViewModel;
+        TituloVistaActual = "Inventario";
+        await _inventarioViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAComprasAsync()
+    {
+        if (!EsAdministrador) return;
+
+        VistaActual = _comprasViewModel;
+        TituloVistaActual = "Compras";
+        await _comprasViewModel.CargarAsync();
     }
 
     [RelayCommand]

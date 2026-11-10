@@ -58,15 +58,20 @@ public partial class App : Application
             var usuarioService = new UsuarioService(dbContext, sesion);
             var productoService = new ProductoService(dbContext, sesion);
             var proveedorService = new ProveedorService(dbContext, sesion);
+            var inventarioService = new InventarioService(dbContext, sesion);
+            var compraService = new CompraService(dbContext, sesion);
 
             var inicioViewModel = new InicioViewModel();
             var productosViewModel = new ProductosViewModel(productoService);
             var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
+            var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
+            var comprasViewModel = new ComprasViewModel(
+                compraService, proveedorService, productoService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
 
             var mainViewModel = new MainViewModel(
                 inicioViewModel, productosViewModel, proveedoresViewModel,
-                usuariosViewModel, sesion);
+                inventarioViewModel, comprasViewModel, usuariosViewModel, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

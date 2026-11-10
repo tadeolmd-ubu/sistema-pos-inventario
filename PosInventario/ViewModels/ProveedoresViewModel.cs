@@ -35,7 +35,9 @@ public partial class ProveedoresViewModel : OperacionViewModel
         SelectedProveedor is not null && SelectedProveedor.Activo == 1;
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+
+    private async Task CargarDatosAsync()
     {
         if (_proveedorService is null) return;
 
@@ -45,7 +47,7 @@ public partial class ProveedoresViewModel : OperacionViewModel
             : await _proveedorService.ObtenerActivosAsync());
 
         Filtrar();
-    });
+    }
 
     partial void OnVerInactivosChanged(bool value) => _ = CargarAsync();
 
@@ -101,7 +103,7 @@ public partial class ProveedoresViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -114,7 +116,7 @@ public partial class ProveedoresViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     [RelayCommand]
@@ -127,7 +129,7 @@ public partial class ProveedoresViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
-            await CargarAsync();
+            await CargarDatosAsync();
     });
 
     private void Filtrar()
