@@ -25,6 +25,35 @@ public class VentaService
             .ThenByDescending(v => v.Id)
             .ToListAsync();
 
+    public async Task<List<Venta>> ObtenerDelDiaAsync()
+    {
+        var desde = DateTime.Today;
+        var hasta = desde.AddDays(1);
+
+        return await _db.Ventas
+            .AsNoTracking()
+            .Include(v => v.Usuario)
+            .Where(v => v.Estado == EstadoVenta.Completada &&
+                        v.Fecha >= desde && v.Fecha < hasta)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .ToListAsync();
+    }
+
+    public async Task<List<Venta>> ObtenerRecientesAsync(int limite = 10)
+    {
+        if (limite <= 0)
+            limite = 10;
+
+        return await _db.Ventas
+            .AsNoTracking()
+            .Include(v => v.Usuario)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .Take(limite)
+            .ToListAsync();
+    }
+
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
         MetodoPago metodoPago,

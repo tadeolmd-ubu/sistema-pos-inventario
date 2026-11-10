@@ -63,7 +63,8 @@ public partial class App : Application
             var cajaService = new CajaService(dbContext, sesion);
             var ventaService = new VentaService(dbContext, sesion);
 
-            var inicioViewModel = new InicioViewModel();
+            var inicioViewModel = new InicioViewModel(
+                ventaService, productoService, cajaService, compraService, sesion);
             var cajaViewModel = new CajaViewModel(
                 cajaService, ventaService, productoService, sesion);
             var productosViewModel = new ProductosViewModel(productoService);

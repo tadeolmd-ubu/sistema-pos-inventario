@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
              xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:models="using:PosInventario.Models"
              xmlns:vm="using:PosInventario.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
              d:DataContext="{x:Static dt:DesignTimeData.Inicio}"
@@ -11,18 +13,221 @@
 
     <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="20">
+            <StackPanel Spacing="18">
 
-                <TextBlock Text="Inicio" Classes="sectionTitle"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Inicio" Classes="sectionTitle"/>
+                        <TextBlock Text="Resumen del día" Classes="caption"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Actualizar"
+                            Classes="secondary"
+                            Command="{Binding CargarCommand}"/>
+                </Grid>
 
-                <Border Classes="card" Padding="24">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Base lista" Classes="subsection"/>
-                        <TextBlock Text="El modelo de datos está mapeado. El próximo paso es implementar los servicios del dominio."
-                                   Classes="caption"
-                                   TextWrapping="Wrap"/>
+                <controls:ResponsiveColumnsGrid WideColumns="4"
+                                                NarrowColumns="2"
+                                                Breakpoint="900"
+                                                Spacing="18">
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Ventas de hoy" Classes="caption"/>
+                            <TextBlock Text="{Binding VentasDelDia}"
+                                       FontSize="30"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding TotalDelDiaTexto}" Classes="caption"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Ticket promedio" Classes="caption"/>
+                            <TextBlock Text="{Binding TicketPromedioTexto}"
+                                       FontSize="30"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Por venta" Classes="caption"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Caja" Classes="caption"/>
+                            <TextBlock Text="{Binding EstadoCajaTexto}"
+                                       FontSize="24"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding UsuarioCajaTexto}" Classes="caption"/>
+                            <TextBlock Text="{Binding EfectivoEsperadoTexto, StringFormat='Esperado {0}'}"
+                                       Classes="caption"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20" IsVisible="{Binding EsAdministrador}">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Stock bajo" Classes="caption"/>
+                            <TextBlock Text="{Binding ProductosStockBajo}"
+                                       FontSize="30"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding ProductosActivos, StringFormat='{}{0} productos activos'}"
+                                       Classes="caption"/>
+                        </StackPanel>
+                    </Border>
+
+                </controls:ResponsiveColumnsGrid>
+
+                <Border Classes="card" Padding="22">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Ventas por método" Classes="subsection"/>
+
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Efectivo" Classes="caption"/>
+                                <TextBlock Text="{Binding TotalEfectivoTexto}"
+                                           FontSize="22"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="Tarjeta" Classes="caption"/>
+                                <TextBlock Text="{Binding TotalTarjetaTexto}"
+                                           FontSize="22"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="2">
+                                <TextBlock Text="Transferencia" Classes="caption"/>
+                                <TextBlock Text="{Binding TotalTransferenciaTexto}"
+                                           FontSize="22"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
+
+                <Border Classes="cardFlat" Padding="18">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Últimas ventas" Classes="subsection"/>
+
+                        <Grid>
+                            <ListBox ItemsSource="{Binding UltimasVentas}"
+                                     MaxHeight="320"
+                                     Classes="entityList">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Venta">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Id, StringFormat='V-{0:000000}'}"
+                                                           FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                               Classes="caption"/>
+                                                    <TextBlock Text="·" Classes="caption"/>
+                                                    <TextBlock Text="{Binding MetodoPago}" Classes="caption"/>
+                                                    <TextBlock Text="·" Classes="caption"/>
+                                                    <TextBlock Text="{Binding Usuario.Nombre}" Classes="caption"/>
+                                                    <TextBlock Text="·" Classes="caption"/>
+                                                    <TextBlock Text="{Binding Estado}" Classes="caption"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Total, StringFormat='{}{0:0.00}'}"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <TextBlock Text="Sin ventas todavía"
+                                       Classes="caption"
+                                       IsVisible="{Binding !HayUltimasVentas}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <controls:ResponsiveColumnsGrid WideColumns="2"
+                                                NarrowColumns="1"
+                                                Breakpoint="900"
+                                                Spacing="18"
+                                                IsVisible="{Binding EsAdministrador}">
+
+                    <Border Classes="cardFlat" Padding="18">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Stock bajo" Classes="subsection"/>
+
+                            <Grid>
+                                <ListBox ItemsSource="{Binding StockBajo}"
+                                         MaxHeight="200"
+                                         Classes="entityList">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Producto">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Sku}" Classes="caption"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                                               FontWeight="SemiBold"
+                                                               HorizontalAlignment="Right"/>
+                                                    <TextBlock Text="{Binding StockMinimo, StringFormat='mín. {0}'}"
+                                                               Classes="caption"
+                                                               HorizontalAlignment="Right"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Text="Sin stock bajo"
+                                           Classes="caption"
+                                           IsVisible="{Binding !HayStockBajo}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="cardFlat" Padding="18">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Últimas compras" Classes="subsection"/>
+
+                            <Grid>
+                                <ListBox ItemsSource="{Binding UltimasCompras}"
+                                         MaxHeight="200"
+                                         Classes="entityList">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Compra">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding Proveedor.Nombre}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy}'}"
+                                                               Classes="caption"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Total, StringFormat='{}{0:0.00}'}"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Text="Sin compras"
+                                           Classes="caption"
+                                           IsVisible="{Binding !HayCompras}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </controls:ResponsiveColumnsGrid>
 
             </StackPanel>
         </ScrollViewer>
