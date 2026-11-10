@@ -8,6 +8,7 @@ namespace PosInventario.ViewModels;
 public partial class MainViewModel : OperacionViewModel
 {
     private readonly InicioViewModel _inicioViewModel;
+    private readonly CajaViewModel _cajaViewModel;
     private readonly ProductosViewModel _productosViewModel;
     private readonly ProveedoresViewModel _proveedoresViewModel;
     private readonly InventarioViewModel _inventarioViewModel;
@@ -17,6 +18,7 @@ public partial class MainViewModel : OperacionViewModel
 
     public MainViewModel(
         InicioViewModel inicioViewModel,
+        CajaViewModel cajaViewModel,
         ProductosViewModel productosViewModel,
         ProveedoresViewModel proveedoresViewModel,
         InventarioViewModel inventarioViewModel,
@@ -25,6 +27,7 @@ public partial class MainViewModel : OperacionViewModel
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
+        _cajaViewModel = cajaViewModel;
         _productosViewModel = productosViewModel;
         _proveedoresViewModel = proveedoresViewModel;
         _inventarioViewModel = inventarioViewModel;
@@ -33,6 +36,7 @@ public partial class MainViewModel : OperacionViewModel
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
+        _cajaViewModel.MensajeSolicitado += SolicitarMensaje;
         _productosViewModel.MensajeSolicitado += SolicitarMensaje;
         _proveedoresViewModel.MensajeSolicitado += SolicitarMensaje;
         _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -73,6 +77,14 @@ public partial class MainViewModel : OperacionViewModel
         VistaActual = _inicioViewModel;
         TituloVistaActual = "Inicio";
         await _inicioViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrACajaAsync()
+    {
+        VistaActual = _cajaViewModel;
+        TituloVistaActual = "Caja";
+        await _cajaViewModel.CargarAsync();
     }
 
     [RelayCommand]
