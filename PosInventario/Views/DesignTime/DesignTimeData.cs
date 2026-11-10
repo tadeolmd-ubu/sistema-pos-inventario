@@ -13,6 +13,18 @@ public sealed class DesignTimeData
     public static readonly InventarioDesignTime Inventario = new();
     public static readonly ComprasDesignTime Compras = new();
     public static readonly UsuariosDesignTime Usuarios = new();
+    public static readonly ConfiguracionDesignTime Configuracion = new();
+}
+
+public sealed class ConfiguracionDesignTime : ConfiguracionViewModel
+{
+    public ConfiguracionDesignTime()
+    {
+        RutaBaseDatos = "/home/usuario/.local/share/SistemaInventario/SistemaInventario.db";
+        CarpetaSugerida = "/home/usuario/.local/share/SistemaInventario/Respaldos";
+        UltimoRespaldoTexto =
+            "/home/usuario/.local/share/SistemaInventario/Respaldos/respaldo_20261110_101500_abcd.db";
+    }
 }
 
 public sealed class InicioDesignTime : InicioViewModel

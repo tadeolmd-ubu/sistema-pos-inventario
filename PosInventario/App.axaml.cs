@@ -73,11 +73,13 @@ public partial class App : Application
             var comprasViewModel = new ComprasViewModel(
                 compraService, proveedorService, productoService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
+            var configuracionViewModel = new ConfiguracionViewModel(
+                respaldoService, rutaBaseDatos, sesion);
 
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
-                usuariosViewModel, sesion);
+                usuariosViewModel, configuracionViewModel, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 
