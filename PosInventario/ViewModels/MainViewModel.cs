@@ -14,6 +14,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly InventarioViewModel _inventarioViewModel;
     private readonly ComprasViewModel _comprasViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
+    private readonly ConfiguracionViewModel _configuracionViewModel;
     private readonly SesionActual _sesion;
 
     public MainViewModel(
@@ -24,6 +25,7 @@ public partial class MainViewModel : OperacionViewModel
         InventarioViewModel inventarioViewModel,
         ComprasViewModel comprasViewModel,
         UsuariosViewModel usuariosViewModel,
+        ConfiguracionViewModel configuracionViewModel,
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
@@ -33,6 +35,7 @@ public partial class MainViewModel : OperacionViewModel
         _inventarioViewModel = inventarioViewModel;
         _comprasViewModel = comprasViewModel;
         _usuariosViewModel = usuariosViewModel;
+        _configuracionViewModel = configuracionViewModel;
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -42,6 +45,7 @@ public partial class MainViewModel : OperacionViewModel
         _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
         _comprasViewModel.MensajeSolicitado += SolicitarMensaje;
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
+        _configuracionViewModel.MensajeSolicitado += SolicitarMensaje;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         TextoVersionMenu = $"v{version?.ToString(3) ?? "1.0.0"} · Sistema de inventario";
@@ -135,6 +139,15 @@ public partial class MainViewModel : OperacionViewModel
         VistaActual = _usuariosViewModel;
         TituloVistaActual = "Usuarios";
         await _usuariosViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private void IrAConfiguracion()
+    {
+        if (!EsAdministrador) return;
+
+        VistaActual = _configuracionViewModel;
+        TituloVistaActual = "Configuración";
     }
 
     [RelayCommand]

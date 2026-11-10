@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Configuracion}"
+             x:DataType="vm:ConfiguracionViewModel"
+             x:Class="PosInventario.Views.ConfiguracionView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="18" MaxWidth="900" HorizontalAlignment="Left">
+
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Configuración" Classes="sectionTitle"/>
+                    <TextBlock Text="Opciones generales del sistema" Classes="caption"/>
+                </StackPanel>
+
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Base de datos" Classes="subsection"/>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Ruta actual" Classes="fieldLabel"/>
+                            <TextBlock Text="{Binding RutaBaseDatos}"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Respaldos" Classes="subsection"/>
+                        <TextBlock Text="Crea una copia de seguridad completa del archivo SQLite. El respaldo no modifica la base actual."
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Carpeta sugerida" Classes="fieldLabel"/>
+                            <TextBlock Text="{Binding CarpetaSugerida}"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Crear respaldo aquí"
+                                    Classes="primary"
+                                    Command="{Binding CrearRespaldoSugeridoCommand}"/>
+                            <Button Content="Elegir otra carpeta..."
+                                    Classes="secondary"
+                                    Click="ElegirCarpeta_Click"/>
+                        </StackPanel>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}"
+                                CornerRadius="10"
+                                Padding="12"
+                                IsVisible="{Binding HayUltimoRespaldo}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Último respaldo" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding UltimoRespaldoTexto}"
+                                           Classes="caption"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding MensajeOperacion}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>
