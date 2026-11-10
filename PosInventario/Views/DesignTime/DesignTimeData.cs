@@ -8,6 +8,7 @@ public sealed class DesignTimeData
 {
     public static readonly InicioDesignTime Inicio = new();
     public static readonly ProductosDesignTime Productos = new();
+    public static readonly ProveedoresDesignTime Proveedores = new();
     public static readonly UsuariosDesignTime Usuarios = new();
 }
 
@@ -35,6 +36,36 @@ public sealed class ProductosDesignTime : ProductosViewModel
 
         ProductosItems.Add(producto);
         SelectedProducto = producto;
+    }
+}
+
+public sealed class ProveedoresDesignTime : ProveedoresViewModel
+{
+    public ProveedoresDesignTime()
+    {
+        var activo = new Proveedor
+        {
+            Id = 1,
+            Nombre = "Distribuidora Central",
+            Telefono = "11 5555-1000",
+            Email = "ventas@central.com",
+            Direccion = "Av. Siempre Viva 123",
+            Activo = 1,
+            FechaCreacion = DateTime.Now
+        };
+
+        var inactivo = new Proveedor
+        {
+            Id = 2,
+            Nombre = "Proveedor Histórico",
+            Telefono = "11 5555-2000",
+            Activo = 0,
+            FechaCreacion = DateTime.Now
+        };
+
+        ProveedoresItems.Add(activo);
+        ProveedoresItems.Add(inactivo);
+        SelectedProveedor = activo;
     }
 }
 
