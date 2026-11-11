@@ -1,4 +1,3 @@
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Service;
@@ -15,6 +14,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly ComprasViewModel _comprasViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly ConfiguracionViewModel _configuracionViewModel;
+    private readonly VersionService _versionService;
     private readonly SesionActual _sesion;
 
     public MainViewModel(
@@ -26,6 +26,7 @@ public partial class MainViewModel : OperacionViewModel
         ComprasViewModel comprasViewModel,
         UsuariosViewModel usuariosViewModel,
         ConfiguracionViewModel configuracionViewModel,
+        VersionService versionService,
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
@@ -36,6 +37,7 @@ public partial class MainViewModel : OperacionViewModel
         _comprasViewModel = comprasViewModel;
         _usuariosViewModel = usuariosViewModel;
         _configuracionViewModel = configuracionViewModel;
+        _versionService = versionService;
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -47,8 +49,8 @@ public partial class MainViewModel : OperacionViewModel
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
         _configuracionViewModel.MensajeSolicitado += SolicitarMensaje;
 
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        TextoVersionMenu = $"v{version?.ToString(3) ?? "1.0.0"} · Sistema de inventario";
+        var version = _versionService.VersionLocal;
+        TextoVersionMenu = $"v{version} · Sistema de inventario";
 
         VistaActual = _inicioViewModel;
         TituloVistaActual = "Inicio";
@@ -73,6 +75,12 @@ public partial class MainViewModel : OperacionViewModel
         NombreUsuarioActual = _sesion.Usuario?.Nombre ?? string.Empty;
         RolUsuarioActual = _sesion.Usuario?.Rol.ToString() ?? string.Empty;
         EsAdministrador = _sesion.EsAdministrador;
+    }
+
+    public async Task ActualizarVersionAsync()
+    {
+        var version = await _versionService.ObtenerVersionAsync();
+        TextoVersionMenu = $"v{version} · Sistema de inventario";
     }
 
     private void CambiarVista(OperacionViewModel vista, string titulo)
