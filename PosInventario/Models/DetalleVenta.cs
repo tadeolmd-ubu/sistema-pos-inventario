@@ -11,6 +11,17 @@ public class DetalleVenta
     public Producto Producto { get; set; } = null!;
 
     public int Cantidad { get; set; }
+
+    /// <summary>
+    /// Unidades ya devueltas de esta línea. No puede superar la cantidad vendida.
+    /// </summary>
+    public int CantidadDevuelta { get; set; }
+
     public decimal PrecioUnitario { get; set; }
     public decimal Subtotal { get; set; }
+
+    /// <summary>
+    /// Unidades de la línea que aún se pueden devolver.
+    /// </summary>
+    public int CantidadPendiente => Cantidad - CantidadDevuelta;
 }
