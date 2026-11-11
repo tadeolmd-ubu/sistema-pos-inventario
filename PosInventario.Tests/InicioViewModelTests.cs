@@ -109,7 +109,13 @@ public class InicioViewModelTests
             var total = producto.PrecioVenta;
 
             var resultado = await VentaService.RegistrarAsync(
-                [new LineaVenta(producto.Id, 1)], metodo, total);
+                [new LineaVenta(producto.Id, 1)],
+                [
+                    new LineaPago(
+                        metodo,
+                        total,
+                        metodo == MetodoPago.Efectivo ? total : null)
+                ]);
 
             Assert.True(resultado.Correcta, resultado.Mensaje);
             return resultado.Valor!;
@@ -259,5 +265,32 @@ public class InicioViewModelTests
         Assert.True(vm.CajaAbierta);
         Assert.Equal(1, vm.VentasDelDia);
         Assert.Single(vm.UltimasVentas);
+    }
+
+    [Fact]
+    public async Task CalculaTotalesDeUnaVentaMixta()
+    {
+        await using var prueba = await PruebaInicio.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-INI", stock: 5);
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var vm = prueba.CrearVista();
+        await vm.CargarAsync();
+
+        Assert.Equal(1, vm.VentasDelDia);
+        Assert.Equal(100m, vm.TotalDelDia);
+        Assert.Equal(40m, vm.TotalEfectivo);
+        Assert.Equal(60m, vm.TotalTarjeta);
+        Assert.Equal(0m, vm.TotalTransferencia);
     }
 }

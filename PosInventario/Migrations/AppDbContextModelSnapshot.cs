@@ -369,6 +369,47 @@ namespace PosInventario.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PosInventario.Models.PagoVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("IdVenta")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idVenta");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("metodo");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<decimal>("MontoDevuelto")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("montoDevuelto");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdVenta");
+
+                    b.ToTable("PagoVenta", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PagoVenta_metodo", "metodo IN ('Efectivo', 'Tarjeta', 'Transferencia')");
+
+                            t.HasCheckConstraint("CK_PagoVenta_monto", "monto > 0");
+
+                            t.HasCheckConstraint("CK_PagoVenta_montoDevuelto", "montoDevuelto >= 0 AND montoDevuelto <= monto");
+                        });
+                });
+
             modelBuilder.Entity("PosInventario.Models.Producto", b =>
                 {
                     b.Property<int>("Id")
@@ -776,6 +817,17 @@ namespace PosInventario.Migrations
                     b.Navigation("Venta");
                 });
 
+            modelBuilder.Entity("PosInventario.Models.PagoVenta", b =>
+                {
+                    b.HasOne("PosInventario.Models.Venta", "Venta")
+                        .WithMany("Pagos")
+                        .HasForeignKey("IdVenta")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("PosInventario.Models.Venta", b =>
                 {
                     b.HasOne("PosInventario.Models.Caja", "Caja")
@@ -848,6 +900,8 @@ namespace PosInventario.Migrations
                     b.Navigation("Movimientos");
 
                     b.Navigation("MovimientosCaja");
+
+                    b.Navigation("Pagos");
                 });
 #pragma warning restore 612, 618
         }

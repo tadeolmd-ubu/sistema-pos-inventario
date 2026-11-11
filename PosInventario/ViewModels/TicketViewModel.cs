@@ -45,15 +45,28 @@ public partial class TicketViewModel : ObservableObject
 
     public string TotalNetoTexto => Venta.TotalNeto.ToString("0.00", Cultura);
 
-    public string MetodoPagoTexto => Venta.MetodoPago.ToString();
+    public IReadOnlyList<PagoVenta> Pagos => Venta.Pagos.ToList();
 
-    public bool EsEfectivo => Venta.MetodoPago == MetodoPago.Efectivo;
+    public bool HayPagos => Pagos.Count > 0;
+
+    public bool HayPagoEfectivo =>
+        Venta.Pagos.Count > 0
+            ? Venta.Pagos.Any(p => p.Metodo == MetodoPago.Efectivo)
+            : Venta.MetodoPago == MetodoPago.Efectivo;
+
+    public decimal EfectivoRecibido =>
+        Venta.Pagos.Count > 0
+            ? Venta.Pagos
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.Monto) + Venta.Vuelto
+            : Venta.MontoRecibido;
+
+    public string MontoRecibidoTexto =>
+        EfectivoRecibido.ToString("0.00", Cultura);
 
     public string EstadoTexto => Venta.Estado.ToString();
 
     public bool EsAnulada => Venta.Estado == EstadoVenta.Anulada;
-
-    public string MontoRecibidoTexto => Venta.MontoRecibido.ToString("0.00", Cultura);
 
     public string VueltoTexto => Venta.Vuelto.ToString("0.00", Cultura);
 

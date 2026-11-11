@@ -134,7 +134,7 @@ public class TicketImpresionTests
 
         Assert.Contains("Descuento", texto);
         Assert.Contains("46.00", texto);
-        Assert.Contains("Paga con", texto);
+        Assert.Contains("Recibido", texto);
         Assert.Contains("Cambio", texto);
     }
 
@@ -144,7 +144,7 @@ public class TicketImpresionTests
         var texto = GeneradorTicketTexto.Generar(
             CrearVenta(metodoPago: MetodoPago.Tarjeta), AnchoTicket.Mm58);
 
-        Assert.DoesNotContain("Paga con", texto);
+        Assert.DoesNotContain("Recibido", texto);
         Assert.DoesNotContain("Cambio", texto);
     }
 
@@ -244,5 +244,40 @@ public class TicketImpresionTests
         Assert.True(vm.EsMensajeError);
         Assert.False(vm.Imprimiendo);
         Assert.Contains("No se pudo imprimir", vm.MensajeImpresion);
+    }
+
+    [Fact]
+    public void IncluyeDesgloseDePagosMixtos()
+    {
+        var venta = CrearVenta();
+        venta.MetodoPago = MetodoPago.Mixto;
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Efectivo,
+            Monto = 20m
+        });
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Tarjeta,
+            Monto = 31m
+        });
+
+        var texto = GeneradorTicketTexto.Generar(venta, AnchoTicket.Mm58);
+
+        Assert.Contains("Efectivo", texto);
+        Assert.Contains("Tarjeta", texto);
+        Assert.Contains(
+            texto.Split('\n'),
+            linea => linea.Contains("Recibido") && linea.EndsWith("29.00"));
+        Assert.Contains(
+            texto.Split('\n'),
+            linea => linea.Contains("Cambio") && linea.EndsWith("9.00"));
+
+        var vm = new TicketViewModel(
+            venta, new ImpresoraFalsa(new Resultado(true, "ok")));
+
+        Assert.True(vm.HayPagoEfectivo);
+        Assert.Equal(2, vm.Pagos.Count);
+        Assert.Equal(29m, vm.EfectivoRecibido);
     }
 }

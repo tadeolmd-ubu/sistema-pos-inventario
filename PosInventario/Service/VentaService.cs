@@ -20,6 +20,7 @@ public class VentaService
         => await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
             .Where(v => v.IdCaja == idCaja)
@@ -35,6 +36,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Pagos)
             .Where(v => v.Estado == EstadoVenta.Completada &&
                         v.Fecha >= desde && v.Fecha < hasta)
             .OrderByDescending(v => v.Fecha)
@@ -50,6 +52,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
             .OrderByDescending(v => v.Fecha)
@@ -77,6 +80,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
             .Where(v => v.Fecha >= inicio && v.Fecha < fin)
@@ -88,8 +92,7 @@ public class VentaService
 
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
-        MetodoPago metodoPago,
-        decimal montoRecibido,
+        IReadOnlyList<LineaPago> pagos,
         decimal descuento = 0m)
     {
         if (!_sesion.Iniciada)
@@ -97,6 +100,9 @@ public class VentaService
 
         if (lineas is null || lineas.Count == 0)
             return new Resultado<Venta>(false, "Agrega al menos un producto.", null);
+
+        if (pagos is null)
+            return new Resultado<Venta>(false, "Agrega al menos un método de pago.", null);
 
         var caja = await _db.Cajas
             .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
@@ -153,22 +159,20 @@ public class VentaService
 
         var total = subtotal - descuento;
 
-        decimal vuelto;
+        var pagosNormalizados = NormalizarPagos(pagos, total, out var errorPagos);
 
-        if (metodoPago == MetodoPago.Efectivo)
-        {
-            if (montoRecibido < total)
-                return new Resultado<Venta>(
-                    false, "El monto recibido es menor al total de la venta.", null);
+        if (errorPagos is not null)
+            return new Resultado<Venta>(false, errorPagos, null);
 
-            vuelto = montoRecibido - total;
-        }
-        else
-        {
-            montoRecibido = total;
-            vuelto = 0m;
-        }
+        var efectivoAplicado = pagosNormalizados
+            .Where(p => p.Metodo == MetodoPago.Efectivo)
+            .Sum(p => p.Monto);
 
+        var efectivoRecibido = pagosNormalizados
+            .Where(p => p.Metodo == MetodoPago.Efectivo)
+            .Sum(p => p.MontoRecibido ?? 0m);
+
+        var vuelto = efectivoRecibido - efectivoAplicado;
         var momento = DateTime.Now;
 
         var venta = new Venta
@@ -180,11 +184,26 @@ public class VentaService
             Subtotal = subtotal,
             Descuento = descuento,
             Total = total,
-            MetodoPago = metodoPago,
-            MontoRecibido = montoRecibido,
+            MetodoPago = pagosNormalizados.Count switch
+            {
+                0 => MetodoPago.Efectivo,
+                1 => pagosNormalizados[0].Metodo,
+                _ => MetodoPago.Mixto
+            },
+            MontoRecibido = total + vuelto,
             Vuelto = vuelto,
             Estado = EstadoVenta.Completada
         };
+
+        foreach (var pago in pagosNormalizados)
+        {
+            venta.Pagos.Add(new PagoVenta
+            {
+                Metodo = pago.Metodo,
+                Monto = pago.Monto,
+                MontoDevuelto = 0m
+            });
+        }
 
         foreach (var linea in lineas)
         {
@@ -220,14 +239,14 @@ public class VentaService
         }
 
         // Solo el efectivo entra físicamente a la caja.
-        if (metodoPago == MetodoPago.Efectivo && total > 0)
+        if (efectivoAplicado > 0)
         {
             venta.MovimientosCaja.Add(new MovimientoCaja
             {
                 IdCaja = caja.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimientoCaja.Venta,
-                Monto = total,
+                Monto = efectivoAplicado,
                 Descripcion = "Venta",
                 Fecha = momento,
                 Venta = venta
@@ -237,9 +256,74 @@ public class VentaService
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync();
 
-        var mensaje = "Venta registrada.";
+        return new Resultado<Venta>(true, "Venta registrada.", venta);
+    }
 
-        return new Resultado<Venta>(true, mensaje, venta);
+    /// <summary>
+    /// Valida y completa los pagos: una fila por método, montos positivos,
+    /// suma exacta al total y efectivo recibido suficiente. Una venta sin
+    /// costo (descuento del 100%) no necesita filas de pago.
+    /// </summary>
+    private static List<LineaPago> NormalizarPagos(
+        IReadOnlyList<LineaPago> pagos, decimal total, out string? error)
+    {
+        error = null;
+        var normalizados = new List<LineaPago>();
+
+        if (total == 0)
+            return normalizados;
+
+        if (pagos.Count == 0)
+        {
+            error = "Agrega al menos un método de pago.";
+            return normalizados;
+        }
+
+        if (pagos.Any(p => p.Metodo == MetodoPago.Mixto))
+        {
+            error = "El método Mixto no es un pago válido.";
+            return normalizados;
+        }
+
+        if (pagos.Select(p => p.Metodo).Distinct().Count() != pagos.Count)
+        {
+            error = "No se puede repetir el mismo método de pago.";
+            return normalizados;
+        }
+
+        foreach (var pago in pagos)
+        {
+            if (pago.Monto <= 0)
+            {
+                error = "El monto de cada pago debe ser mayor que 0.";
+                return normalizados;
+            }
+
+            if (pago.Metodo == MetodoPago.Efectivo)
+            {
+                var recibido = pago.MontoRecibido ?? pago.Monto;
+
+                if (recibido < pago.Monto)
+                {
+                    error = "El efectivo recibido es menor al monto en efectivo.";
+                    return normalizados;
+                }
+
+                normalizados.Add(pago with { MontoRecibido = recibido });
+            }
+            else
+            {
+                normalizados.Add(pago with { MontoRecibido = null });
+            }
+        }
+
+        if (normalizados.Sum(p => p.Monto) != total)
+        {
+            error = "La suma de los pagos debe ser igual al total de la venta.";
+            return normalizados;
+        }
+
+        return normalizados;
     }
 
     /// <summary>
@@ -270,6 +354,7 @@ public class VentaService
 
         var venta = await _db.Ventas
             .Include(v => v.Caja)
+            .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
             .FirstOrDefaultAsync(v => v.Id == idVenta);
@@ -333,26 +418,56 @@ public class VentaService
             }
         }
 
-        // El efectivo solo puede salir de una caja abierta: la original si
-        // aún está abierta o, si ya se cerró, la abierta actual.
-        Caja? cajaReembolso;
-
-        if (venta.Caja is not null && venta.Caja.Estado == EstadoCaja.Abierta)
+        // Compatibilidad: una venta anterior a la migración de pagos podría
+        // no tener filas. Se crea una con su método y saldo original.
+        if (venta.Pagos.Count == 0 && venta.Total > 0)
         {
-            cajaReembolso = venta.Caja;
-        }
-        else
-        {
-            cajaReembolso = await _db.Cajas
-                .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
+            var metodo = venta.MetodoPago == MetodoPago.Mixto
+                ? MetodoPago.Efectivo
+                : venta.MetodoPago;
 
-            if (cajaReembolso is null && venta.MetodoPago == MetodoPago.Efectivo)
-                return new Resultado(false,
-                    "No hay una caja abierta para reembolsar el efectivo. " +
-                    "Abre la caja e inténtalo de nuevo.");
+            venta.Pagos.Add(new PagoVenta
+            {
+                Metodo = metodo,
+                Monto = venta.Total,
+                MontoDevuelto = venta.TotalDevuelto
+            });
         }
 
         var reembolso = CalcularReembolso(venta, lineas);
+        var reembolsos = RepartirReembolso(venta.Pagos.ToList(), reembolso);
+
+        if (reembolsos.Sum(r => r.Monto) != reembolso)
+            return new Resultado(false,
+                "No se pudo distribuir el reembolso entre los métodos de pago.");
+
+        var reembolsoEfectivo = reembolsos
+            .Where(r => r.Pago.Metodo == MetodoPago.Efectivo)
+            .Sum(r => r.Monto);
+
+        // El efectivo solo puede salir de una caja abierta: la original si
+        // aún está abierta o, si ya se cerró, la abierta actual. Si la venta
+        // fue 100% electrónica, no se necesita caja.
+        Caja? cajaReembolso = null;
+
+        if (reembolsoEfectivo > 0)
+        {
+            if (venta.Caja is not null && venta.Caja.Estado == EstadoCaja.Abierta)
+            {
+                cajaReembolso = venta.Caja;
+            }
+            else
+            {
+                cajaReembolso = await _db.Cajas
+                    .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
+
+                if (cajaReembolso is null)
+                    return new Resultado(false,
+                        "No hay una caja abierta para reembolsar el efectivo. " +
+                        "Abre la caja e inténtalo de nuevo.");
+            }
+        }
+
         var momento = DateTime.Now;
 
         foreach (var (idDetalle, cantidad) in cantidades)
@@ -380,6 +495,9 @@ public class VentaService
             });
         }
 
+        foreach (var reembolsoPago in reembolsos)
+            reembolsoPago.Pago.MontoDevuelto += reembolsoPago.Monto;
+
         venta.TotalDevuelto += reembolso;
 
         var quedanPendientes = venta.Detalles.Any(d => d.CantidadPendiente > 0);
@@ -391,15 +509,15 @@ public class VentaService
             venta.IdUsuarioAnulacion = _sesion.IdUsuario;
         }
 
-        // Solo el efectivo sale físicamente de la caja.
-        if (venta.MetodoPago == MetodoPago.Efectivo && reembolso > 0 && cajaReembolso is not null)
+        // Solo la parte en efectivo sale físicamente de la caja.
+        if (reembolsoEfectivo > 0 && cajaReembolso is not null)
         {
             _db.MovimientosCaja.Add(new MovimientoCaja
             {
                 IdCaja = cajaReembolso.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimientoCaja.AnulacionVenta,
-                Monto = reembolso,
+                Monto = reembolsoEfectivo,
                 Descripcion = $"Devolución venta V-{venta.Id:000000}",
                 IdVenta = venta.Id,
                 Fecha = momento
@@ -453,5 +571,106 @@ public class VentaService
         }
 
         return Math.Min(reembolso, totalPendiente);
+    }
+
+    /// <summary>
+    /// Reparte el reembolso entre los pagos originales de la venta. Se usan
+    /// los saldos pendientes de cada pago para que las devoluciones parciales
+    /// sucesivas no se desfasen por redondeo.
+    /// </summary>
+    public IReadOnlyList<ReembolsoPago> CalcularReembolsoPorPago(
+        Venta venta, IReadOnlyList<LineaDevolucion>? lineas)
+    {
+        var reembolso = CalcularReembolso(venta, lineas);
+
+        return RepartirReembolso(PagosParaReembolso(venta), reembolso);
+    }
+
+    private static IReadOnlyList<PagoVenta> PagosParaReembolso(Venta venta)
+    {
+        if (venta.Pagos.Count > 0)
+            return venta.Pagos.ToList();
+
+        if (venta.Total <= 0)
+            return [];
+
+        var metodo = venta.MetodoPago == MetodoPago.Mixto
+            ? MetodoPago.Efectivo
+            : venta.MetodoPago;
+
+        return
+        [
+            new PagoVenta
+            {
+                Metodo = metodo,
+                Monto = venta.Total,
+                MontoDevuelto = venta.TotalDevuelto
+            }
+        ];
+    }
+
+    private static List<ReembolsoPago> RepartirReembolso(
+        IReadOnlyList<PagoVenta> pagos, decimal reembolso)
+    {
+        var resultado = new List<ReembolsoPago>();
+
+        if (reembolso <= 0)
+            return resultado;
+
+        var pendientes = pagos
+            .Select(p => new { Pago = p, Pendiente = p.Monto - p.MontoDevuelto })
+            .Where(x => x.Pendiente > 0)
+            .ToList();
+
+        var totalPendiente = pendientes.Sum(x => x.Pendiente);
+
+        if (totalPendiente <= 0)
+            return resultado;
+
+        // Al devolver todo lo pendiente se usan los saldos exactos.
+        if (reembolso >= totalPendiente)
+        {
+            foreach (var pendiente in pendientes)
+                resultado.Add(new ReembolsoPago(pendiente.Pago, pendiente.Pendiente));
+
+            return resultado;
+        }
+
+        var asignado = 0m;
+
+        for (var i = 0; i < pendientes.Count; i++)
+        {
+            var pendiente = pendientes[i];
+            var monto = i == pendientes.Count - 1
+                ? reembolso - asignado
+                : Math.Round(reembolso * pendiente.Pendiente / totalPendiente, 2);
+
+            monto = Math.Clamp(monto, 0m, pendiente.Pendiente);
+
+            if (monto <= 0)
+                continue;
+
+            resultado.Add(new ReembolsoPago(pendiente.Pago, monto));
+            asignado += monto;
+        }
+
+        // Los centavos que deje el redondeo los absorbe el último pago.
+        var diferencia = reembolso - resultado.Sum(r => r.Monto);
+
+        for (var i = resultado.Count - 1; i >= 0 && diferencia != 0; i--)
+        {
+            var actual = resultado[i];
+            var maximo = actual.Pago.Monto - actual.Pago.MontoDevuelto;
+            var ajuste = Math.Clamp(
+                diferencia, -actual.Monto, maximo - actual.Monto);
+
+            if (ajuste == 0)
+                continue;
+
+            resultado[i] = actual with { Monto = actual.Monto + ajuste };
+            diferencia -= ajuste;
+        }
+
+        return resultado;
     }
 }

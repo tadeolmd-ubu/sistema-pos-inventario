@@ -180,4 +180,48 @@ public class AjustesV1Tests
         Assert.Equal("V-000007", ticket.Numero);
         Assert.Single(ticket.Detalles);
     }
+
+    [Fact]
+    public async Task HistorialSeparaPagosMixtos()
+    {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
+        var caja = new Caja
+        {
+            Id = 1,
+            FechaApertura = DateTime.Now,
+            MontoInicial = 1000m,
+            Estado = EstadoCaja.Cerrada
+        };
+
+        var venta = new Venta
+        {
+            Id = 3,
+            Fecha = DateTime.Now,
+            Subtotal = 100m,
+            Total = 100m,
+            MetodoPago = MetodoPago.Mixto,
+            Estado = EstadoVenta.Completada
+        };
+
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Efectivo,
+            Monto = 40m
+        });
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Tarjeta,
+            Monto = 60m
+        });
+
+        var vm = new CajaHistorialViewModel(
+            caja, [venta],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
+
+        Assert.Equal(40m, vm.TotalEfectivo);
+        Assert.Equal(60m, vm.TotalTarjeta);
+        Assert.Equal(0m, vm.TotalTransferencia);
+        Assert.Equal("100.00", vm.TotalVentasTexto);
+    }
 }
