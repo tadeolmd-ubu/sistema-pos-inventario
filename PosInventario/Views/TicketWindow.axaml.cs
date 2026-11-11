@@ -17,11 +17,18 @@ public partial class TicketWindow : Window
                 Title = $"Ticket {viewModel.Numero}";
         };
 
-        KeyDown += Ticket_KeyDown;
+        AddHandler(KeyDownEvent, Ticket_KeyDown, RoutingStrategies.Tunnel);
     }
 
     private async void Ticket_KeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            Close();
+            return;
+        }
+
         if (e.Key != Key.P || !e.KeyModifiers.HasFlag(KeyModifiers.Control))
             return;
 
