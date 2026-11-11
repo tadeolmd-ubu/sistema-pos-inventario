@@ -73,6 +73,7 @@ public partial class App : Application
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
             var comprasViewModel = new ComprasViewModel(
                 compraService, proveedorService, productoService);
+            var ventasViewModel = new VentasViewModel(ventaService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
             var configuracionViewModel = new ConfiguracionViewModel(
                 respaldoService, rutaBaseDatos, sesion);
@@ -80,7 +81,8 @@ public partial class App : Application
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
-                usuariosViewModel, configuracionViewModel, versionService, sesion);
+                ventasViewModel, usuariosViewModel, configuracionViewModel,
+                versionService, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

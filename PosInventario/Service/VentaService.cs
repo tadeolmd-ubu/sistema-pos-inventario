@@ -56,6 +56,34 @@ public class VentaService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Historial de ventas entre dos fechas (inclusive), con el cajero y el
+    /// detalle necesarios para ver el ticket. Incluye ventas anuladas.
+    /// </summary>
+    public async Task<List<Venta>> ObtenerHistorialAsync(
+        DateTime desde, DateTime hasta, int limite = 500)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (limite <= 0)
+            limite = 500;
+
+        return await _db.Ventas
+            .AsNoTracking()
+            .Include(v => v.Usuario)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .Where(v => v.Fecha >= inicio && v.Fecha < fin)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .Take(limite)
+            .ToListAsync();
+    }
+
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
         MetodoPago metodoPago,

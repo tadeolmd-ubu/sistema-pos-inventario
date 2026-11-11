@@ -4,6 +4,7 @@ using PosInventario.Data;
 using PosInventario.Models;
 using PosInventario.Models.Enums;
 using PosInventario.Service;
+using PosInventario.ViewModels;
 
 namespace PosInventario.Tests;
 
@@ -203,5 +204,94 @@ public class VentaServiceTests
         Assert.Single(recientes);
         Assert.Single(recientes[0].Detalles);
         Assert.NotNull(recientes[0].Detalles.First().Producto);
+    }
+
+    [Fact]
+    public async Task ObtenerHistorialFiltraPorRangoInclusive()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("VTA-007");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var hoy = await prueba.VenderAsync(producto);
+        var vieja = await prueba.VenderAsync(producto);
+
+        var viejaEnBase = await prueba.Db.Ventas.FirstAsync(v => v.Id == vieja.Id);
+        viejaEnBase.Fecha = DateTime.Today.AddDays(-10).AddHours(10);
+        await prueba.Db.SaveChangesAsync();
+
+        var historial = await prueba.VentaService.ObtenerHistorialAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today);
+
+        Assert.Single(historial);
+        Assert.Equal(hoy.Id, historial[0].Id);
+        Assert.NotNull(historial[0].Usuario);
+        Assert.NotEmpty(historial[0].Detalles);
+    }
+
+    [Fact]
+    public async Task VentasViewModelOcultaAnuladasPorDefecto()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("VTA-008");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var primera = await prueba.VenderAsync(producto);
+        await prueba.VenderAsync(producto);
+
+        var anulacion = await prueba.VentaService.AnularAsync(primera.Id);
+        Assert.True(anulacion.Correcta, anulacion.Mensaje);
+
+        var vm = new VentasViewModel(prueba.VentaService)
+        {
+            Desde = new DateTimeOffset(DateTime.Today.AddDays(-1)),
+            Hasta = new DateTimeOffset(DateTime.Today)
+        };
+
+        await vm.CargarAsync();
+
+        Assert.Single(vm.VentasItems);
+        Assert.Equal("100.00", vm.TotalVendidoTexto);
+
+        vm.VerAnuladas = true;
+
+        Assert.Equal(2, vm.VentasItems.Count);
+        Assert.Equal(2, vm.CantidadVentas);
+        Assert.Equal("100.00", vm.TotalVendidoTexto);
+        Assert.Contains(vm.VentasItems, v => v.Estado == EstadoVenta.Anulada);
+    }
+
+    [Fact]
+    public async Task ResumenPagosSeparaMetodosYExcluyeAnuladas()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("VTA-009");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        await prueba.VenderAsync(producto, MetodoPago.Efectivo);
+        await prueba.VenderAsync(producto, MetodoPago.Tarjeta);
+        var transferencia = await prueba.VenderAsync(
+            producto, MetodoPago.Transferencia);
+
+        var anulacion = await prueba.VentaService.AnularAsync(transferencia.Id);
+        Assert.True(anulacion.Correcta, anulacion.Mensaje);
+
+        var caja = await prueba.CajaService.ObtenerCajaAbiertaAsync();
+        var resumen = await prueba.CajaService.ObtenerResumenPagosAsync(caja!.Id);
+
+        Assert.Equal(2, resumen.CantidadVentas);
+        Assert.Equal(100m, resumen.Efectivo);
+        Assert.Equal(100m, resumen.Tarjeta);
+        Assert.Equal(0m, resumen.Transferencia);
+        Assert.Equal(200m, resumen.Total);
     }
 }

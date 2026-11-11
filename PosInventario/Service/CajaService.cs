@@ -92,6 +92,25 @@ public class CajaService
         return await CalcularMontoEsperadoInternoAsync(caja.Id, caja.MontoInicial);
     }
 
+    /// <summary>
+    /// Totales de las ventas completadas de una caja, separados por método de
+    /// pago. Se usa en el cierre y en el detalle del historial.
+    /// </summary>
+    public async Task<ResumenPagosCaja> ObtenerResumenPagosAsync(int idCaja)
+    {
+        var ventas = await _db.Ventas
+            .AsNoTracking()
+            .Where(v => v.IdCaja == idCaja && v.Estado == EstadoVenta.Completada)
+            .Select(v => new { v.MetodoPago, v.Total })
+            .ToListAsync();
+
+        return new ResumenPagosCaja(
+            ventas.Count,
+            ventas.Where(v => v.MetodoPago == MetodoPago.Efectivo).Sum(v => v.Total),
+            ventas.Where(v => v.MetodoPago == MetodoPago.Tarjeta).Sum(v => v.Total),
+            ventas.Where(v => v.MetodoPago == MetodoPago.Transferencia).Sum(v => v.Total));
+    }
+
     public async Task<Resultado<Caja>> AbrirAsync(decimal montoInicial)
     {
         if (!_sesion.Iniciada)

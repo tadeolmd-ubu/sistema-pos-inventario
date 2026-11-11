@@ -181,6 +181,27 @@
 
                     <Button Classes="navPill"
                             IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAVentasCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=VentasViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=VentasViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Ventas"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=VentasViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
                             Command="{Binding IrAUsuariosCommand}"
                             Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=UsuariosViewModel}">
                         <Grid ColumnDefinitions="3,Auto,*">

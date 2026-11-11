@@ -12,6 +12,7 @@ public sealed class DesignTimeData
     public static readonly ProveedoresDesignTime Proveedores = new();
     public static readonly InventarioDesignTime Inventario = new();
     public static readonly ComprasDesignTime Compras = new();
+    public static readonly VentasDesignTime Ventas = new();
     public static readonly UsuariosDesignTime Usuarios = new();
     public static readonly ConfiguracionDesignTime Configuracion = new();
 }
@@ -433,5 +434,53 @@ public sealed class UsuariosDesignTime : UsuariosViewModel
         UsuariosItems.Add(admin);
         UsuariosItems.Add(cajero);
         SelectedUsuario = cajero;
+    }
+}
+
+public sealed class VentasDesignTime : VentasViewModel
+{
+    public VentasDesignTime()
+    {
+        var usuario = new Usuario
+        {
+            Id = 1,
+            NombreUsuario = "admin",
+            Nombre = "Administrador General",
+            Rol = RolUsuario.Administrador,
+            Activo = 1,
+            FechaCreacion = DateTime.Now
+        };
+
+        VentasItems.Add(new Venta
+        {
+            Id = 32,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            IdCaja = 1,
+            Fecha = DateTime.Now.AddHours(-1),
+            Subtotal = 900.00m,
+            Descuento = 50.00m,
+            Total = 850.00m,
+            MetodoPago = MetodoPago.Efectivo,
+            MontoRecibido = 1000.00m,
+            Vuelto = 150.00m,
+            Estado = EstadoVenta.Completada
+        });
+
+        VentasItems.Add(new Venta
+        {
+            Id = 31,
+            IdUsuario = usuario.Id,
+            Usuario = usuario,
+            IdCaja = 1,
+            Fecha = DateTime.Now.AddHours(-3),
+            Subtotal = 250.00m,
+            Total = 250.00m,
+            MetodoPago = MetodoPago.Tarjeta,
+            MontoRecibido = 250.00m,
+            Estado = EstadoVenta.Anulada
+        });
+
+        SelectedVenta = VentasItems[0];
     }
 }
