@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
@@ -14,6 +16,8 @@ namespace PosInventario;
 
 public partial class App : Application
 {
+    private static bool _errorGlobalMostrado;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,8 +25,27 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        RegistroApp.LimpiarAntiguos();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            if (Program.OtraInstancia)
+            {
+                desktop.MainWindow = CrearVentanaInstanciaAbierta();
+
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
+            Dispatcher.UIThread.UnhandledException += (_, e) =>
+            {
+                RegistroApp.Escribir(
+                    "Excepción no controlada en la interfaz.", e.Exception);
+
+                e.Handled = true;
+                MostrarErrorGlobal(desktop, e.Exception);
+            };
+
             string rutaBaseDatos;
             try
             {
@@ -30,6 +53,9 @@ public partial class App : Application
             }
             catch (Exception ex)
             {
+                RegistroApp.Escribir(
+                    "No se pudo preparar la base de datos al iniciar.", ex);
+
                 desktop.MainWindow = new Window
                 {
                     Title = "Error al iniciar Sistema de inventario",
@@ -48,7 +74,13 @@ public partial class App : Application
             }
 
             var opciones = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(new SqliteConnectionStringBuilder { DataSource = rutaBaseDatos }.ToString())
+                .UseSqlite(new SqliteConnectionStringBuilder
+                {
+                    DataSource = rutaBaseDatos,
+                    // Espera a que otra conexión libere la base en lugar de
+                    // fallar de inmediato con "database is locked".
+                    DefaultTimeout = 30
+                }.ToString())
                 .Options;
 
             var dbContext = new AppDbContext(opciones);
@@ -73,6 +105,7 @@ public partial class App : Application
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
             var comprasViewModel = new ComprasViewModel(
                 compraService, proveedorService, productoService);
+            var ventasViewModel = new VentasViewModel(ventaService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
             var configuracionViewModel = new ConfiguracionViewModel(
                 respaldoService, rutaBaseDatos, sesion);
@@ -80,7 +113,8 @@ public partial class App : Application
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
-                usuariosViewModel, configuracionViewModel, versionService, sesion);
+                ventasViewModel, usuariosViewModel, configuracionViewModel,
+                versionService, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 
@@ -107,6 +141,9 @@ public partial class App : Application
                 }
                 catch (Exception ex)
                 {
+                    RegistroApp.Escribir(
+                        "No se pudo iniciar la base de datos o la sesión.", ex);
+
                     mainWindow.Content = new TextBlock
                     {
                         Text = $"No se pudo iniciar la base de datos: {ex.Message}",
@@ -179,6 +216,104 @@ public partial class App : Application
         _ = mainViewModel.ActualizarVersionAsync();
 
         return true;
+    }
+
+    /// <summary>
+    /// Muestra un aviso cuando ocurre un error no controlado. Se muestra una
+    /// sola vez para no llenar la pantalla de ventanas.
+    /// </summary>
+    private static void MostrarErrorGlobal(
+        IClassicDesktopStyleApplicationLifetime desktop, Exception ex)
+    {
+        if (_errorGlobalMostrado)
+            return;
+
+        _errorGlobalMostrado = true;
+
+        try
+        {
+            var ventana = new MensajeWindow(new MensajeDialogo(
+                "Ocurrió un error inesperado",
+                $"{ex.Message}\n\nEl detalle se guardó en:\n{RegistroApp.ArchivoActual}",
+                TipoMensajeOperacion.Error));
+
+            var principal = desktop.MainWindow;
+
+            if (principal is { IsVisible: true })
+                _ = ventana.ShowDialog(principal);
+            else
+                ventana.Show();
+        }
+        catch
+        {
+            // Si ni siquiera se puede avisar, el detalle ya quedó en el log.
+        }
+    }
+
+    private static Window CrearVentanaInstanciaAbierta()
+    {
+        var ventana = new Window
+        {
+            Title = "Sistema de inventario",
+            Width = 460,
+            Height = 240,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+
+        var cerrar = new Button
+        {
+            Content = "Cerrar",
+            HorizontalAlignment = HorizontalAlignment.Right,
+            MinWidth = 100
+        };
+
+        cerrar.Click += (_, _) => ventana.Close();
+
+        var titulo = new TextBlock
+        {
+            Text = "Sistema de inventario ya está abierto",
+            FontSize = 18,
+            FontWeight = Avalonia.Media.FontWeight.SemiBold,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        };
+
+        var detalle = new TextBlock
+        {
+            Text = "Cierra la ventana que ya tienes abierta y vuelve a iniciar la aplicación.",
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+
+        var acciones = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+
+        acciones.Children.Add(cerrar);
+
+        var contenido = new Grid
+        {
+            RowDefinitions = new RowDefinitions("Auto,*,Auto"),
+            RowSpacing = 16
+        };
+
+        Grid.SetRow(titulo, 0);
+        Grid.SetRow(detalle, 1);
+        Grid.SetRow(acciones, 2);
+
+        contenido.Children.Add(titulo);
+        contenido.Children.Add(detalle);
+        contenido.Children.Add(acciones);
+
+        ventana.Content = new Border
+        {
+            Padding = new Thickness(28),
+            Child = contenido
+        };
+
+        return ventana;
     }
 
     private static string ResolverRutaBaseDatos()

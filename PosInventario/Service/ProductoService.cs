@@ -53,6 +53,27 @@ public class ProductoService
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
 
+    /// <summary>
+    /// Busca un producto por su SKU exacto (sin distinguir mayúsculas).
+    /// Caja usa el valor por omisión (solo vigentes); el escaneo en
+    /// Productos incluye archivados para no preparar un alta duplicada.
+    /// </summary>
+    public async Task<Producto?> ObtenerPorSkuAsync(
+        string sku, bool incluirArchivados = false)
+    {
+        var normalizado = (sku ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (normalizado.Length == 0)
+            return null;
+
+        var query = _db.Productos.AsNoTracking().AsQueryable();
+
+        if (!incluirArchivados)
+            query = query.Where(p => p.FechaArchivado == null);
+
+        return await query.FirstOrDefaultAsync(p => p.Sku.ToLower() == normalizado);
+    }
+
     public async Task<Resultado<Producto>> AgregarAsync(
         string sku, string nombre, string? descripcion,
         decimal precioVenta, decimal costo, int stockMinimo)
@@ -104,7 +125,7 @@ public class ProductoService
             return new Resultado(false, "El producto no existe.");
 
         if (producto.FechaArchivado is not null)
-            return new Resultado(false, "Restaurá el producto antes de editarlo.");
+            return new Resultado(false, "Restaura el producto antes de editarlo.");
 
         var error = ValidarCampos(sku, nombre, descripcion, precioVenta, costo, stockMinimo);
         if (error is not null)
@@ -145,7 +166,7 @@ public class ProductoService
 
         if (producto.Stock != 0)
             return new Resultado(
-                false, "No se puede archivar un producto con stock. Ajustá el inventario a 0 primero.");
+                false, "No se puede archivar un producto con stock. Ajusta el inventario a 0 primero.");
 
         producto.FechaArchivado = DateOnly.FromDateTime(DateTime.Today);
         producto.FechaModificacion = DateTime.Now;

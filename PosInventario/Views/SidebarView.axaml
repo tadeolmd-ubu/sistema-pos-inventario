@@ -24,7 +24,7 @@
     </UserControl.Styles>
 
     <Border Background="{StaticResource SidebarGradientBrush}">
-        <Grid RowDefinitions="Auto,*,Auto">
+        <Grid RowDefinitions="Auto,*,Auto,Auto">
 
             <StackPanel Grid.Row="0"
                         Orientation="Horizontal"
@@ -181,6 +181,27 @@
 
                     <Button Classes="navPill"
                             IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAVentasCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=VentasViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=VentasViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Ventas"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=VentasViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
                             Command="{Binding IrAUsuariosCommand}"
                             Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=UsuariosViewModel}">
                         <Grid ColumnDefinitions="3,Auto,*">
@@ -224,7 +245,52 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Padding="18,12" Background="#26000000">
+            <Border Grid.Row="2" Padding="16,10" Background="#14000000">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding ComandosTitulo, StringFormat='Comandos · {0}'}"
+                               FontSize="11"
+                               FontWeight="ExtraBold"
+                               Foreground="{StaticResource NavyBrush}"
+                               TextWrapping="Wrap"
+                               Opacity="0.9"/>
+
+                    <ItemsControl ItemsSource="{Binding ComandosItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AtajoItem">
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="8"
+                                      Margin="0,1">
+                                    <Border Background="{StaticResource SurfaceBrush}"
+                                            CornerRadius="4"
+                                            Padding="5,1"
+                                            MinWidth="34"
+                                            VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Tecla}"
+                                                   FontSize="10"
+                                                   FontWeight="Bold"
+                                                   Foreground="{StaticResource NavyBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Descripcion}"
+                                               FontSize="11"
+                                               Foreground="{StaticResource NavyBrush}"
+                                               Opacity="0.9"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="F1 para ver todos los atajos"
+                               FontSize="10"
+                               Foreground="{StaticResource NavyBrush}"
+                               Opacity="0.6"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="3" Padding="18,12" Background="#26000000">
                 <StackPanel Spacing="8">
 
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">

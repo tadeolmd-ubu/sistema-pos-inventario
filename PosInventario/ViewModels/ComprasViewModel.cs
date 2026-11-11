@@ -90,7 +90,7 @@ public partial class ComprasViewModel : OperacionViewModel
     {
         if (SelectedProducto is null)
         {
-            MensajeOperacion = Notificar("Seleccioná un producto.");
+            MensajeOperacion = Notificar("Selecciona un producto.");
             return;
         }
 
@@ -134,13 +134,13 @@ public partial class ComprasViewModel : OperacionViewModel
 
         if (SelectedProveedor is null)
         {
-            MensajeOperacion = Notificar("Seleccioná un proveedor.");
+            MensajeOperacion = Notificar("Selecciona un proveedor.");
             return;
         }
 
         if (LineasItems.Count == 0)
         {
-            MensajeOperacion = Notificar("Agregá al menos un producto.");
+            MensajeOperacion = Notificar("Agrega al menos un producto.");
             return;
         }
 

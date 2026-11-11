@@ -183,6 +183,50 @@ public partial class ProductosViewModel : OperacionViewModel
         }
     });
 
+    /// <summary>
+    /// Procesa un código escaneado en el formulario. Si el SKU existe, carga
+    /// el producto; si no, limpia el formulario y deja el código listo para
+    /// dar de alta el producto. Se invoca al presionar Enter en el campo SKU.
+    /// </summary>
+    public Task EscanearCodigoAsync(string? codigo) => EjecutarSeguroAsync(async () =>
+    {
+        if (_productoService is null) return;
+
+        var normalizado = (codigo ?? string.Empty).Trim();
+
+        if (normalizado.Length == 0) return;
+
+        var producto = await _productoService.ObtenerPorSkuAsync(
+            normalizado, incluirArchivados: true);
+
+        if (producto is null)
+        {
+            LimpiarFormulario();
+            Sku = normalizado;
+            MensajeOperacion = "Código nuevo: completa los datos y guarda.";
+            return;
+        }
+
+        // El producto debe estar en el listado para poder seleccionarlo.
+        var requiereArchivados = producto.FechaArchivado is not null;
+
+        if (VerArchivados != requiereArchivados)
+        {
+            _limpiando = true;
+            VerArchivados = requiereArchivados;
+            _limpiando = false;
+            await CargarDatosAsync();
+        }
+
+        Busqueda = string.Empty;
+
+        SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == producto.Id);
+
+        MensajeOperacion = producto.FechaArchivado is null
+            ? "Producto cargado."
+            : "Producto archivado cargado. Puedes restaurarlo.";
+    });
+
     public override void LimpiarPantalla()
     {
         base.LimpiarPantalla();

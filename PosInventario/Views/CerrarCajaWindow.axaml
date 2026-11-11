@@ -32,10 +32,71 @@
                            FontWeight="ExtraBold"/>
             </Grid>
 
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="14"
+                    IsVisible="{Binding TieneResumen}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Ventas de la caja" Classes="fieldLabel"/>
+
+                    <Grid ColumnDefinitions="*,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="3">
+                        <TextBlock Grid.Row="0" Text="Cantidad" Classes="caption"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding CantidadVentasTexto}"/>
+
+                        <TextBlock Grid.Row="1" Text="Efectivo" Classes="caption"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding TotalEfectivoTexto}"/>
+
+                        <TextBlock Grid.Row="2" Text="Tarjeta" Classes="caption"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                   Text="{Binding TotalTarjetaTexto}"/>
+
+                        <TextBlock Grid.Row="3" Text="Transferencia" Classes="caption"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   Text="{Binding TotalTransferenciaTexto}"/>
+
+                        <TextBlock Grid.Row="4" Text="Total vendido" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                   Text="{Binding TotalVentasTexto}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <StackPanel Spacing="6">
                 <TextBlock Text="Monto contado" Classes="fieldLabel"/>
-                <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="Monto contado"/>
+                <TextBox x:Name="MontoFinalBox"
+                         Text="{Binding MontoFinalTexto}"
+                         PlaceholderText="Monto contado"/>
+                <TextBlock Text="Si no coincide con el esperado, se pedirá confirmación."
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
             </StackPanel>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12"
+                    IsVisible="{Binding MontoContadoValido}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding DiferenciaDetalleTexto}"
+                               Classes="caption"/>
+                    <TextBlock Text="{Binding FaltanteTexto}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource ErrorBrush}"
+                               IsVisible="{Binding HayFaltante}"/>
+                    <TextBlock Text="{Binding SobranteTexto}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource ErrorBrush}"
+                               IsVisible="{Binding HaySobrante}"/>
+                    <TextBlock Text="Sin diferencia"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessBrush}"
+                               IsVisible="{Binding SinDiferencia}"/>
+                </StackPanel>
+            </Border>
 
             <StackPanel Spacing="6">
                 <TextBlock Text="Observaciones" Classes="fieldLabel"/>
@@ -60,7 +121,7 @@
                 <Button Content="Cerrar caja"
                         Classes="danger"
                         IsDefault="True"
-                        Command="{Binding CerrarCommand}"/>
+                        Click="Cerrar_Click"/>
             </StackPanel>
 
         </StackPanel>

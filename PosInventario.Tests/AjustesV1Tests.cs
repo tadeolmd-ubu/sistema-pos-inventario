@@ -91,8 +91,10 @@ public class AjustesV1Tests
     }
 
     [Fact]
-    public void HistorialSeparaVentasCanceladas()
+    public async Task HistorialSeparaVentasCanceladas()
     {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
         var caja = new Caja
         {
             Id = 1,
@@ -119,12 +121,107 @@ public class AjustesV1Tests
             Estado = EstadoVenta.Anulada
         };
 
-        var vm = new CajaHistorialViewModel(caja, [completada, anulada]);
+        var vm = new CajaHistorialViewModel(
+            caja, [completada, anulada],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
 
         Assert.True(vm.HayVentasCanceladas);
         Assert.Single(vm.VentasCanceladas);
-        Assert.Equal(anulada.Id, vm.VentasCanceladas[0].Id);
-        Assert.Equal(2, vm.CantidadVentas);
-        Assert.Equal("300.00", vm.TotalVentasTexto);
+        Assert.Equal(anulada.Id, vm.VentasCanceladas[0].Venta.Id);
+        Assert.Single(vm.VentasCompletadas);
+        Assert.Equal(1, vm.CantidadVentas);
+        Assert.Equal("100.00", vm.TotalVentasTexto);
+    }
+
+    [Fact]
+    public async Task HistorialCreaElTicketDeUnaVenta()
+    {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
+        var caja = new Caja
+        {
+            Id = 1,
+            FechaApertura = DateTime.Now,
+            MontoInicial = 1000m,
+            Estado = EstadoCaja.Cerrada
+        };
+
+        var producto = new Producto { Id = 1, Nombre = "Coca Cola" };
+
+        var venta = new Venta
+        {
+            Id = 7,
+            Fecha = DateTime.Now,
+            Subtotal = 100m,
+            Total = 100m,
+            Estado = EstadoVenta.Completada
+        };
+
+        venta.Detalles.Add(new DetalleVenta
+        {
+            Id = 1,
+            IdVenta = venta.Id,
+            IdProducto = producto.Id,
+            Producto = producto,
+            Cantidad = 1,
+            PrecioUnitario = 100m,
+            Subtotal = 100m
+        });
+
+        var vm = new CajaHistorialViewModel(
+            caja, [venta],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
+
+        var item = Assert.Single(vm.VentasCompletadas);
+        var ticket = vm.CrearTicketViewModel(item.Venta);
+
+        Assert.Same(venta, item.Venta);
+        Assert.Same(venta, ticket.Venta);
+        Assert.Equal("V-000007", ticket.Numero);
+        Assert.Single(ticket.Detalles);
+    }
+
+    [Fact]
+    public async Task HistorialSeparaPagosMixtos()
+    {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
+        var caja = new Caja
+        {
+            Id = 1,
+            FechaApertura = DateTime.Now,
+            MontoInicial = 1000m,
+            Estado = EstadoCaja.Cerrada
+        };
+
+        var venta = new Venta
+        {
+            Id = 3,
+            Fecha = DateTime.Now,
+            Subtotal = 100m,
+            Total = 100m,
+            MetodoPago = MetodoPago.Mixto,
+            Estado = EstadoVenta.Completada
+        };
+
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Efectivo,
+            Monto = 40m
+        });
+        venta.Pagos.Add(new PagoVenta
+        {
+            Metodo = MetodoPago.Tarjeta,
+            Monto = 60m
+        });
+
+        var vm = new CajaHistorialViewModel(
+            caja, [venta],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
+
+        Assert.Equal(40m, vm.TotalEfectivo);
+        Assert.Equal(60m, vm.TotalTarjeta);
+        Assert.Equal(0m, vm.TotalTransferencia);
+        Assert.Equal("100.00", vm.TotalVentasTexto);
     }
 }

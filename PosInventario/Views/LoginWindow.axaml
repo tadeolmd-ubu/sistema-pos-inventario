@@ -15,7 +15,7 @@
 
             <StackPanel Spacing="4">
                 <TextBlock Text="Sistema de inventario" Classes="sectionTitle"/>
-                <TextBlock Text="Ingresá tus credenciales para continuar." Classes="caption"/>
+                <TextBlock Text="Ingresa tus credenciales para continuar." Classes="caption"/>
             </StackPanel>
 
             <StackPanel Spacing="6">

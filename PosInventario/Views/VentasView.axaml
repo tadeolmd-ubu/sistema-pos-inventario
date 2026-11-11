@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Ventas}"
+             x:DataType="vm:VentasViewModel"
+             x:Class="PosInventario.Views.VentasView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <StackPanel Spacing="16" MaxWidth="1100" HorizontalAlignment="Left">
+
+            <TextBlock Text="Ventas" Classes="sectionTitle"/>
+
+            <Border Classes="cardFlat" Padding="22">
+                <StackPanel Spacing="16">
+
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Desde" Classes="fieldLabel"/>
+                            <DatePicker SelectedDate="{Binding Desde}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                            <DatePicker SelectedDate="{Binding Hasta}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Spacing="6">
+                            <TextBlock Text="Buscar" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Busqueda}"
+                                     PlaceholderText="Ticket o cajero..."
+                                     Classes="search"/>
+                        </StackPanel>
+
+                        <CheckBox Grid.Column="3"
+                                  Content="Ver anuladas"
+                                  IsChecked="{Binding VerAnuladas}"
+                                  VerticalAlignment="Bottom"
+                                  Margin="0,0,0,6"/>
+
+                        <Button Grid.Column="4"
+                                Content="Buscar"
+                                Classes="primary"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,0,2"
+                                Command="{Binding CargarCommand}"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding CantidadVentas, StringFormat='{}{0} ventas'}"
+                                   Classes="caption"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TotalVendidoTexto, StringFormat='Total vendido {0}'}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <TextBlock Text="No hay ventas en el rango seleccionado."
+                               Classes="caption"
+                               IsVisible="{Binding SinVentas}"/>
+
+                    <DataGrid ItemsSource="{Binding VentasItems}"
+                              SelectedItem="{Binding SelectedVenta}"
+                              DoubleTapped="Ventas_DoubleTapped"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              MaxHeight="430">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ticket"
+                                                Binding="{Binding Id, StringFormat='V-{0:000000}'}"
+                                                Width="110"/>
+                            <DataGridTextColumn Header="Fecha"
+                                                Binding="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                Width="150"/>
+                            <DataGridTextColumn Header="Cajero"
+                                                Binding="{Binding Usuario.Nombre}"
+                                                Width="*"/>
+                            <DataGridTextColumn Header="Método"
+                                                Binding="{Binding MetodoPago}"
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Estado"
+                                                Binding="{Binding Estado}"
+                                                Width="110"/>
+                            <DataGridTemplateColumn Header="Total" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="models:Venta">
+                                        <StackPanel Spacing="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding TotalNeto, StringFormat='{}{0:0.00}'}"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding TotalDevuelto, StringFormat='Devuelto: {0:0.00}'}"
+                                                       Classes="caption"
+                                                       IsVisible="{Binding HayDevolucion}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                        <Button Content="Ver ticket"
+                                Classes="secondary"
+                                Command="{Binding VerTicketCommand}"/>
+                        <Button Content="Devolver"
+                                Classes="secondary"
+                                Command="{Binding DevolverCommand}"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+        </StackPanel>
+    </Border>
+</UserControl>

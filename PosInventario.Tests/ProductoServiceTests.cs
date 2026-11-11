@@ -284,4 +284,24 @@ public class ProductoServiceTests
         producto!.Stock = stock;
         await db.SaveChangesAsync();
     }
+
+    [Fact]
+    public async Task ObtenerPorSkuIgnoraMayusculasYExcluyeArchivados()
+    {
+        await using var prueba = await PruebaProductos.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("SKU-ABC");
+
+        var encontrado = await prueba.ProductoService.ObtenerPorSkuAsync(" sku-abc ");
+
+        Assert.NotNull(encontrado);
+        Assert.Equal(producto.Id, encontrado!.Id);
+
+        Assert.Null(await prueba.ProductoService.ObtenerPorSkuAsync("NO-EXISTE"));
+
+        var archivado = await prueba.ProductoService.ArchivarAsync(producto.Id);
+        Assert.True(archivado.Correcta, archivado.Mensaje);
+
+        Assert.Null(await prueba.ProductoService.ObtenerPorSkuAsync("SKU-ABC"));
+    }
 }

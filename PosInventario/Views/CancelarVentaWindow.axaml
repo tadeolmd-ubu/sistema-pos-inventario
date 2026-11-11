@@ -4,7 +4,7 @@
         xmlns:vm="using:PosInventario.ViewModels"
         x:DataType="vm:CancelarVentaViewModel"
         x:Class="PosInventario.Views.CancelarVentaWindow"
-        Title="Cancelar venta"
+        Title="Devolver venta"
         Width="600"
         SizeToContent="Height"
         MaxHeight="760"
@@ -15,8 +15,8 @@
     <Border Classes="card" Margin="18" Padding="24">
         <StackPanel Spacing="12">
 
-            <TextBlock Text="Cancelar venta" Classes="subsection"/>
-            <TextBlock Text="Seleccioná una venta de esta caja. Se devolverá el stock y, si fue en efectivo, el dinero a la caja."
+            <TextBlock Text="Devolver venta" Classes="subsection"/>
+            <TextBlock Text="Selecciona una venta de esta caja. Puedes devolver toda la venta o solo algunos productos."
                        Classes="caption"
                        TextWrapping="Wrap"/>
 
@@ -62,10 +62,10 @@
                         Classes="secondary"
                         IsCancel="True"
                         Click="Cerrar_Click"/>
-                <Button Content="Cancelar venta"
-                        Classes="danger"
-                        IsVisible="{Binding PuedeCancelar}"
-                        Click="Cancelar_Click"/>
+                <Button Content="Devolver"
+                        Classes="primary"
+                        IsVisible="{Binding PuedeDevolver}"
+                        Click="Devolver_Click"/>
             </StackPanel>
 
         </StackPanel>

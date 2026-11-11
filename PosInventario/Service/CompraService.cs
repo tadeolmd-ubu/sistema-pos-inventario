@@ -56,7 +56,7 @@ public class CompraService
 
         if (lineas is null || lineas.Count == 0)
             return new Resultado<Compra>(
-                false, "Agregá al menos un producto a la compra.", null);
+                false, "Agrega al menos un producto a la compra.", null);
 
         var comprobanteNormalizado = NormalizarOpcional(numeroComprobante);
 

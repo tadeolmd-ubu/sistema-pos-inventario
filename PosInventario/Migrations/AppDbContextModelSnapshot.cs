@@ -203,6 +203,12 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
+                    b.Property<int>("CantidadDevuelta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0)
+                        .HasColumnName("cantidadDevuelta");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("INTEGER")
                         .HasColumnName("idProducto");
@@ -228,6 +234,8 @@ namespace PosInventario.Migrations
                     b.ToTable("DetalleVenta", null, t =>
                         {
                             t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
+
+                            t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
 
                             t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
 
@@ -358,6 +366,47 @@ namespace PosInventario.Migrations
                             t.HasCheckConstraint("CK_MovimientoInventario_stockAnterior", "stockAnterior >= 0");
 
                             t.HasCheckConstraint("CK_MovimientoInventario_stockResultante", "stockResultante >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("PosInventario.Models.PagoVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("IdVenta")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idVenta");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("metodo");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<decimal>("MontoDevuelto")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("montoDevuelto");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdVenta");
+
+                    b.ToTable("PagoVenta", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PagoVenta_metodo", "metodo IN ('Efectivo', 'Tarjeta', 'Transferencia')");
+
+                            t.HasCheckConstraint("CK_PagoVenta_monto", "monto > 0");
+
+                            t.HasCheckConstraint("CK_PagoVenta_montoDevuelto", "montoDevuelto >= 0 AND montoDevuelto <= monto");
                         });
                 });
 
@@ -593,6 +642,12 @@ namespace PosInventario.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("total");
 
+                    b.Property<decimal>("TotalDevuelto")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("totalDevuelto");
+
                     b.Property<decimal>("Vuelto")
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("vuelto");
@@ -618,6 +673,8 @@ namespace PosInventario.Migrations
                             t.HasCheckConstraint("CK_Venta_subtotal", "subtotal >= 0");
 
                             t.HasCheckConstraint("CK_Venta_total", "total >= 0");
+
+                            t.HasCheckConstraint("CK_Venta_totalDevuelto", "totalDevuelto >= 0 AND totalDevuelto <= total");
 
                             t.HasCheckConstraint("CK_Venta_vuelto", "vuelto >= 0");
                         });
@@ -760,6 +817,17 @@ namespace PosInventario.Migrations
                     b.Navigation("Venta");
                 });
 
+            modelBuilder.Entity("PosInventario.Models.PagoVenta", b =>
+                {
+                    b.HasOne("PosInventario.Models.Venta", "Venta")
+                        .WithMany("Pagos")
+                        .HasForeignKey("IdVenta")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("PosInventario.Models.Venta", b =>
                 {
                     b.HasOne("PosInventario.Models.Caja", "Caja")
@@ -832,6 +900,8 @@ namespace PosInventario.Migrations
                     b.Navigation("Movimientos");
 
                     b.Navigation("MovimientosCaja");
+
+                    b.Navigation("Pagos");
                 });
 #pragma warning restore 612, 618
         }

@@ -75,7 +75,7 @@ public class InventarioService
 
         if (string.IsNullOrWhiteSpace(referenciaNormalizada))
             return new Resultado<MovimientoInventario>(
-                false, "Seleccioná un motivo.", null);
+                false, "Selecciona un motivo.", null);
 
         if (referenciaNormalizada.Length > MaxReferencia)
             return new Resultado<MovimientoInventario>(
@@ -83,7 +83,7 @@ public class InventarioService
 
         if (!MotivosInventario.Para(tipo).Contains(referenciaNormalizada))
             return new Resultado<MovimientoInventario>(
-                false, "Seleccioná un motivo válido.", null);
+                false, "Selecciona un motivo válido.", null);
 
         if (!esAjuste && valor <= 0)
             return new Resultado<MovimientoInventario>(

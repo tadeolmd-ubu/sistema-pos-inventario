@@ -44,7 +44,7 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
     {
         if (SelectedProducto is null)
         {
-            MensajeOperacion = "Seleccioná un producto.";
+            MensajeOperacion = "Selecciona un producto.";
             return;
         }
 
@@ -70,7 +70,8 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
         var seleccionado = SelectedProducto?.Id;
 
         ReemplazarItems(ProductosItems, filtrados);
-        SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == seleccionado);
+        SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == seleccionado)
+            ?? ProductosItems.FirstOrDefault();
     }
 
     private static void ReemplazarItems<T>(

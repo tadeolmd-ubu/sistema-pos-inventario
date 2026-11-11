@@ -77,17 +77,36 @@
 
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Venta" Classes="subsection"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <TextBox x:Name="BusquedaRapidaBox"
+                                         Text="{Binding BusquedaRapida}"
+                                         PlaceholderText="Escanea un código o escribe el SKU y presiona Enter"
+                                         KeyDown="BusquedaRapida_KeyDown"/>
                                 <Button Grid.Column="1"
+                                        Content="Agregar"
+                                        Classes="secondary"
+                                        ToolTip.Tip="Enter en la búsqueda"
+                                        Command="{Binding AgregarPorCodigoCommand}"/>
+                                <Button Grid.Column="2"
                                         Content="Seleccionar productos"
                                         Classes="secondary"
+                                        ToolTip.Tip="F3"
                                         Command="{Binding SeleccionarProductosCommand}"/>
                             </Grid>
 
-                            <DataGrid ItemsSource="{Binding LineasVentaItems}"
+                            <TextBlock Text="Atajos: F2 buscar · F3 productos · F4 cobrar · F1 ayuda · Esc limpiar"
+                                       Classes="caption"/>
+
+                            <DataGrid x:Name="LineasVentaGrid"
+                                      ItemsSource="{Binding LineasVentaItems}"
                                       AutoGenerateColumns="False"
                                       IsReadOnly="True"
                                       HeadersVisibility="Column"
                                       GridLinesVisibility="Horizontal"
+                                      SelectionMode="Single"
+                                      IsTabStop="True"
                                       MaxHeight="280">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Producto"
@@ -128,8 +147,18 @@
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Subtotal" Classes="caption"/>
                                 <TextBlock Grid.Column="1"
-                                           Text="{Binding TotalVentaTexto}"
+                                           Text="{Binding SubtotalVentaTexto}"
                                            FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,180">
+                                <TextBlock Text="Descuento"
+                                           Classes="caption"
+                                           VerticalAlignment="Center"/>
+                                <TextBox x:Name="DescuentoBox"
+                                         Grid.Column="1"
+                                         Text="{Binding DescuentoTexto}"
+                                         PlaceholderText="Descuento"/>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto">
@@ -139,10 +168,13 @@
                                            Classes="subsection"/>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <StackPanel Grid.Column="0" Spacing="6">
+                            <Grid ColumnDefinitions="*,*"
+                                  ColumnSpacing="12"
+                                  IsVisible="{Binding !EsPagoMixto}">
+                                <StackPanel Spacing="6">
                                     <TextBlock Text="Método de pago" Classes="fieldLabel"/>
-                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                    <ComboBox x:Name="MetodoPagoSimpleBox"
+                                              ItemsSource="{Binding MetodosPago}"
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="enums:MetodoPago">
@@ -152,16 +184,65 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="1" Spacing="6" IsVisible="{Binding EsPagoEfectivo}">
+                                <StackPanel Grid.Column="1"
+                                            Spacing="6"
+                                            IsVisible="{Binding EsPagoEfectivo}">
                                     <TextBlock Text="Paga con" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoRecibidoTexto}"
-                                             PlaceholderText="Ingresa una cantidad"/>
+                                    <TextBox x:Name="PagoEfectivoBox"
+                                             Text="{Binding MontoEfectivoTexto}"
+                                             PlaceholderText="0.00"
+                                             KeyDown="Pago_KeyDown"/>
                                 </StackPanel>
                             </Grid>
 
+                            <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                    <ComboBox x:Name="MetodoPagoMixtoBox"
+                                              ItemsSource="{Binding MetodosPago}"
+                                              SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:MetodoPago">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <TextBlock Text="Escribe cuánto se pagó con cada método. La suma debe cubrir el total; tarjeta y transferencia no pueden superarlo y el excedente en efectivo es cambio."
+                                           Classes="caption"
+                                           TextWrapping="Wrap"/>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Efectivo" Classes="fieldLabel"/>
+                                        <TextBox x:Name="PagoEfectivoMixtoBox"
+                                                 Text="{Binding MontoEfectivoTexto}"
+                                                 PlaceholderText="0.00"
+                                                 KeyDown="Pago_KeyDown"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Tarjeta" Classes="fieldLabel"/>
+                                        <TextBox x:Name="PagoTarjetaBox"
+                                                 Text="{Binding MontoTarjetaTexto}"
+                                                 PlaceholderText="0.00"
+                                                 KeyDown="Pago_KeyDown"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Transferencia" Classes="fieldLabel"/>
+                                    <TextBox x:Name="PagoTransferenciaBox"
+                                             Text="{Binding MontoTransferenciaTexto}"
+                                             PlaceholderText="0.00"
+                                             KeyDown="Pago_KeyDown"/>
+                                </StackPanel>
+                            </StackPanel>
+
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8"
-                                        IsVisible="{Binding EsPagoEfectivo}">
+                                        IsVisible="{Binding MuestraEfectivo}">
                                 <TextBlock Text="Rápido:"
                                            Classes="caption"
                                            VerticalAlignment="Center"/>
@@ -187,12 +268,40 @@
                                         CommandParameter="500"/>
                             </StackPanel>
 
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Recibido" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TotalRecibidoTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayFaltante}">
+                                <TextBlock Text="Faltante" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding FaltanteTexto}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource ErrorBrush}"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayCambio}">
+                                <TextBlock Text="Cambio" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding CambioTexto}"
+                                           FontSize="16"
+                                           FontWeight="ExtraBold"
+                                           Foreground="{StaticResource SuccessBrush}"/>
+                            </Grid>
+
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Button Content="Realizar venta"
                                         Classes="primary"
+                                        ToolTip.Tip="F4 o Ctrl+Enter"
                                         Command="{Binding CobrarCommand}"/>
                                 <Button Content="Limpiar"
                                         Classes="secondary"
+                                        ToolTip.Tip="Esc"
                                         Command="{Binding LimpiarVentaCommand}"/>
                             </StackPanel>
 
@@ -273,17 +382,20 @@
                 </Border>
 
                 <StackPanel Spacing="10" IsVisible="{Binding HayCajaAbierta}">
-                    <Button Content="Cancelar venta"
+                    <Button Content="Devolver venta"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F8"
                             Command="{Binding SolicitarCancelarVentaCommand}"/>
                     <Button Content="Registrar movimiento de efectivo"
                             Classes="secondary"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F9"
                             Command="{Binding SolicitarRegistrarMovimientoCommand}"/>
                     <Button Content="Cerrar caja"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F10"
                             Command="{Binding SolicitarCerrarCajaCommand}"/>
                 </StackPanel>
 

@@ -1,55 +1,154 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PosInventario.Models;
 using PosInventario.Models.Enums;
+using PosInventario.Service;
 
 namespace PosInventario.ViewModels;
 
-public class CajaHistorialViewModel
+/// <summary>
+/// Detalle de una caja cerrada: montos congelados al cierre y ventas netas
+/// de devoluciones. Permite devolver ventas de la caja al vendedor original
+/// o a un administrador.
+/// </summary>
+public partial class CajaHistorialViewModel : OperacionViewModel
 {
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
-    public CajaHistorialViewModel(Caja caja, IReadOnlyList<Venta> ventas)
+    private readonly VentaService? _ventaService;
+    private readonly SesionActual? _sesion;
+    private readonly Caja _caja;
+
+    public CajaHistorialViewModel(
+        Caja caja, IReadOnlyList<Venta> ventas,
+        VentaService ventaService, SesionActual sesion)
     {
-        Caja = caja;
-        Ventas = ventas;
+        _caja = caja;
+        _ventaService = ventaService;
+        _sesion = sesion;
+
+        ReemplazarVentas(ventas);
     }
 
-    public Caja Caja { get; }
+    public ObservableCollection<VentaHistorialItem> VentasCompletadas { get; } = [];
 
-    public IReadOnlyList<Venta> Ventas { get; }
+    public ObservableCollection<VentaHistorialItem> VentasCanceladas { get; } = [];
 
-    public string Numero => $"Caja #{Caja.Id}";
+    public Caja Caja => _caja;
 
-    public string UsuarioApertura => Caja.UsuarioApertura?.Nombre ?? "—";
+    public string Numero => $"Caja #{_caja.Id}";
+
+    public string UsuarioApertura => _caja.UsuarioApertura?.Nombre ?? "—";
 
     public string FechaApertura =>
-        Caja.FechaApertura.ToString("dd/MM/yyyy HH:mm", Cultura);
+        _caja.FechaApertura.ToString("dd/MM/yyyy HH:mm", Cultura);
 
-    public string FechaCierre => Caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm", Cultura) ?? "—";
+    public string FechaCierre =>
+        _caja.FechaCierre?.ToString("dd/MM/yyyy HH:mm", Cultura) ?? "—";
 
     public string MontoInicialTexto =>
-        Caja.MontoInicial.ToString("0.00", Cultura);
+        _caja.MontoInicial.ToString("0.00", Cultura);
 
     public string MontoEsperadoTexto =>
-        (Caja.MontoEsperado ?? 0m).ToString("0.00", Cultura);
+        (_caja.MontoEsperado ?? 0m).ToString("0.00", Cultura);
 
     public string MontoFinalTexto =>
-        (Caja.MontoFinal ?? 0m).ToString("0.00", Cultura);
+        (_caja.MontoFinal ?? 0m).ToString("0.00", Cultura);
 
     public string DiferenciaTexto =>
-        (Caja.Diferencia ?? 0m).ToString("0.00", Cultura);
+        (_caja.Diferencia ?? 0m).ToString("0.00", Cultura);
 
     public string Observaciones =>
-        string.IsNullOrWhiteSpace(Caja.Observaciones) ? "—" : Caja.Observaciones;
+        string.IsNullOrWhiteSpace(_caja.Observaciones) ? "—" : _caja.Observaciones;
 
-    public int CantidadVentas => Ventas.Count;
+    public int CantidadVentas => VentasCompletadas.Count;
 
-    public IReadOnlyList<Venta> VentasCanceladas =>
-        Ventas.Where(v => v.Estado == EstadoVenta.Anulada).ToList();
+    public bool HayVentasCanceladas => VentasCanceladas.Count > 0;
 
-    public bool HayVentasCanceladas =>
-        Ventas.Any(v => v.Estado == EstadoVenta.Anulada);
+    public decimal TotalEfectivo => VentasCompletadas
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Efectivo)
+        .Sum(p => p.Monto - p.MontoDevuelto);
+
+    public decimal TotalTarjeta => VentasCompletadas
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Tarjeta)
+        .Sum(p => p.Monto - p.MontoDevuelto);
+
+    public decimal TotalTransferencia => VentasCompletadas
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Transferencia)
+        .Sum(p => p.Monto - p.MontoDevuelto);
+
+    public string TotalEfectivoTexto => TotalEfectivo.ToString("0.00", Cultura);
+
+    public string TotalTarjetaTexto => TotalTarjeta.ToString("0.00", Cultura);
+
+    public string TotalTransferenciaTexto =>
+        TotalTransferencia.ToString("0.00", Cultura);
 
     public string TotalVentasTexto =>
-        Ventas.Sum(v => v.Total).ToString("0.00", Cultura);
+        VentasCompletadas.Sum(i => i.Venta.TotalNeto).ToString("0.00", Cultura);
+
+    /// <summary>
+    /// Crea el ViewModel de la ventana de devolución de una venta de esta caja.
+    /// </summary>
+    public DevolverVentaViewModel? CrearDevolucionViewModel(Venta venta)
+    {
+        if (_ventaService is null) return null;
+
+        return new DevolverVentaViewModel(_ventaService, venta);
+    }
+
+    /// <summary>
+    /// Crea el ViewModel del ticket de una venta de esta caja para verlo o
+    /// reimprimirlo, incluso si la caja ya está cerrada.
+    /// </summary>
+    public TicketViewModel CrearTicketViewModel(Venta venta) => new(venta);
+
+    /// <summary>
+    /// Vuelve a leer las ventas de la caja; la ventana lo llama después de
+    /// registrar una devolución.
+    /// </summary>
+    [RelayCommand]
+    public Task RecargarAsync() => EjecutarSeguroAsync(async () =>
+    {
+        if (_ventaService is null) return;
+
+        var ventas = await _ventaService.ObtenerPorCajaAsync(_caja.Id);
+
+        ReemplazarVentas(ventas);
+        NotificarResumen();
+    });
+
+    private void ReemplazarVentas(IReadOnlyList<Venta> ventas)
+    {
+        VentasCompletadas.Clear();
+        VentasCanceladas.Clear();
+
+        foreach (var venta in ventas)
+        {
+            var item = new VentaHistorialItem(venta, _sesion);
+
+            if (venta.Estado == EstadoVenta.Completada)
+                VentasCompletadas.Add(item);
+            else
+                VentasCanceladas.Add(item);
+        }
+    }
+
+    private void NotificarResumen()
+    {
+        OnPropertyChanged(nameof(CantidadVentas));
+        OnPropertyChanged(nameof(HayVentasCanceladas));
+        OnPropertyChanged(nameof(TotalEfectivo));
+        OnPropertyChanged(nameof(TotalTarjeta));
+        OnPropertyChanged(nameof(TotalTransferencia));
+        OnPropertyChanged(nameof(TotalEfectivoTexto));
+        OnPropertyChanged(nameof(TotalTarjetaTexto));
+        OnPropertyChanged(nameof(TotalTransferenciaTexto));
+        OnPropertyChanged(nameof(TotalVentasTexto));
+    }
 }
