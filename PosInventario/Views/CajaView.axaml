@@ -159,25 +159,43 @@
                                            Classes="subsection"/>
                             </Grid>
 
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="Método de pago" Classes="fieldLabel"/>
-                                <ComboBox ItemsSource="{Binding MetodosPago}"
-                                          SelectedItem="{Binding MetodoPagoSeleccionado}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="enums:MetodoPago">
-                                            <TextBlock Text="{Binding}"/>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
+                            <Grid ColumnDefinitions="*,*"
+                                  ColumnSpacing="12"
+                                  IsVisible="{Binding !EsPagoMixto}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                              SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:MetodoPago">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
 
-                            <StackPanel Spacing="6" IsVisible="{Binding EsPagoEfectivo}">
-                                <TextBlock Text="Paga con" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding MontoEfectivoTexto}"
-                                         PlaceholderText="0.00"/>
-                            </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            Spacing="6"
+                                            IsVisible="{Binding EsPagoEfectivo}">
+                                    <TextBlock Text="Paga con" Classes="fieldLabel"/>
+                                    <TextBox Text="{Binding MontoEfectivoTexto}"
+                                             PlaceholderText="0.00"/>
+                                </StackPanel>
+                            </Grid>
 
                             <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                              SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:MetodoPago">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
                                 <TextBlock Text="Escribe cuánto se pagó con cada método. La suma debe cubrir el total; tarjeta y transferencia no pueden superarlo y el excedente en efectivo es cambio."
                                            Classes="caption"
                                            TextWrapping="Wrap"/>
