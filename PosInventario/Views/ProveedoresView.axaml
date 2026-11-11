@@ -14,6 +14,7 @@
 
     <UserControl.Resources>
         <conv:ActivoConverter x:Key="EstadoNombre"/>
+        <conv:ActivoFondoConverter x:Key="FondoInactivo"/>
     </UserControl.Resources>
 
     <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
@@ -41,15 +42,19 @@
                              Classes="entityList">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Proveedor">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding Telefono}" Classes="caption"/>
-                                        <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Activo, Converter={StaticResource EstadoNombre}, ConverterParameter=nombre}"
-                                                   Classes="caption"/>
+                                <Border Background="{Binding Activo, Converter={StaticResource FondoInactivo}}"
+                                        CornerRadius="8"
+                                        Padding="8,6">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Telefono}" Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding Activo, Converter={StaticResource EstadoNombre}, ConverterParameter=nombre}"
+                                                       Classes="caption"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

@@ -93,12 +93,12 @@
 
                             <StackPanel Spacing="6" IsVisible="{Binding !EsAjuste}">
                                 <TextBlock Text="Cantidad" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="1"/>
+                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6" IsVisible="{Binding EsAjuste}">
                                 <TextBlock Text="Stock contado" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding StockContadoTexto}" PlaceholderText="0"/>
+                                <TextBox Text="{Binding StockContadoTexto}" PlaceholderText="Stock contado"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">

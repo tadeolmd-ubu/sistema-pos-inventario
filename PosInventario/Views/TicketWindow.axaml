@@ -26,6 +26,16 @@
                                HorizontalAlignment="Center"/>
                 </StackPanel>
 
+                <Border Background="{StaticResource ErrorBrush}"
+                        CornerRadius="6"
+                        Padding="10,4"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding EsAnulada}">
+                    <TextBlock Text="ANULADA"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource SurfaceBrush}"/>
+                </Border>
+
                 <StackPanel Spacing="1">
                     <TextBlock Text="{Binding Fecha, StringFormat='Fecha: {0}'}" Classes="caption"/>
                     <TextBlock Text="{Binding Cajero, StringFormat='Cajero: {0}'}" Classes="caption"/>

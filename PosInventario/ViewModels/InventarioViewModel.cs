@@ -16,6 +16,7 @@ public partial class InventarioViewModel : OperacionViewModel
     private readonly InventarioService? _inventarioService;
     private readonly List<Producto> _cargados = [];
     private bool _cargando;
+    private bool _limpiando;
 
     public InventarioViewModel()
     {
@@ -40,8 +41,8 @@ public partial class InventarioViewModel : OperacionViewModel
     [ObservableProperty] private string busqueda = string.Empty;
     [ObservableProperty] private TipoMovimiento tipoSeleccionado = TipoMovimiento.Entrada;
     [ObservableProperty] private string motivoSeleccionado = string.Empty;
-    [ObservableProperty] private string cantidadTexto = "1";
-    [ObservableProperty] private string stockContadoTexto = "0";
+    [ObservableProperty] private string cantidadTexto = string.Empty;
+    [ObservableProperty] private string stockContadoTexto = string.Empty;
     [ObservableProperty] private bool verTodosLosMovimientos;
 
     public IReadOnlyList<string> MotivosDisponibles =>
@@ -98,12 +99,10 @@ public partial class InventarioViewModel : OperacionViewModel
 
     partial void OnSelectedProductoChanged(Producto? value)
     {
-        StockContadoTexto = (value?.Stock ?? 0).ToString(Cultura);
-
         OnPropertyChanged(nameof(StockActualTexto));
         OnPropertyChanged(nameof(TituloMovimientos));
 
-        if (!_cargando)
+        if (!_cargando && !_limpiando)
             _ = CargarMovimientosAsync();
     }
 
@@ -164,18 +163,30 @@ public partial class InventarioViewModel : OperacionViewModel
         if (!correcta) return;
 
         await CargarDatosAsync();
-
-        CantidadTexto = "1";
-        StockContadoTexto = SelectedProducto?.Stock.ToString(Cultura) ?? "0";
+        LimpiarFormulario();
     });
 
     [RelayCommand]
     private void LimpiarFormulario()
     {
+        SelectedProducto = null;
         TipoSeleccionado = TipoMovimiento.Entrada;
         MotivoSeleccionado = MotivosInventario.Entrada[0];
-        CantidadTexto = "1";
-        StockContadoTexto = SelectedProducto?.Stock.ToString(Cultura) ?? "0";
+        CantidadTexto = string.Empty;
+        StockContadoTexto = string.Empty;
+    }
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        _limpiando = true;
+        _cargados.Clear();
+        ProductosItems.Clear();
+        MovimientosItems.Clear();
+        Busqueda = string.Empty;
+        LimpiarFormulario();
+        _limpiando = false;
     }
 
     private async Task CargarMovimientosAsync()

@@ -124,12 +124,12 @@
 
                             <StackPanel Grid.Column="1" Spacing="6">
                                 <TextBlock Text="Cantidad" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="1"/>
+                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Spacing="6">
                                 <TextBlock Text="Costo unitario" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="0.00"/>
+                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="Costo unitario"/>
                             </StackPanel>
                         </Grid>
 

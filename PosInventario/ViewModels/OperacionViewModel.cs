@@ -46,4 +46,10 @@ public abstract partial class OperacionViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    /// <summary>
+    /// Limpia el estado de la pantalla al salir de ella.
+    /// </summary>
+    public virtual void LimpiarPantalla()
+        => MensajeOperacion = string.Empty;
 }

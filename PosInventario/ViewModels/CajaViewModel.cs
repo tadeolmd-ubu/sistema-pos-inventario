@@ -40,7 +40,7 @@ public partial class CajaViewModel : OperacionViewModel
 
     [ObservableProperty] private Caja? cajaAbierta;
     [ObservableProperty] private decimal montoEsperado;
-    [ObservableProperty] private string montoInicialTexto = "0.00";
+    [ObservableProperty] private string montoInicialTexto = string.Empty;
 
     [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
     [ObservableProperty] private string montoRecibidoTexto = string.Empty;
@@ -160,7 +160,7 @@ public partial class CajaViewModel : OperacionViewModel
 
         if (!resultado.Correcta) return;
 
-        MontoInicialTexto = "0.00";
+        MontoInicialTexto = string.Empty;
         await CargarDatosAsync();
     });
 
@@ -297,9 +297,13 @@ public partial class CajaViewModel : OperacionViewModel
         var resultado = await _ventaService.RegistrarAsync(
             lineas, MetodoPagoSeleccionado, montoRecibido);
 
-        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
+        if (!resultado.Correcta)
+        {
+            MensajeOperacion = Notificar(resultado.Mensaje);
+            return;
+        }
 
-        if (!resultado.Correcta) return;
+        MensajeOperacion = resultado.Mensaje;
 
         LineasVentaItems.Clear();
         MontoRecibidoTexto = string.Empty;
@@ -348,6 +352,26 @@ public partial class CajaViewModel : OperacionViewModel
 
         var ventas = await _ventaService.ObtenerPorCajaAsync(caja.Id);
         return new CajaHistorialViewModel(caja, ventas);
+    }
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        LineasVentaItems.Clear();
+        MovimientosItems.Clear();
+        HistorialItems.Clear();
+
+        MontoInicialTexto = string.Empty;
+        MontoRecibidoTexto = string.Empty;
+        MetodoPagoSeleccionado = MetodoPago.Efectivo;
+
+        CajaAbierta = null;
+        MontoEsperado = 0;
+
+        OnPropertyChanged(nameof(TotalVenta));
+        OnPropertyChanged(nameof(TotalVentaTexto));
+        OnPropertyChanged(nameof(HayLineasVenta));
     }
 
     private void NotificarVenta()

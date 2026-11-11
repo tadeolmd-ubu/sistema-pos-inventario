@@ -1,5 +1,6 @@
 using System.Globalization;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.ViewModels;
 
@@ -42,6 +43,12 @@ public class CajaHistorialViewModel
         string.IsNullOrWhiteSpace(Caja.Observaciones) ? "—" : Caja.Observaciones;
 
     public int CantidadVentas => Ventas.Count;
+
+    public IReadOnlyList<Venta> VentasCanceladas =>
+        Ventas.Where(v => v.Estado == EstadoVenta.Anulada).ToList();
+
+    public bool HayVentasCanceladas =>
+        Ventas.Any(v => v.Estado == EstadoVenta.Anulada);
 
     public string TotalVentasTexto =>
         Ventas.Sum(v => v.Total).ToString("0.00", Cultura);

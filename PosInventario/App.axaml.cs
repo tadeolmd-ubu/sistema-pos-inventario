@@ -62,6 +62,7 @@ public partial class App : Application
             var compraService = new CompraService(dbContext, sesion);
             var cajaService = new CajaService(dbContext, sesion);
             var ventaService = new VentaService(dbContext, sesion);
+            var versionService = new VersionService();
 
             var inicioViewModel = new InicioViewModel(
                 ventaService, productoService, cajaService, compraService, sesion);
@@ -79,7 +80,7 @@ public partial class App : Application
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
-                usuariosViewModel, configuracionViewModel, sesion);
+                usuariosViewModel, configuracionViewModel, versionService, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 
@@ -174,6 +175,8 @@ public partial class App : Application
         mainViewModel.AplicarSesion();
         await mainViewModel.InicializarAsync();
         ventana.IsEnabled = true;
+
+        _ = mainViewModel.ActualizarVersionAsync();
 
         return true;
     }

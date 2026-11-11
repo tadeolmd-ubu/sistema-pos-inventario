@@ -38,8 +38,8 @@ public partial class ComprasViewModel : OperacionViewModel
     [ObservableProperty] private Producto? selectedProducto;
     [ObservableProperty] private LineaCompraItem? selectedLinea;
     [ObservableProperty] private string numeroComprobante = string.Empty;
-    [ObservableProperty] private string cantidadTexto = "1";
-    [ObservableProperty] private string costoTexto = "0.00";
+    [ObservableProperty] private string cantidadTexto = string.Empty;
+    [ObservableProperty] private string costoTexto = string.Empty;
 
     public decimal Total => LineasItems.Sum(l => l.Subtotal);
 
@@ -83,7 +83,6 @@ public partial class ComprasViewModel : OperacionViewModel
         if (value is null) return;
 
         CostoTexto = value.Costo.ToString("0.00", Cultura);
-        CantidadTexto = "1";
     }
 
     [RelayCommand]
@@ -158,10 +157,7 @@ public partial class ComprasViewModel : OperacionViewModel
 
         var idCompra = resultado.Valor?.Id;
 
-        LineasItems.Clear();
-        SelectedLinea = null;
-        NumeroComprobante = string.Empty;
-        NotificarTotal();
+        LimpiarFormulario();
 
         await CargarDatosAsync();
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == idCompra);
@@ -174,9 +170,10 @@ public partial class ComprasViewModel : OperacionViewModel
         SelectedLinea = null;
         SelectedProveedor = null;
         SelectedProducto = null;
+        SelectedCompra = null;
         NumeroComprobante = string.Empty;
-        CantidadTexto = "1";
-        CostoTexto = "0.00";
+        CantidadTexto = string.Empty;
+        CostoTexto = string.Empty;
         NotificarTotal();
     }
 
@@ -194,9 +191,20 @@ public partial class ComprasViewModel : OperacionViewModel
 
         if (!resultado.Correcta) return;
 
+        LimpiarFormulario();
         await CargarDatosAsync();
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == id);
     });
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        ComprasItems.Clear();
+        ProveedoresItems.Clear();
+        ProductosItems.Clear();
+        LimpiarFormulario();
+    }
 
     private void NotificarTotal()
     {

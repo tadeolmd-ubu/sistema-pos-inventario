@@ -32,6 +32,10 @@ public class TicketViewModel
 
     public bool EsEfectivo => Venta.MetodoPago == MetodoPago.Efectivo;
 
+    public string EstadoTexto => Venta.Estado.ToString();
+
+    public bool EsAnulada => Venta.Estado == EstadoVenta.Anulada;
+
     public string MontoRecibidoTexto => Venta.MontoRecibido.ToString("0.00", Cultura);
 
     public string VueltoTexto => Venta.Vuelto.ToString("0.00", Cultura);

@@ -186,4 +186,22 @@ public class VentaServiceTests
         Assert.Equal(2, recientes.Count);
         Assert.Contains(recientes, v => v.Estado == EstadoVenta.Anulada && v.Id == primera.Id);
     }
+
+    [Fact]
+    public async Task ObtenerRecientesIncluyeDetallesParaElTicket()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("VTA-005");
+        await prueba.InventarioService.RegistrarEntradaAsync(producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        await prueba.VenderAsync(producto);
+
+        var recientes = await prueba.VentaService.ObtenerRecientesAsync(1);
+
+        Assert.Single(recientes);
+        Assert.Single(recientes[0].Detalles);
+        Assert.NotNull(recientes[0].Detalles.First().Producto);
+    }
 }

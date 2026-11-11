@@ -25,7 +25,7 @@
 
                         <StackPanel Spacing="6" Width="220" HorizontalAlignment="Left">
                             <TextBlock Text="Monto inicial" Classes="fieldLabel"/>
-                            <TextBox Text="{Binding MontoInicialTexto}" PlaceholderText="0.00"/>
+                            <TextBox Text="{Binding MontoInicialTexto}" PlaceholderText="Monto inicial"/>
                         </StackPanel>
 
                         <Button Content="Abrir caja"

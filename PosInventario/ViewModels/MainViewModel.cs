@@ -1,4 +1,3 @@
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Service;
@@ -15,6 +14,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly ComprasViewModel _comprasViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly ConfiguracionViewModel _configuracionViewModel;
+    private readonly VersionService _versionService;
     private readonly SesionActual _sesion;
 
     public MainViewModel(
@@ -26,6 +26,7 @@ public partial class MainViewModel : OperacionViewModel
         ComprasViewModel comprasViewModel,
         UsuariosViewModel usuariosViewModel,
         ConfiguracionViewModel configuracionViewModel,
+        VersionService versionService,
         SesionActual sesion)
     {
         _inicioViewModel = inicioViewModel;
@@ -36,6 +37,7 @@ public partial class MainViewModel : OperacionViewModel
         _comprasViewModel = comprasViewModel;
         _usuariosViewModel = usuariosViewModel;
         _configuracionViewModel = configuracionViewModel;
+        _versionService = versionService;
         _sesion = sesion;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -47,8 +49,8 @@ public partial class MainViewModel : OperacionViewModel
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
         _configuracionViewModel.MensajeSolicitado += SolicitarMensaje;
 
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        TextoVersionMenu = $"v{version?.ToString(3) ?? "1.0.0"} · Sistema de inventario";
+        var version = _versionService.VersionLocal;
+        TextoVersionMenu = $"v{version} · Sistema de inventario";
 
         VistaActual = _inicioViewModel;
         TituloVistaActual = "Inicio";
@@ -75,19 +77,35 @@ public partial class MainViewModel : OperacionViewModel
         EsAdministrador = _sesion.EsAdministrador;
     }
 
+    public async Task ActualizarVersionAsync()
+    {
+        var version = await _versionService.ObtenerVersionAsync();
+        TextoVersionMenu = $"v{version} · Sistema de inventario";
+    }
+
+    private void CambiarVista(OperacionViewModel vista, string titulo)
+    {
+        if (ReferenceEquals(VistaActual, vista))
+            return;
+
+        if (VistaActual is OperacionViewModel anterior)
+            anterior.LimpiarPantalla();
+
+        VistaActual = vista;
+        TituloVistaActual = titulo;
+    }
+
     [RelayCommand]
     private async Task IrAInicioAsync()
     {
-        VistaActual = _inicioViewModel;
-        TituloVistaActual = "Inicio";
+        CambiarVista(_inicioViewModel, "Inicio");
         await _inicioViewModel.CargarAsync();
     }
 
     [RelayCommand]
     private async Task IrACajaAsync()
     {
-        VistaActual = _cajaViewModel;
-        TituloVistaActual = "Caja";
+        CambiarVista(_cajaViewModel, "Caja");
         await _cajaViewModel.CargarAsync();
     }
 
@@ -96,8 +114,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _productosViewModel;
-        TituloVistaActual = "Productos";
+        CambiarVista(_productosViewModel, "Productos");
         await _productosViewModel.CargarAsync();
     }
 
@@ -106,8 +123,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _proveedoresViewModel;
-        TituloVistaActual = "Proveedores";
+        CambiarVista(_proveedoresViewModel, "Proveedores");
         await _proveedoresViewModel.CargarAsync();
     }
 
@@ -116,8 +132,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _inventarioViewModel;
-        TituloVistaActual = "Inventario";
+        CambiarVista(_inventarioViewModel, "Inventario");
         await _inventarioViewModel.CargarAsync();
     }
 
@@ -126,8 +141,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _comprasViewModel;
-        TituloVistaActual = "Compras";
+        CambiarVista(_comprasViewModel, "Compras");
         await _comprasViewModel.CargarAsync();
     }
 
@@ -136,8 +150,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _usuariosViewModel;
-        TituloVistaActual = "Usuarios";
+        CambiarVista(_usuariosViewModel, "Usuarios");
         await _usuariosViewModel.CargarAsync();
     }
 
@@ -146,8 +159,7 @@ public partial class MainViewModel : OperacionViewModel
     {
         if (!EsAdministrador) return;
 
-        VistaActual = _configuracionViewModel;
-        TituloVistaActual = "Configuración";
+        CambiarVista(_configuracionViewModel, "Configuración");
     }
 
     [RelayCommand]

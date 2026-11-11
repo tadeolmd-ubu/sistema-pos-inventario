@@ -31,9 +31,6 @@ public partial class UsuariosView : UserControl
 
     private void OnRestablecerContrasena(RestablecerContrasenaViewModel viewModel)
     {
-        if (TopLevel.GetTopLevel(this) is not Window ventana) return;
-
-        _ = ventana.ShowDialog(
-            new RestablecerContrasenaWindow { DataContext = viewModel });
+        new RestablecerContrasenaWindow { DataContext = viewModel }.Show();
     }
 }

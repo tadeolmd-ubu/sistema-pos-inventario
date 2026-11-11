@@ -13,6 +13,7 @@ public partial class ProductosViewModel : OperacionViewModel
 
     private readonly ProductoService? _productoService;
     private readonly List<Producto> _cargados = [];
+    private bool _limpiando;
 
     public ProductosViewModel() { }
 
@@ -27,9 +28,9 @@ public partial class ProductosViewModel : OperacionViewModel
     [ObservableProperty] private string sku = string.Empty;
     [ObservableProperty] private string nombre = string.Empty;
     [ObservableProperty] private string descripcion = string.Empty;
-    [ObservableProperty] private string precioVentaTexto = "0.00";
-    [ObservableProperty] private string costoTexto = "0.00";
-    [ObservableProperty] private string stockMinimoTexto = "0";
+    [ObservableProperty] private string precioVentaTexto = string.Empty;
+    [ObservableProperty] private string costoTexto = string.Empty;
+    [ObservableProperty] private string stockMinimoTexto = string.Empty;
 
     public bool EsModoCreacion => SelectedProducto is null;
 
@@ -61,7 +62,11 @@ public partial class ProductosViewModel : OperacionViewModel
         Filtrar();
     }
 
-    partial void OnVerArchivadosChanged(bool value) => _ = CargarAsync();
+    partial void OnVerArchivadosChanged(bool value)
+    {
+        if (!_limpiando)
+            _ = CargarAsync();
+    }
 
     partial void OnBusquedaChanged(string value) => Filtrar();
 
@@ -88,9 +93,9 @@ public partial class ProductosViewModel : OperacionViewModel
         Sku = string.Empty;
         Nombre = string.Empty;
         Descripcion = string.Empty;
-        PrecioVentaTexto = "0.00";
-        CostoTexto = "0.00";
-        StockMinimoTexto = "0";
+        PrecioVentaTexto = string.Empty;
+        CostoTexto = string.Empty;
+        StockMinimoTexto = string.Empty;
     }
 
     [RelayCommand]
@@ -140,7 +145,10 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(mensaje, correcta);
 
         if (correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -153,7 +161,10 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
 
     [RelayCommand]
@@ -166,8 +177,24 @@ public partial class ProductosViewModel : OperacionViewModel
         MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
 
         if (resultado.Correcta)
+        {
             await CargarDatosAsync();
+            LimpiarFormulario();
+        }
     });
+
+    public override void LimpiarPantalla()
+    {
+        base.LimpiarPantalla();
+
+        _limpiando = true;
+        _cargados.Clear();
+        ProductosItems.Clear();
+        LimpiarFormulario();
+        Busqueda = string.Empty;
+        VerArchivados = false;
+        _limpiando = false;
+    }
 
     private void Filtrar()
     {
