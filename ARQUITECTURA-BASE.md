@@ -1,8 +1,8 @@
 # Arquitectura base
 
-Documento operativo del esqueleto implementado. Resume las decisiones y las
-reglas que deben respetarse al agregar módulos. El modelo de datos ya está
-mapeado; los servicios y las pantallas se implementan por fases.
+Documento operativo del sistema implementado (v1 funcional en `dev`). Resume
+las decisiones y las reglas que deben respetarse al agregar módulos. El
+roadmap posterior a la v1 vive en `PENDIENTES.md`.
 
 ## Variables del proyecto
 
@@ -12,7 +12,7 @@ mapeado; los servicios y las pantallas se implementan por fases.
 | Nombre visible | `Sistema de inventario` |
 | Base SQLite | `SistemaInventario.db` |
 | Carpeta de datos (Release) | `SistemaInventario` en `LocalApplicationData` |
-| Repositorio de releases | `tadeolmd-ubu/sistemaPOS` |
+| Repositorio de releases | `tadeolmd-ubu/sistema-pos-inventario` |
 
 > El nombre técnico original (`POS--Sistema-POS-Inventario`) no es válido como
 > namespace/assembly de C#, por eso se usa `PosInventario`.
@@ -20,11 +20,14 @@ mapeado; los servicios y las pantallas se implementan por fases.
 ## Stack
 
 - `net10.0`, `WinExe`, `Nullable` e `ImplicitUsings` habilitados.
-- Avalonia 12.1.2 + FluentTheme + Inter.
+- Avalonia 12.1.2 + FluentTheme + Inter (+ `Avalonia.Controls.DataGrid`;
+  `AvaloniaUI.DiagnosticsSupport` solo en Debug).
 - CommunityToolkit.Mvvm 8.4.2.
 - EF Core SQLite 10.0.12 (runtime + design).
 - xUnit 2.9.3 para pruebas.
 - `dotnet-ef` 10.0.12 como herramienta local (`PosInventario/.config/dotnet-tools.json`).
+- Sin PDF, impresión ni red: la v1 es local (salvo el sondeo de versión
+  contra la API de GitHub en `VersionService`).
 
 ## Estructura
 
@@ -35,17 +38,31 @@ PosInventario/
 ├── Assets/
 ├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane
 ├── Data/                      AppDbContext, AppDbContextFactory
-├── Migrations/                generadas con dotnet-ef
+├── Migrations/                generadas con dotnet-ef (InitialCreate)
 ├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
-├── Service/                   Resultado, RespaldoService
+├── Service/                   Resultado, RespaldoService, RegistroApp,
+│                              InstanciaUnica, SesionActual, VersionService,
+│                              Usuario/Producto/Proveedor/Inventario/
+│                              Compra/Caja/VentaService, Linea*, ResumenPagosCaja
 ├── Styles/                    Styles.axaml, Converters.cs
-├── ViewModels/                OperacionViewModel, MainViewModel, InicioViewModel
-├── Views/                     SidebarView, InicioView, MensajeWindow, DesignTime/
+├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
+│                              Productos, Proveedores, Inventario, Compras,
+│                              Ventas, Usuarios, Configuración, Login, Setup,
+│                              Ticket, CancelarVenta, CerrarCaja, CajaHistorial,
+│                              MovimientoCaja, RestablecerContrasena,
+│                              SeleccionarProducto) e ítems de líneas
+├── Views/                     vistas por módulo + SidebarView, LoginWindow,
+│                              SetupWindow, TicketWindow, CancelarVentaWindow,
+│                              CerrarCajaWindow, CajaHistorialWindow,
+│                              MovimientoCajaWindow, RegistrarMovimientoCajaWindow,
+│                              RestablecerContrasenaWindow, SeleccionarProductoWindow,
+│                              ConfirmacionWindow, MensajeWindow, DesignTime/
 ├── App.axaml(.cs)
 ├── MainWindow.axaml(.cs)
 ├── Program.cs
 └── app.manifest
-PosInventario.Tests/           pruebas de servicios y respaldo
+PosInventario.Tests/           pruebas de servicios, respaldo, instancia,
+                               registro, ViewModels de caja/inicio y despliegue
 ```
 
 ## Dependencias entre capas
@@ -64,17 +81,49 @@ Views → ViewModels → Service → Data + Models
 
 ## Arranque
 
+`Program.cs`:
+
+1. Registra los manejadores globales (`AppDomain`, `TaskScheduler`,
+   `Dispatcher`) que escriben en `RegistroApp` sin lanzar.
+2. `InstanciaUnica.TryAdquirir`: bloqueo de archivo; si ya hay otra instancia
+   abierta, muestra el aviso "ya está abierto" y cierra.
+
 `App.axaml.cs`:
 
-1. Resuelve la ruta de la base (`Debug`: directorio actual y padres;
+1. Limpia logs con más de 30 días (`RegistroApp.LimpiarAntiguos`).
+2. Resuelve la ruta de la base (`Debug`: directorio actual y padres;
    `Release`: `LocalApplicationData` + importación portable).
-2. Crea **un** `AppDbContext`.
-3. Crea un servicio por entidad.
-4. Crea un ViewModel por pantalla y el `MainViewModel`.
-5. Asigna `DataContext` a `MainWindow`.
-6. En `Opened`: respaldo si hay migraciones pendientes, `MigrateAsync()`,
-   `InicializarAsync()`.
-7. En `desktop.Exit`: `Dispose()` del contexto.
+3. Crea **un** `AppDbContext` con `DefaultTimeout = 30` (espera el bloqueo de
+   SQLite en vez de fallar de inmediato).
+4. Crea un servicio por entidad + `SesionActual`, `RespaldoService` y
+   `VersionService`.
+5. Crea un ViewModel por pantalla y el `MainViewModel`; asigna `DataContext` a
+   `MainWindow` (inhabilitada hasta iniciar sesión).
+6. En `Opened`: respaldo previo si hay migraciones pendientes, `MigrateAsync()`,
+   luego `IniciarSesionAsync`.
+7. `IniciarSesionAsync`: abre el `SetupWindow` si no existe ningún usuario y
+   luego el `LoginWindow`; al entrar, `sesion.Iniciar`, `AplicarSesion`,
+   `InicializarAsync` y sondeo de versión remota en segundo plano.
+8. En `desktop.Exit`: `Dispose()` del contexto.
+
+## Sesión y roles
+
+- `SesionActual` guarda el `Usuario` activo; `EsAdministrador` se consulta
+  desde ViewModels y servicios.
+- `MainViewModel` bloquea los comandos de módulos administrativos
+  (Productos, Proveedores, Inventario, Compras, Ventas, Usuarios,
+  Configuración); la caja está disponible para ambos roles.
+- Los servicios también validan rol en operaciones sensibles (respaldos,
+  cancelaciones) además de la UI.
+
+## Servicios transversales
+
+- `RegistroApp`: log en `LocalApplicationData/SistemaInventario/logs/app-*.log`
+  con retención de 30 días. Nunca lanza.
+- `InstanciaUnica`: bloqueo de archivo para una sola ejecución.
+- `RespaldoService`: respaldo con `BackupDatabase` de SQLite; nombra
+  `respaldo_<fecha>_<hash>.db` en la carpeta destino.
+- `VersionService`: versión del ensamblado o de la última release de GitHub.
 
 ## Reglas de negocio
 
@@ -126,8 +175,10 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-Implementar los servicios por fase: `Usuario` y sesión, catálogos
-(`Producto`, `Proveedor`), inventario, compras, caja y ventas.
+La v1 está completa y sus 88 pruebas pasan. El trabajo pendiente (impresión de
+ticket, devoluciones tras cierre, pagos mixtos, respaldo automático,
+restauración, reportes, instalador) está ordenado por fases y prioridades en
+`PENDIENTES.md`.
 
 ## Invariantes
 
@@ -142,7 +193,21 @@ Implementar los servicios por fase: `Usuario` y sesión, catálogos
 9. La app debe arrancar aunque falle una consulta de actualización.
 10. Cada módulo nuevo se clona del patrón existente.
 
+## Módulos incluidos
+
+- Sesión: `LoginViewModel`/`SetupViewModel` con `UsuarioService`
+  (hash de contraseña, activación/desactivación, restablecimiento).
+- Inicio: resumen del día con `InicioViewModel`.
+- Caja: `CajaService` + `VentaService` (apertura/cierre con diferencia,
+  cobros con descuento, anulación, movimientos de efectivo, ticket en
+  pantalla, desglose por método de pago).
+- Catálogos e inventario: `ProductoService`, `ProveedorService`,
+  `InventarioService` (motivos de ajuste).
+- Compras: `CompraService` con líneas y actualización de stock.
+- Historial de ventas: `VentasViewModel` con filtros y reimpresión.
+- Configuración: respaldo manual desde la UI (solo administrador).
+
 ## Módulos opcionales (no incluidos)
 
-PDF (QuestPDF), respaldo manual desde UI, actualización automática y
-configuración. Se agregan solo cuando el proyecto los necesite.
+PDF (QuestPDF), impresión de tickets, actualización automática y
+configuración persistente. Se agregan según el roadmap de `PENDIENTES.md`.

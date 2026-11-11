@@ -1,8 +1,35 @@
 # Sistema de inventario
 
-Aplicación de escritorio construida con Avalonia, MVVM (CommunityToolkit),
-EF Core y SQLite. El modelo de datos está mapeado y la migración base creada;
-los servicios y las pantallas se implementan por fases.
+Aplicación de escritorio POS + inventario construida con Avalonia, MVVM
+(CommunityToolkit), EF Core y SQLite. La v1 está implementada y funcional:
+todos los módulos operan sobre la base local con sesión, roles, respaldos y
+registro de errores.
+
+## Estado actual (noviembre 2026, rama `dev`)
+
+- **Sesión:** asistente de primer administrador (setup), login y cierre de
+  sesión. Roles `Administrador` y `Cajero` con menús restringidos.
+- **Inicio:** resumen del día (ventas, ingresos, stock bajo, compras recientes).
+- **Caja (POS):** apertura y cierre con diferencia, cobro en efectivo, tarjeta
+  o transferencia, descuento sobre el subtotal, búsqueda y alta por SKU
+  (compatible con lector de código de barras), ticket en pantalla, anulación de
+  ventas y movimientos de entrada/salida de efectivo.
+- **Catálogos:** productos y proveedores (solo administrador).
+- **Inventario:** entradas/salidas con motivo y ajuste de stock.
+- **Compras:** registro con proveedor, líneas y actualización de costo/stock.
+- **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
+  método de pago y reimpresión de ticket.
+- **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
+  contraseña.
+- **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.
+- **Operación:** instancia única con bloqueo de archivo, manejo global de
+  errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
+  español de México.
+- **Tests:** 88 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+  en disco); build de Windows en CI.
+
+Lo que falta para llevarlo a un negocio real está ordenado por fases en
+`PENDIENTES.md`.
 
 ## Requisitos
 
@@ -20,7 +47,8 @@ dotnet run --project PosInventario/PosInventario.csproj
 
 ## Base de datos
 
-SQLite local (`SistemaInventario.db`). Las migraciones se aplican al iniciar.
+SQLite local (`SistemaInventario.db`). Las migraciones se aplican al iniciar;
+antes de migrar se crea un respaldo previo y, si falla, no se migra.
 
 - En `Debug` la base se busca en el directorio actual y sus padres.
 - En `Release` se usa `%LOCALAPPDATA%/SistemaInventario/SistemaInventario.db`
@@ -39,12 +67,13 @@ dotnet tool run dotnet-ef database update
 ## Publicación
 
 El workflow `.github/workflows/deploy.yml` ejecuta las pruebas, publica
-`win-x64` self-contained y crea una release en cada push a `main`.
+`win-x64` self-contained y crea una release en cada push a `main`
+(repositorio `tadeolmd-ubu/sistema-pos-inventario`).
 
 ## Estructura
 
 ```text
-PosInventario/          aplicación (Models, Data, Service, ViewModels, Views, Styles, Controls)
+PosInventario/          aplicación (Models, Data, Migrations, Service, ViewModels, Views, Controls, Styles)
 PosInventario.Tests/    pruebas xUnit sobre SQLite en memoria y en disco
 ```
 

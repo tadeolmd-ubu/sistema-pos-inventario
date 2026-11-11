@@ -10,12 +10,15 @@
 
 ## Ramas
 
-- `feat/services/<modulo>`
-- `feat/viewmodels/<modulo>`
-- `feat/views/<modulo>`
-- `fix/<modulo>`
+- `dev`: rama de integración donde se fusiona todo el trabajo.
+- `main`: solo recibe fusiones estables; cada push genera la release
+  (`deploy.yml`).
+- Ramas de trabajo desde `dev`:
+  - `feat/<modulo>` (p. ej. `feat/caja`, `feat/historial-ventas`)
+  - `fix/<modulo>` (p. ej. `fix/errores-globales`)
+  - `chore/<tema>` (p. ej. `chore/textos-espanol-mexico`)
 
-## Antes de un PR
+## Antes de fusionar a `dev`
 
 ```bash
 dotnet build PosInventario.sln
@@ -23,9 +26,13 @@ dotnet test PosInventario.sln
 git diff --check
 ```
 
+## Al cerrar un ítem de `PENDIENTES.md`
+
+Cambia `- [ ]` por `- [x]` y agrega el hash del commit en el propio documento.
+
 ## Prohibido
 
 - Crear repositorios o Unit of Work.
 - Usar `Remove()` en entidades de negocio.
 - Poner lógica de negocio en XAML o en el code-behind.
-- Versionar archivos `.db`.
+- Versionar archivos `.db` ni respaldos.
