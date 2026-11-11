@@ -15,12 +15,31 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     public CerrarCajaViewModel() { }
 
     public CerrarCajaViewModel(CajaService cajaService, Caja caja, decimal montoEsperado)
+        : this(cajaService, caja, montoEsperado, null)
+    {
+    }
+
+    public CerrarCajaViewModel(
+        CajaService cajaService,
+        Caja caja,
+        decimal montoEsperado,
+        ResumenPagosCaja? resumen)
     {
         _cajaService = cajaService;
         UsuarioAperturaTexto = caja.UsuarioApertura?.Nombre ?? "—";
         FechaAperturaTexto = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm", Cultura);
         MontoInicialTexto = caja.MontoInicial.ToString("0.00", Cultura);
         MontoEsperadoTexto = montoEsperado.ToString("0.00", Cultura);
+
+        if (resumen is null)
+            return;
+
+        TieneResumen = true;
+        CantidadVentasTexto = resumen.CantidadVentas.ToString(Cultura);
+        TotalVentasTexto = resumen.Total.ToString("0.00", Cultura);
+        TotalEfectivoTexto = resumen.Efectivo.ToString("0.00", Cultura);
+        TotalTarjetaTexto = resumen.Tarjeta.ToString("0.00", Cultura);
+        TotalTransferenciaTexto = resumen.Transferencia.ToString("0.00", Cultura);
     }
 
     [ObservableProperty] private string usuarioAperturaTexto = string.Empty;
@@ -29,6 +48,14 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     [ObservableProperty] private string montoEsperadoTexto = string.Empty;
     [ObservableProperty] private string montoFinalTexto = string.Empty;
     [ObservableProperty] private string observaciones = string.Empty;
+
+    [ObservableProperty] private string cantidadVentasTexto = string.Empty;
+    [ObservableProperty] private string totalVentasTexto = string.Empty;
+    [ObservableProperty] private string totalEfectivoTexto = string.Empty;
+    [ObservableProperty] private string totalTarjetaTexto = string.Empty;
+    [ObservableProperty] private string totalTransferenciaTexto = string.Empty;
+
+    public bool TieneResumen { get; }
 
     public event Action? CajaCerrada;
 

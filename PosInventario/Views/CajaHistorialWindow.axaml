@@ -58,7 +58,27 @@
                                VerticalAlignment="Center"/>
                 </Grid>
 
-                <ItemsControl ItemsSource="{Binding Ventas}">
+                <Border Background="{StaticResource SurfaceAltBrush}"
+                        CornerRadius="10"
+                        Padding="12">
+                    <Grid ColumnDefinitions="*,Auto"
+                          RowDefinitions="Auto,Auto,Auto"
+                          RowSpacing="3">
+                        <TextBlock Grid.Row="0" Text="Efectivo" Classes="caption"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding TotalEfectivoTexto}"/>
+
+                        <TextBlock Grid.Row="1" Text="Tarjeta" Classes="caption"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding TotalTarjetaTexto}"/>
+
+                        <TextBlock Grid.Row="2" Text="Transferencia" Classes="caption"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                   Text="{Binding TotalTransferenciaTexto}"/>
+                    </Grid>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding VentasCompletadas}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:Venta">
                             <Grid ColumnDefinitions="*,Auto" Margin="0,4">

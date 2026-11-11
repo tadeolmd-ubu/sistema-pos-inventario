@@ -31,6 +31,9 @@
         <DataTemplate DataType="vm:ComprasViewModel">
             <views:ComprasView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:VentasViewModel">
+            <views:VentasView/>
+        </DataTemplate>
         <DataTemplate DataType="vm:UsuariosViewModel">
             <views:UsuariosView/>
         </DataTemplate>

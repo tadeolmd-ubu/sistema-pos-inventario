@@ -124,7 +124,8 @@ public class AjustesV1Tests
         Assert.True(vm.HayVentasCanceladas);
         Assert.Single(vm.VentasCanceladas);
         Assert.Equal(anulada.Id, vm.VentasCanceladas[0].Id);
-        Assert.Equal(2, vm.CantidadVentas);
-        Assert.Equal("300.00", vm.TotalVentasTexto);
+        Assert.Single(vm.VentasCompletadas);
+        Assert.Equal(1, vm.CantidadVentas);
+        Assert.Equal("100.00", vm.TotalVentasTexto);
     }
 }

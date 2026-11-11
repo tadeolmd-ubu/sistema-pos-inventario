@@ -391,13 +391,15 @@ public partial class CajaViewModel : OperacionViewModel
     }
 
     [RelayCommand]
-    private void SolicitarCerrarCaja()
+    private Task SolicitarCerrarCajaAsync() => EjecutarSeguroAsync(async () =>
     {
         if (_cajaService is null || CajaAbierta is null) return;
 
+        var resumen = await _cajaService.ObtenerResumenPagosAsync(CajaAbierta.Id);
+
         CerrarCajaSolicitado?.Invoke(
-            new CerrarCajaViewModel(_cajaService, CajaAbierta, MontoEsperado));
-    }
+            new CerrarCajaViewModel(_cajaService, CajaAbierta, MontoEsperado, resumen));
+    });
 
     /// <summary>
     /// La vista lo usa al seleccionar una caja del historial.

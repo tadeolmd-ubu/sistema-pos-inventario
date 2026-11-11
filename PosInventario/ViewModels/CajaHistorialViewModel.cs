@@ -42,7 +42,10 @@ public class CajaHistorialViewModel
     public string Observaciones =>
         string.IsNullOrWhiteSpace(Caja.Observaciones) ? "—" : Caja.Observaciones;
 
-    public int CantidadVentas => Ventas.Count;
+    public int CantidadVentas => VentasCompletadas.Count;
+
+    public IReadOnlyList<Venta> VentasCompletadas =>
+        Ventas.Where(v => v.Estado == EstadoVenta.Completada).ToList();
 
     public IReadOnlyList<Venta> VentasCanceladas =>
         Ventas.Where(v => v.Estado == EstadoVenta.Anulada).ToList();
@@ -50,6 +53,28 @@ public class CajaHistorialViewModel
     public bool HayVentasCanceladas =>
         Ventas.Any(v => v.Estado == EstadoVenta.Anulada);
 
+    public decimal TotalEfectivo =>
+        VentasCompletadas
+            .Where(v => v.MetodoPago == MetodoPago.Efectivo)
+            .Sum(v => v.Total);
+
+    public decimal TotalTarjeta =>
+        VentasCompletadas
+            .Where(v => v.MetodoPago == MetodoPago.Tarjeta)
+            .Sum(v => v.Total);
+
+    public decimal TotalTransferencia =>
+        VentasCompletadas
+            .Where(v => v.MetodoPago == MetodoPago.Transferencia)
+            .Sum(v => v.Total);
+
+    public string TotalEfectivoTexto => TotalEfectivo.ToString("0.00", Cultura);
+
+    public string TotalTarjetaTexto => TotalTarjeta.ToString("0.00", Cultura);
+
+    public string TotalTransferenciaTexto =>
+        TotalTransferencia.ToString("0.00", Cultura);
+
     public string TotalVentasTexto =>
-        Ventas.Sum(v => v.Total).ToString("0.00", Cultura);
+        VentasCompletadas.Sum(v => v.Total).ToString("0.00", Cultura);
 }
