@@ -7,7 +7,7 @@
         Width="440"
         SizeToContent="Height"
         CanResize="False"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         Background="{StaticResource ContentBackgroundBrush}">
 
     <Border Classes="card" Margin="18" Padding="28">
