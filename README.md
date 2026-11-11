@@ -37,7 +37,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 133 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 134 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -103,11 +103,14 @@ listado completo.
 | **Enter en pago** | Cobrar | Confirmar la venta desde el campo de pago |
 | **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
 | **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
+| **↑/↓ + Enter** (selector de productos) | Navegar y agregar | Elegir un producto sin mouse |
 | **Ctrl+P** (ticket) | Imprimir | Imprimir o reimprimir el ticket |
 | **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
 
 Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
 campo; si está vacío, limpia la venta (con confirmación cuando hay productos).
+En el selector de productos, el primer resultado queda seleccionado al filtrar
+y **Enter** lo agrega.
 
 ## Impresión de tickets
 

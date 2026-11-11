@@ -177,7 +177,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 133 pruebas pasan. El trabajo pendiente (respaldo
+La base está estable y sus 134 pruebas pasan. El trabajo pendiente (respaldo
 automático, restauración, reportes, instalador) está ordenado por fases y
 prioridades en `PENDIENTES.md`.
 
@@ -231,7 +231,8 @@ prioridades en `PENDIENTES.md`.
   se capturan en fase Tunnel para que ComboBox/DataGrid no los consuman; Esc
   en fase Bubble para respetar diálogos y desplegables. El menú lateral
   muestra `ComandosItems` según la pestaña y el control enfocado
-  (`AtajoItem`), y F1 abre la ayuda del contexto. El detalle está en
+  (`AtajoItem`), y F1 abre la ayuda del contexto. El selector de productos
+  permite navegar con ↑/↓ y agregar con Enter. El detalle está en
   `README.md`.
 - Devoluciones: `DevolverVentaViewModel`/`DevolverVentaWindow` con checklist
   por producto o por unidad cuando hay varias iguales, con "Seleccionar

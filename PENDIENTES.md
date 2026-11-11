@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 133 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 134 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -152,10 +152,11 @@
   - **Panel:** el menú lateral muestra “Comandos · <contexto>” y cambia según
     la pestaña y el control enfocado (búsqueda, carrito, pago, selector,
     lista, botón, etc.).
-  - **Hecho en:** rama `feat/atajos-pos` (763a7a6, 2dfca5e, 2d6db9e y
-    b528cef): foco automático, F1–F10, Esc con confirmación, Ctrl+Enter,
-    Enter en búsqueda y pago, Delete, +/-, Ctrl+P en el ticket y panel
-    dinámico de comandos por contexto.
+  - **Hecho en:** rama `feat/atajos-pos` (763a7a6, 2dfca5e, 2d6db9e,
+    b528cef y 23777ea): foco automático, F1–F10, Esc con confirmación,
+    Ctrl+Enter, Enter en búsqueda y pago, Delete, +/-, Ctrl+P en el ticket,
+    panel dinámico de comandos por contexto y selección de productos con
+    Enter.
   - **Tamaño:** S.
 
 - [ ] **1.6 Confirmación al cerrar caja con diferencia**
