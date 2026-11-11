@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:PosInventario.Controls"
+             xmlns:conv="using:PosInventario.Styles"
              xmlns:dt="using:PosInventario.Views.DesignTime"
              xmlns:models="using:PosInventario.Models"
              xmlns:vm="using:PosInventario.ViewModels"
@@ -10,6 +11,10 @@
              d:DataContext="{x:Static dt:DesignTimeData.Productos}"
              x:DataType="vm:ProductosViewModel"
              x:Class="PosInventario.Views.ProductosView">
+
+    <UserControl.Resources>
+        <conv:ArchivadoFondoConverter x:Key="FondoArchivado"/>
+    </UserControl.Resources>
 
     <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
         <controls:ResponsiveTwoPane ExpandedListWidth="390"
@@ -36,18 +41,22 @@
                              Classes="entityList">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Producto">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding Sku}" Classes="caption"/>
-                                        <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding PrecioVenta, StringFormat='{}{0:0.00}'}"
-                                                   Classes="caption"/>
-                                        <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
-                                                   Classes="caption"/>
+                                <Border Background="{Binding FechaArchivado, Converter={StaticResource FondoArchivado}}"
+                                        CornerRadius="8"
+                                        Padding="8,6">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Sku}" Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding PrecioVenta, StringFormat='{}{0:0.00}'}"
+                                                       Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                                       Classes="caption"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
