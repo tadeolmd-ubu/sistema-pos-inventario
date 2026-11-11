@@ -177,7 +177,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 127 pruebas pasan. El trabajo pendiente (respaldo
+La base está estable y sus 129 pruebas pasan. El trabajo pendiente (respaldo
 automático, restauración, reportes, instalador) está ordenado por fases y
 prioridades en `PENDIENTES.md`.
 
@@ -201,16 +201,17 @@ prioridades en `PENDIENTES.md`.
 - Inicio: resumen del día con `InicioViewModel`.
 - Caja: `CajaService` + `VentaService` (apertura/cierre con diferencia,
   cobros con descuento, pagos mixtos, anulación, movimientos de efectivo,
-  ticket en pantalla, desglose por método de pago). Cada venta guarda sus
-  pagos en `PagoVenta`; la suma debe cubrir el total, el cambio solo se
-  calcula sobre el efectivo y solo esa parte entra a la caja. Las devoluciones
-  (`VentaService.DevolverAsync`) pueden ser totales o parciales: regresan
-  el stock, acumulan `CantidadDevuelta` por línea y `TotalDevuelto` por
-  venta, y reembolsan el efectivo desde la caja abierta (la original si
-  sigue abierta); en ventas mixtas el reembolso se reparte proporcionalmente
-  entre los pagos originales y cada uno acumula su `MontoDevuelto`. Una caja
-  cerrada nunca se recalcula. `AnularAsync` es el caso especial de devolver
-  todo lo pendiente.
+  ticket en pantalla, desglose por método de pago). El cobro mixto se captura
+  con un selector que muestra los montos de efectivo, tarjeta y
+  transferencia; la suma debe cubrir el total. Cada venta guarda sus pagos en
+  `PagoVenta`; el cambio solo se calcula sobre el efectivo y solo esa parte
+  entra a la caja. Las devoluciones (`VentaService.DevolverAsync`) pueden ser
+  totales o parciales: regresan el stock, acumulan `CantidadDevuelta` por
+  línea y `TotalDevuelto` por venta, y reembolsan el efectivo desde la caja
+  abierta (la original si sigue abierta); en ventas mixtas el reembolso se
+  reparte proporcionalmente entre los pagos originales y cada uno acumula su
+  `MontoDevuelto`. Una caja cerrada nunca se recalcula. `AnularAsync` es el
+  caso especial de devolver todo lo pendiente.
 - Catálogos e inventario: `ProductoService`, `ProveedorService`,
   `InventarioService` (motivos de ajuste). En Productos el campo SKU es
   también el código de barras: al escanear y presionar Enter se carga el

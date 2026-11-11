@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 127 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 129 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -139,9 +139,10 @@
     esperado de la caja coincide.
   - **Tests:** suma de pagos, vuelto, cierre y ticket.
   - **Depende de:** 0.4.
-  - **Hecho en:** rama `feat/pagos-mixtos` (c774529): tabla `PagoVenta`,
-    migración con backfill, lista de pagos en Caja, desglose en ticket/cierre
-    y devoluciones por método.
+  - **Hecho en:** rama `feat/pagos-mixtos` (c774529 y 6524a3a): tabla
+    `PagoVenta`, migración con backfill, selector Mixto con los montos de
+    efectivo/tarjeta/transferencia, desglose en ticket/cierre y devoluciones
+    por método.
   - **Tamaño:** L.
 
 - [ ] **1.5 Atajos de teclado y foco en el POS**
