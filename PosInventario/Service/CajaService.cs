@@ -94,14 +94,15 @@ public class CajaService
 
     /// <summary>
     /// Totales de las ventas completadas de una caja, separados por método de
-    /// pago. Se usa en el cierre y en el detalle del historial.
+    /// pago y netos de devoluciones. Se usa en el cierre y en el detalle del
+    /// historial.
     /// </summary>
     public async Task<ResumenPagosCaja> ObtenerResumenPagosAsync(int idCaja)
     {
         var ventas = await _db.Ventas
             .AsNoTracking()
             .Where(v => v.IdCaja == idCaja && v.Estado == EstadoVenta.Completada)
-            .Select(v => new { v.MetodoPago, v.Total })
+            .Select(v => new { v.MetodoPago, Total = v.Total - v.TotalDevuelto })
             .ToListAsync();
 
         return new ResumenPagosCaja(

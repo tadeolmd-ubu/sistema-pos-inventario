@@ -20,6 +20,8 @@ public class VentaService
         => await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
             .Where(v => v.IdCaja == idCaja)
             .OrderByDescending(v => v.Fecha)
             .ThenByDescending(v => v.Id)
@@ -240,7 +242,28 @@ public class VentaService
         return new Resultado<Venta>(true, mensaje, venta);
     }
 
+    /// <summary>
+    /// Anula la venta devolviendo todas las unidades pendientes: es el caso
+    /// especial de una devolución total.
+    /// </summary>
     public async Task<Resultado> AnularAsync(int idVenta)
+    {
+        var resultado = await DevolverAsync(idVenta, lineas: null);
+
+        return resultado.Correcta
+            ? new Resultado(true, "Venta anulada.")
+            : resultado;
+    }
+
+    /// <summary>
+    /// Registra una devolución total o parcial de una venta: regresa el stock
+    /// de las líneas devueltas y acumula lo devuelto por línea y por venta.
+    /// El reembolso en efectivo sale de la caja original si sigue abierta o,
+    /// si ya se cerró, de la caja abierta actual sin tocar los montos del
+    /// cierre anterior. Sin líneas se devuelven todas las unidades pendientes.
+    /// </summary>
+    public async Task<Resultado> DevolverAsync(
+        int idVenta, IReadOnlyList<LineaDevolucion>? lineas)
     {
         if (!_sesion.Iniciada)
             return new Resultado(false, "La sesión no está iniciada.");
@@ -259,11 +282,7 @@ public class VentaService
 
         if (!_sesion.EsAdministrador && venta.IdUsuario != _sesion.IdUsuario)
             return new Resultado(
-                false, "Solo quien realizó la venta o un administrador puede anularla.");
-
-        if (venta.Caja is null || venta.Caja.Estado != EstadoCaja.Abierta)
-            return new Resultado(
-                false, "Solo se pueden anular ventas de la caja abierta.");
+                false, "Solo quien realizó la venta o un administrador puede hacer la devolución.");
 
         foreach (var detalle in venta.Detalles)
         {
@@ -271,50 +290,168 @@ public class VentaService
                 return new Resultado(false, "Uno de los productos de la venta no existe.");
         }
 
+        // Sin líneas se devuelven todas las unidades pendientes (anulación).
+        Dictionary<int, int> cantidades;
+
+        if (lineas is null)
+        {
+            cantidades = venta.Detalles
+                .Where(d => d.CantidadPendiente > 0)
+                .ToDictionary(d => d.Id, d => d.CantidadPendiente);
+
+            if (cantidades.Count == 0)
+                return new Resultado(false, "La venta ya está completamente devuelta.");
+        }
+        else
+        {
+            if (lineas.Count == 0)
+                return new Resultado(false, "Selecciona al menos un producto.");
+
+            if (lineas.Select(l => l.IdDetalleVenta).Distinct().Count() != lineas.Count)
+                return new Resultado(false, "Hay productos repetidos en la devolución.");
+
+            cantidades = [];
+
+            foreach (var linea in lineas)
+            {
+                var detalle = venta.Detalles
+                    .FirstOrDefault(d => d.Id == linea.IdDetalleVenta);
+
+                if (detalle is null)
+                    return new Resultado(
+                        false, "Uno de los productos no pertenece a la venta.");
+
+                if (linea.Cantidad <= 0)
+                    return new Resultado(
+                        false, "La cantidad a devolver debe ser mayor que 0.");
+
+                if (linea.Cantidad > detalle.CantidadPendiente)
+                    return new Resultado(false,
+                        $"No se pueden devolver más unidades de {detalle.Producto!.Nombre} de las vendidas.");
+
+                cantidades[detalle.Id] = linea.Cantidad;
+            }
+        }
+
+        // El efectivo solo puede salir de una caja abierta: la original si
+        // aún está abierta o, si ya se cerró, la abierta actual.
+        Caja? cajaReembolso;
+
+        if (venta.Caja is not null && venta.Caja.Estado == EstadoCaja.Abierta)
+        {
+            cajaReembolso = venta.Caja;
+        }
+        else
+        {
+            cajaReembolso = await _db.Cajas
+                .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);
+
+            if (cajaReembolso is null && venta.MetodoPago == MetodoPago.Efectivo)
+                return new Resultado(false,
+                    "No hay una caja abierta para reembolsar el efectivo. " +
+                    "Abre la caja e inténtalo de nuevo.");
+        }
+
+        var reembolso = CalcularReembolso(venta, lineas);
         var momento = DateTime.Now;
 
-        foreach (var detalle in venta.Detalles)
+        foreach (var (idDetalle, cantidad) in cantidades)
         {
-            var producto = detalle.Producto;
+            var detalle = venta.Detalles.First(d => d.Id == idDetalle);
+            var producto = detalle.Producto!;
             var stockAnterior = producto.Stock;
 
-            producto.Stock += detalle.Cantidad;
+            producto.Stock += cantidad;
             producto.FechaModificacion = momento;
+
+            detalle.CantidadDevuelta += cantidad;
 
             _db.MovimientosInventario.Add(new MovimientoInventario
             {
                 IdProducto = producto.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimiento.AnulacionVenta,
-                Cantidad = detalle.Cantidad,
+                Cantidad = cantidad,
                 StockAnterior = stockAnterior,
                 StockResultante = producto.Stock,
-                Referencia = $"Anulación venta V-{venta.Id:000000}",
+                Referencia = $"Devolución venta V-{venta.Id:000000}",
                 IdVenta = venta.Id,
                 Fecha = momento
             });
         }
 
-        if (venta.MetodoPago == MetodoPago.Efectivo && venta.Total > 0)
+        venta.TotalDevuelto += reembolso;
+
+        var quedanPendientes = venta.Detalles.Any(d => d.CantidadPendiente > 0);
+
+        if (!quedanPendientes)
+        {
+            venta.Estado = EstadoVenta.Anulada;
+            venta.FechaAnulacion = momento;
+            venta.IdUsuarioAnulacion = _sesion.IdUsuario;
+        }
+
+        // Solo el efectivo sale físicamente de la caja.
+        if (venta.MetodoPago == MetodoPago.Efectivo && reembolso > 0 && cajaReembolso is not null)
         {
             _db.MovimientosCaja.Add(new MovimientoCaja
             {
-                IdCaja = venta.IdCaja,
+                IdCaja = cajaReembolso.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimientoCaja.AnulacionVenta,
-                Monto = venta.Total,
-                Descripcion = $"Anulación venta V-{venta.Id:000000}",
+                Monto = reembolso,
+                Descripcion = $"Devolución venta V-{venta.Id:000000}",
                 IdVenta = venta.Id,
                 Fecha = momento
             });
         }
 
-        venta.Estado = EstadoVenta.Anulada;
-        venta.FechaAnulacion = momento;
-        venta.IdUsuarioAnulacion = _sesion.IdUsuario;
-
         await _db.SaveChangesAsync();
 
-        return new Resultado(true, "Venta anulada.");
+        return new Resultado(true, quedanPendientes
+            ? "Devolución registrada."
+            : "Devolución registrada. La venta ya no tiene nada pendiente.");
+    }
+
+    /// <summary>
+    /// Cuánto dinero se reembolsa al devolver las líneas indicadas. El
+    /// descuento se prorratea (cada unidad devuelve su parte); si se devuelven
+    /// todas las unidades pendientes se reembolsa el saldo exacto para no
+    /// arrastrar diferencias de redondeo.
+    /// </summary>
+    public decimal CalcularReembolso(
+        Venta venta, IReadOnlyList<LineaDevolucion>? lineas)
+    {
+        var totalPendiente = venta.Total - venta.TotalDevuelto;
+
+        if (totalPendiente <= 0)
+            return 0;
+
+        var cantidadPendiente = venta.Detalles.Sum(d => d.CantidadPendiente);
+
+        if (cantidadPendiente <= 0)
+            return 0;
+
+        var unidadesADevolver = lineas?.Sum(l => l.Cantidad) ?? cantidadPendiente;
+
+        if (unidadesADevolver == cantidadPendiente)
+            return totalPendiente;
+
+        var factor = venta.Subtotal > 0 ? venta.Total / venta.Subtotal : 1m;
+        var reembolso = 0m;
+
+        foreach (var linea in lineas ?? [])
+        {
+            var detalle = venta.Detalles
+                .FirstOrDefault(d => d.Id == linea.IdDetalleVenta);
+
+            if (detalle is null)
+                continue;
+
+            reembolso += Math.Round(
+                detalle.PrecioUnitario * linea.Cantidad * factor, 2);
+        }
+
+        return Math.Min(reembolso, totalPendiente);
     }
 }
