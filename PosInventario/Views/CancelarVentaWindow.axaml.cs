@@ -47,8 +47,10 @@ public partial class CancelarVentaWindow : Window
 
         var confirmacion = new ConfirmacionWindow(
             "Cancelar venta",
-            $"¿Cancelar la venta V-{_viewModel.SelectedVenta.Id:000000}? " +
-            "Se devolverá el stock y, si fue en efectivo, el dinero a la caja.");
+            $"¿Cancelar la venta V-{_viewModel.SelectedVenta.Id:000000}?\n\n" +
+            "Se devolverá al inventario:\n" +
+            $"{_viewModel.ProductosSeleccionadaTexto}\n\n" +
+            _viewModel.ReembolsoSeleccionadaTexto);
 
         if (await confirmacion.ShowDialog<bool>(ventana))
             await _viewModel.CancelarSeleccionadaAsync();

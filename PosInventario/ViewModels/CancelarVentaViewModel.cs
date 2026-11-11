@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Models;
@@ -9,6 +10,8 @@ namespace PosInventario.ViewModels;
 
 public partial class CancelarVentaViewModel : OperacionViewModel
 {
+    private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
+
     private readonly VentaService? _ventaService;
     private readonly SesionActual? _sesion;
     private readonly int _idCaja;
@@ -34,6 +37,35 @@ public partial class CancelarVentaViewModel : OperacionViewModel
         (_sesion.EsAdministrador || SelectedVenta.IdUsuario == _sesion.IdUsuario);
 
     /// <summary>
+    /// Unidades pendientes de la venta seleccionada, una por línea, para
+    /// mostrarlas en la confirmación antes de cancelar.
+    /// </summary>
+    public string ProductosSeleccionadaTexto =>
+        SelectedVenta is null
+            ? ""
+            : string.Join("\n", SelectedVenta.Detalles
+                .Where(d => d.CantidadPendiente > 0)
+                .Select(d => $"{d.CantidadPendiente} × {d.Producto?.Nombre ?? "Producto"}"));
+
+    /// <summary>
+    /// Cómo saldría el reembolso de cancelar la venta seleccionada.
+    /// </summary>
+    public string ReembolsoSeleccionadaTexto
+    {
+        get
+        {
+            if (SelectedVenta is null)
+                return "";
+
+            var monto = SelectedVenta.TotalNeto.ToString("0.00", Cultura);
+
+            return SelectedVenta.MetodoPago == MetodoPago.Efectivo
+                ? $"Se reembolsarán {monto} en efectivo de la caja."
+                : $"El reembolso de {monto} se hace fuera de la app; aquí solo se regresa el stock.";
+        }
+    }
+
+    /// <summary>
     /// Lo escucha la ventana para cerrarse después de cancelar la venta.
     /// </summary>
     public event Action? VentaCancelada;
@@ -51,7 +83,11 @@ public partial class CancelarVentaViewModel : OperacionViewModel
     }
 
     partial void OnSelectedVentaChanged(Venta? value)
-        => OnPropertyChanged(nameof(PuedeCancelar));
+    {
+        OnPropertyChanged(nameof(PuedeCancelar));
+        OnPropertyChanged(nameof(ProductosSeleccionadaTexto));
+        OnPropertyChanged(nameof(ReembolsoSeleccionadaTexto));
+    }
 
     public Task CancelarSeleccionadaAsync() => EjecutarSeguroAsync(async () =>
     {
