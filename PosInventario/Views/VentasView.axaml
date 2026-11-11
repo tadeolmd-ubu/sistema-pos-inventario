@@ -93,10 +93,14 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <Button Content="Ver ticket"
-                            Classes="secondary"
-                            HorizontalAlignment="Left"
-                            Command="{Binding VerTicketCommand}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                        <Button Content="Ver ticket"
+                                Classes="secondary"
+                                Command="{Binding VerTicketCommand}"/>
+                        <Button Content="Devolver"
+                                Classes="secondary"
+                                Command="{Binding DevolverCommand}"/>
+                    </StackPanel>
 
                 </StackPanel>
             </Border>

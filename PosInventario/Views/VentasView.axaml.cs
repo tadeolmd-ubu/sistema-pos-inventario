@@ -24,12 +24,18 @@ public partial class VentasView : UserControl
     private void ConectarViewModel(VentasViewModel? viewModel)
     {
         if (_viewModel is not null)
+        {
             _viewModel.TicketSolicitado -= OnTicket;
+            _viewModel.DevolucionSolicitada -= OnDevolucion;
+        }
 
         _viewModel = viewModel;
 
         if (_viewModel is not null)
+        {
             _viewModel.TicketSolicitado += OnTicket;
+            _viewModel.DevolucionSolicitada += OnDevolucion;
+        }
     }
 
     private void Ventas_DoubleTapped(object? sender, TappedEventArgs e)
@@ -47,5 +53,22 @@ public partial class VentasView : UserControl
         {
             DataContext = new TicketViewModel(venta)
         }.ShowDialog(ventana);
+    }
+
+    private async void OnDevolucion(Venta venta)
+    {
+        if (_viewModel is null || TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var devolucion = _viewModel.CrearDevolucionViewModel(venta);
+
+        if (devolucion is null)
+            return;
+
+        var registrada = await new DevolverVentaWindow { DataContext = devolucion }
+            .ShowDialog<bool>(ventana);
+
+        if (registrada)
+            await _viewModel.CargarAsync();
     }
 }

@@ -91,8 +91,10 @@ public class AjustesV1Tests
     }
 
     [Fact]
-    public void HistorialSeparaVentasCanceladas()
+    public async Task HistorialSeparaVentasCanceladas()
     {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
         var caja = new Caja
         {
             Id = 1,
@@ -119,11 +121,13 @@ public class AjustesV1Tests
             Estado = EstadoVenta.Anulada
         };
 
-        var vm = new CajaHistorialViewModel(caja, [completada, anulada]);
+        var vm = new CajaHistorialViewModel(
+            caja, [completada, anulada],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
 
         Assert.True(vm.HayVentasCanceladas);
         Assert.Single(vm.VentasCanceladas);
-        Assert.Equal(anulada.Id, vm.VentasCanceladas[0].Id);
+        Assert.Equal(anulada.Id, vm.VentasCanceladas[0].Venta.Id);
         Assert.Single(vm.VentasCompletadas);
         Assert.Equal(1, vm.CantidadVentas);
         Assert.Equal("100.00", vm.TotalVentasTexto);
