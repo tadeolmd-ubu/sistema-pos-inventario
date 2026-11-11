@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using PosInventario.Service;
 
 namespace PosInventario.ViewModels;
 
@@ -38,6 +39,8 @@ public abstract partial class OperacionViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            RegistroApp.Escribir("Error al ejecutar una operación.", ex);
+
             MensajeOperacion = Notificar(
                 $"No se pudo completar la operación: {ex.Message}");
         }

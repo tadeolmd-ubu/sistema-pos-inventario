@@ -1,5 +1,7 @@
-﻿using Avalonia;
-using System;
+﻿using System;
+using System.Threading.Tasks;
+using Avalonia;
+using PosInventario.Service;
 
 namespace PosInventario;
 
@@ -9,8 +11,21 @@ class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            RegistroApp.Escribir(
+                "Excepción no controlada en un hilo de fondo.",
+                e.ExceptionObject as Exception);
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            RegistroApp.Escribir("Tarea no observada.", e.Exception);
+            e.SetObserved();
+        };
+
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
