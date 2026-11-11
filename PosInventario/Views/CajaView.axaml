@@ -92,10 +92,11 @@
                                 <Button Grid.Column="2"
                                         Content="Seleccionar productos"
                                         Classes="secondary"
+                                        ToolTip.Tip="F3"
                                         Command="{Binding SeleccionarProductosCommand}"/>
                             </Grid>
 
-                            <TextBlock Text="Atajos: F2 buscar · F4 cobrar · Esc limpiar · Enter para agregar"
+                            <TextBlock Text="Atajos: F2 buscar · F3 productos · F4 cobrar · F1 ayuda · Esc limpiar"
                                        Classes="caption"/>
 
                             <DataGrid x:Name="LineasVentaGrid"
@@ -384,14 +385,17 @@
                     <Button Content="Devolver venta"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F8"
                             Command="{Binding SolicitarCancelarVentaCommand}"/>
                     <Button Content="Registrar movimiento de efectivo"
                             Classes="secondary"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F9"
                             Command="{Binding SolicitarRegistrarMovimientoCommand}"/>
                     <Button Content="Cerrar caja"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F10"
                             Command="{Binding SolicitarCerrarCajaCommand}"/>
                 </StackPanel>
 

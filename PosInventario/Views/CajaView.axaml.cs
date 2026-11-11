@@ -76,6 +76,8 @@ public partial class CajaView : UserControl
         if (TopLevel.GetTopLevel(this) is not Window ventana)
             return;
 
+        var focoEnGrid = LineasVentaGrid.IsKeyboardFocusWithin;
+
         var confirmacion = new ConfirmacionWindow(
             "Eliminar producto",
             $"¿Quitar {linea.Nombre} de la venta?");
@@ -83,7 +85,10 @@ public partial class CajaView : UserControl
         if (await confirmacion.ShowDialog<bool>(ventana))
             _viewModel?.EliminarLinea(linea);
 
-        EnfocarBusqueda();
+        if (focoEnGrid)
+            LineasVentaGrid.Focus();
+        else
+            EnfocarBusqueda();
     }
 
     private async void OnTicket(Venta venta)
@@ -219,19 +224,131 @@ public partial class CajaView : UserControl
         if (_viewModel is null)
             return;
 
-        if (e.Key == Key.F2)
+        if (LineasVentaGrid.IsKeyboardFocusWithin &&
+            (e.Key == Key.Delete ||
+             e.Key == Key.Add || e.Key == Key.OemPlus ||
+             e.Key == Key.Subtract || e.Key == Key.OemMinus))
         {
             e.Handled = true;
-            EnfocarBusqueda();
+            EjecutarAccionLinea(e.Key);
             return;
         }
 
-        if (e.Key == Key.F4 ||
-            (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control)))
+        switch (e.Key)
         {
-            e.Handled = true;
-            await CobrarAsync();
+            case Key.F1:
+                e.Handled = true;
+                await MostrarAtajosAsync();
+                break;
+            case Key.F2:
+                e.Handled = true;
+                EnfocarBusqueda();
+                break;
+            case Key.F3:
+                e.Handled = true;
+                if (_viewModel.SeleccionarProductosCommand.CanExecute(null))
+                    _viewModel.SeleccionarProductosCommand.Execute(null);
+                break;
+            case Key.F4:
+                e.Handled = true;
+                await CobrarAsync();
+                break;
+            case Key.F5:
+                e.Handled = true;
+                await _viewModel.CargarAsync();
+                EnfocarBusqueda();
+                break;
+            case Key.F6:
+                e.Handled = true;
+                DescuentoBox.Focus();
+                DescuentoBox.SelectAll();
+                break;
+            case Key.F7:
+                e.Handled = true;
+                EnfocarMetodoPago();
+                break;
+            case Key.F8:
+                e.Handled = true;
+                if (_viewModel.SolicitarCancelarVentaCommand.CanExecute(null))
+                    _viewModel.SolicitarCancelarVentaCommand.Execute(null);
+                break;
+            case Key.F9:
+                e.Handled = true;
+                if (_viewModel.SolicitarRegistrarMovimientoCommand.CanExecute(null))
+                    _viewModel.SolicitarRegistrarMovimientoCommand.Execute(null);
+                break;
+            case Key.F10:
+                e.Handled = true;
+                if (_viewModel.SolicitarCerrarCajaCommand.CanExecute(null))
+                    await _viewModel.SolicitarCerrarCajaCommand.ExecuteAsync(null);
+                break;
+            case Key.Enter when e.KeyModifiers.HasFlag(KeyModifiers.Control):
+                e.Handled = true;
+                await CobrarAsync();
+                break;
         }
+    }
+
+    private void EjecutarAccionLinea(Key key)
+    {
+        if (LineasVentaGrid.SelectedItem is not LineaVentaItem linea)
+            return;
+
+        switch (key)
+        {
+            case Key.Delete:
+                linea.EliminarCommand.Execute(null);
+                break;
+            case Key.Add:
+            case Key.OemPlus:
+                linea.AumentarCommand.Execute(null);
+                break;
+            case Key.Subtract:
+            case Key.OemMinus:
+                linea.DisminuirCommand.Execute(null);
+                break;
+        }
+    }
+
+    private void EnfocarMetodoPago()
+    {
+        if (_viewModel?.EsPagoMixto == true)
+            MetodoPagoMixtoBox.Focus();
+        else
+            MetodoPagoSimpleBox.Focus();
+    }
+
+    private async Task MostrarAtajosAsync()
+    {
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var texto = string.Join(Environment.NewLine, new[]
+        {
+            "F1   Mostrar esta ayuda",
+            "F2   Buscar o escanear",
+            "F3   Seleccionar productos",
+            "F4   Cobrar",
+            "F5   Actualizar caja",
+            "F6   Enfocar descuento",
+            "F7   Enfocar método de pago",
+            "F8   Devolver venta",
+            "F9   Registrar movimiento de efectivo",
+            "F10  Cerrar caja",
+            "Esc  Limpiar venta o cerrar diálogo",
+            "Ctrl+Enter  Cobrar",
+            "Enter en búsqueda  Agregar producto",
+            "Enter en pago  Cobrar",
+            "Delete  Quitar la línea seleccionada",
+            "+ / -  Cambiar cantidad de la línea seleccionada",
+            "Ctrl+P en el ticket  Imprimir"
+        });
+
+        await new MensajeWindow(new MensajeDialogo(
+            "Atajos de teclado", texto, TipoMensajeOperacion.Informacion))
+            .ShowDialog(ventana);
+
+        EnfocarBusqueda();
     }
 
     private async void Caja_KeyDownBubble(object? sender, KeyEventArgs e)
