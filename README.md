@@ -12,8 +12,10 @@ registro de errores.
 - **Inicio:** resumen del día (ventas, ingresos, stock bajo, compras recientes).
 - **Caja (POS):** apertura y cierre con diferencia, cobro en efectivo, tarjeta
   o transferencia, descuento sobre el subtotal, búsqueda y alta por SKU
-  (compatible con lector de código de barras), ticket en pantalla, anulación de
-  ventas y movimientos de entrada/salida de efectivo.
+  (compatible con lector de código de barras), ticket en pantalla,
+  devoluciones totales o parciales desde la caja en curso, el detalle de una
+  caja o el historial de ventas (checklist por unidad y reembolso en la caja
+  abierta) y movimientos de entrada/salida de efectivo.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
@@ -21,14 +23,16 @@ registro de errores.
 - **Inventario:** entradas/salidas con motivo y ajuste de stock.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
-  método de pago y reimpresión de ticket.
+  método de pago, reimpresión de ticket y botón de devolución (checklist por
+  producto o unidad, con reembolso estimado). Cada venta muestra su total neto
+  y, si aplica, cuánto se le ha devuelto.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 88 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 100 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en

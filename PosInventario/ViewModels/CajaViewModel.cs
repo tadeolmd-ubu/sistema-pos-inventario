@@ -406,10 +406,10 @@ public partial class CajaViewModel : OperacionViewModel
     /// </summary>
     public async Task<CajaHistorialViewModel?> CrearHistorialViewModelAsync(Caja caja)
     {
-        if (_ventaService is null) return null;
+        if (_ventaService is null || _sesion is null) return null;
 
         var ventas = await _ventaService.ObtenerPorCajaAsync(caja.Id);
-        return new CajaHistorialViewModel(caja, ventas);
+        return new CajaHistorialViewModel(caja, ventas, _ventaService, _sesion);
     }
 
     public override void LimpiarPantalla()

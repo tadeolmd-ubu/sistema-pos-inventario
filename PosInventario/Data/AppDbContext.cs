@@ -307,6 +307,7 @@ public class AppDbContext : DbContext
                 t.HasCheckConstraint("CK_Venta_subtotal", "subtotal >= 0");
                 t.HasCheckConstraint("CK_Venta_descuento", "descuento >= 0");
                 t.HasCheckConstraint("CK_Venta_total", "total >= 0");
+                t.HasCheckConstraint("CK_Venta_totalDevuelto", "totalDevuelto >= 0 AND totalDevuelto <= total");
                 t.HasCheckConstraint("CK_Venta_montoRecibido", "montoRecibido >= total");
                 t.HasCheckConstraint("CK_Venta_vuelto", "vuelto >= 0");
             });
@@ -322,6 +323,8 @@ public class AppDbContext : DbContext
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Total).HasColumnName("total")
                 .HasColumnType("decimal(12,2)").IsRequired();
+            e.Property(x => x.TotalDevuelto).HasColumnName("totalDevuelto")
+                .HasColumnType("decimal(12,2)").IsRequired().HasDefaultValue(0m);
             e.Property(x => x.MetodoPago).HasColumnName("metodoPago")
                 .HasConversion<string>().HasMaxLength(15).IsRequired();
             e.Property(x => x.MontoRecibido).HasColumnName("montoRecibido")
@@ -359,6 +362,7 @@ public class AppDbContext : DbContext
             e.ToTable("DetalleVenta", t =>
             {
                 t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
+                t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
                 t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
                 t.HasCheckConstraint("CK_DetalleVenta_subtotal", "subtotal >= 0");
             });
@@ -368,6 +372,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.IdVenta).HasColumnName("idVenta").IsRequired();
             e.Property(x => x.IdProducto).HasColumnName("idProducto").IsRequired();
             e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
+            e.Property(x => x.CantidadDevuelta).HasColumnName("cantidadDevuelta")
+                .IsRequired().HasDefaultValue(0);
             e.Property(x => x.PrecioUnitario).HasColumnName("precioUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")

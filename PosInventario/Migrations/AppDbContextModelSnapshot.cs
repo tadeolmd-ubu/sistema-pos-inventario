@@ -203,6 +203,12 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
+                    b.Property<int>("CantidadDevuelta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0)
+                        .HasColumnName("cantidadDevuelta");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("INTEGER")
                         .HasColumnName("idProducto");
@@ -228,6 +234,8 @@ namespace PosInventario.Migrations
                     b.ToTable("DetalleVenta", null, t =>
                         {
                             t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
+
+                            t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
 
                             t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
 
@@ -593,6 +601,12 @@ namespace PosInventario.Migrations
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("total");
 
+                    b.Property<decimal>("TotalDevuelto")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("totalDevuelto");
+
                     b.Property<decimal>("Vuelto")
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("vuelto");
@@ -618,6 +632,8 @@ namespace PosInventario.Migrations
                             t.HasCheckConstraint("CK_Venta_subtotal", "subtotal >= 0");
 
                             t.HasCheckConstraint("CK_Venta_total", "total >= 0");
+
+                            t.HasCheckConstraint("CK_Venta_totalDevuelto", "totalDevuelto >= 0 AND totalDevuelto <= total");
 
                             t.HasCheckConstraint("CK_Venta_vuelto", "vuelto >= 0");
                         });

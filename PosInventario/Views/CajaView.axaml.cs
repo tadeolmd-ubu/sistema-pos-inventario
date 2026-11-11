@@ -168,7 +168,10 @@ public partial class CajaView : UserControl
         if (detalle is null)
             return;
 
-        await new CajaHistorialWindow { DataContext = detalle }
-            .ShowDialog(ventana);
+        var huboDevolucion = await new CajaHistorialWindow { DataContext = detalle }
+            .ShowDialog<bool>(ventana);
+
+        if (huboDevolucion && _viewModel is not null)
+            await _viewModel.CargarAsync();
     }
 }

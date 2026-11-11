@@ -27,16 +27,25 @@ public partial class CancelarVentaViewModel : OperacionViewModel
 
     [ObservableProperty] private Venta? selectedVenta;
 
-    public bool PuedeCancelar =>
+    /// <summary>
+    /// Solo se puede devolver una venta completada con unidades pendientes,
+    /// por el vendedor original o un administrador.
+    /// </summary>
+    public bool PuedeDevolver =>
         SelectedVenta is not null &&
         SelectedVenta.Estado == EstadoVenta.Completada &&
+        SelectedVenta.Detalles.Any(d => d.CantidadPendiente > 0) &&
         _sesion is not null &&
         (_sesion.EsAdministrador || SelectedVenta.IdUsuario == _sesion.IdUsuario);
 
     /// <summary>
-    /// Lo escucha la ventana para cerrarse después de cancelar la venta.
+    /// Crea el ViewModel del checklist de devolución de la venta
+    /// seleccionada.
     /// </summary>
-    public event Action? VentaCancelada;
+    public DevolverVentaViewModel? CrearDevolucionViewModel()
+        => _ventaService is null || SelectedVenta is null
+            ? null
+            : new DevolverVentaViewModel(_ventaService, SelectedVenta);
 
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
@@ -51,21 +60,7 @@ public partial class CancelarVentaViewModel : OperacionViewModel
     }
 
     partial void OnSelectedVentaChanged(Venta? value)
-        => OnPropertyChanged(nameof(PuedeCancelar));
-
-    public Task CancelarSeleccionadaAsync() => EjecutarSeguroAsync(async () =>
-    {
-        if (_ventaService is null || SelectedVenta is null) return;
-
-        var resultado = await _ventaService.AnularAsync(SelectedVenta.Id);
-
-        MensajeOperacion = resultado.Mensaje;
-
-        if (!resultado.Correcta) return;
-
-        await CargarDatosAsync();
-        VentaCancelada?.Invoke();
-    });
+        => OnPropertyChanged(nameof(PuedeDevolver));
 
     private static void ReemplazarItems<T>(
         ObservableCollection<T> destino, IEnumerable<T> origen)

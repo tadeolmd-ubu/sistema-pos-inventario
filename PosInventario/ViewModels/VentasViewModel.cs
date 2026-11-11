@@ -45,15 +45,34 @@ public partial class VentasViewModel : OperacionViewModel
     public string TotalVendidoTexto =>
         VentasItems
             .Where(v => v.Estado == EstadoVenta.Completada)
-            .Sum(v => v.Total)
+            .Sum(v => v.TotalNeto)
             .ToString("0.00", Cultura);
 
     public bool PuedeVerTicket => SelectedVenta is not null;
 
     /// <summary>
+    /// Solo se puede devolver una venta completada con unidades pendientes.
+    /// El servicio valida que el usuario sea el vendedor o un administrador.
+    /// </summary>
+    public bool PuedeDevolverSeleccionada =>
+        SelectedVenta is not null &&
+        SelectedVenta.Estado == EstadoVenta.Completada &&
+        SelectedVenta.Detalles.Any(d => d.CantidadPendiente > 0);
+
+    /// <summary>
     /// La vista abre el ticket de la venta seleccionada.
     /// </summary>
     public event Action<Venta>? TicketSolicitado;
+
+    /// <summary>
+    /// La vista abre la ventana de devolución de la venta seleccionada.
+    /// </summary>
+    public event Action<Venta>? DevolucionSolicitada;
+
+    public DevolverVentaViewModel? CrearDevolucionViewModel(Venta venta)
+        => _ventaService is null
+            ? null
+            : new DevolverVentaViewModel(_ventaService, venta);
 
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(async () =>
@@ -84,6 +103,13 @@ public partial class VentasViewModel : OperacionViewModel
             TicketSolicitado?.Invoke(SelectedVenta);
     }
 
+    [RelayCommand(CanExecute = nameof(PuedeDevolverSeleccionada))]
+    private void Devolver()
+    {
+        if (SelectedVenta is not null)
+            DevolucionSolicitada?.Invoke(SelectedVenta);
+    }
+
     partial void OnBusquedaChanged(string value) => Filtrar();
 
     partial void OnVerAnuladasChanged(bool value) => Filtrar();
@@ -92,6 +118,8 @@ public partial class VentasViewModel : OperacionViewModel
     {
         OnPropertyChanged(nameof(PuedeVerTicket));
         VerTicketCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(PuedeDevolverSeleccionada));
+        DevolverCommand.NotifyCanExecuteChanged();
     }
 
     public override void LimpiarPantalla()

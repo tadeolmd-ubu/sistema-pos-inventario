@@ -293,7 +293,7 @@
                 </Border>
 
                 <StackPanel Spacing="10" IsVisible="{Binding HayCajaAbierta}">
-                    <Button Content="Cancelar venta"
+                    <Button Content="Devolver venta"
                             Classes="danger"
                             HorizontalAlignment="Left"
                             Command="{Binding SolicitarCancelarVentaCommand}"/>

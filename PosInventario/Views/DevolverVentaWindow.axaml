@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:DevolverVentaViewModel"
+        x:Class="PosInventario.Views.DevolverVentaWindow"
+        Title="Devolver venta"
+        Width="520"
+        SizeToContent="Height"
+        MaxHeight="720"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="12">
+
+            <TextBlock Text="{Binding Titulo}" Classes="subsection"/>
+            <TextBlock Text="Marca los productos que devuelve el cliente. El stock se regresa al inventario."
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <CheckBox Content="Seleccionar todos"
+                      IsChecked="{Binding SeleccionarTodos}"/>
+
+            <TextBlock Text="{Binding SinPendientesTexto}"
+                       Classes="caption"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding SinPendientes}"/>
+
+            <ScrollViewer MaxHeight="340" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ProductoDevolucionItem">
+                            <StackPanel Spacing="4" Margin="0,3">
+
+                                <CheckBox Content="{Binding Nombre}"
+                                          IsChecked="{Binding Unica.Seleccionada}"
+                                          IsVisible="{Binding EsUnidadUnica}"/>
+
+                                <Expander Header="{Binding TituloGrupo}"
+                                          IsExpanded="{Binding Expandido}"
+                                          IsVisible="{Binding EsGrupo}">
+                                    <ItemsControl ItemsSource="{Binding Unidades}"
+                                                  Margin="16,4,0,4">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:UnidadDevolucionItem">
+                                                <CheckBox Content="{Binding Etiqueta}"
+                                                          IsChecked="{Binding Seleccionada}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12">
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="3">
+                        <TextBlock Text="Unidades a devolver" Classes="caption"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding UnidadesTexto}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="1" Text="Reembolso estimado" Classes="caption"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding ReembolsoTexto}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+                    <TextBlock Text="{Binding NotaReembolsoTexto}"
+                               Classes="caption"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cerrar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cerrar_Click"/>
+                <Button Content="Devolver"
+                        Classes="primary"
+                        IsEnabled="{Binding PuedeConfirmar}"
+                        Click="Devolver_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>
