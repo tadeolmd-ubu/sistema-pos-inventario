@@ -14,7 +14,10 @@ registro de errores.
   o transferencia, descuento sobre el subtotal, búsqueda y alta por SKU
   (compatible con lector de código de barras), ticket en pantalla, anulación de
   ventas y movimientos de entrada/salida de efectivo.
-- **Catálogos:** productos y proveedores (solo administrador).
+- **Catálogos:** productos y proveedores (solo administrador). El campo
+  **SKU es también el código de barras**: al escanear (o escribir) un código
+  en Productos y presionar Enter se cargan los datos del producto si existe,
+  o se prepara el alta con ese SKU si es nuevo.
 - **Inventario:** entradas/salidas con motivo y ajuste de stock.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por

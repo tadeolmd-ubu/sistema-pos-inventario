@@ -202,7 +202,10 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
   cobros con descuento, anulación, movimientos de efectivo, ticket en
   pantalla, desglose por método de pago).
 - Catálogos e inventario: `ProductoService`, `ProveedorService`,
-  `InventarioService` (motivos de ajuste).
+  `InventarioService` (motivos de ajuste). En Productos el campo SKU es
+  también el código de barras: al escanear y presionar Enter se carga el
+  producto existente o se prepara el alta con ese SKU (`EscanearCodigoAsync`).
+  En Caja el mismo código agrega el producto a la venta.
 - Compras: `CompraService` con líneas y actualización de stock.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión.
 - Configuración: respaldo manual desde la UI (solo administrador).
