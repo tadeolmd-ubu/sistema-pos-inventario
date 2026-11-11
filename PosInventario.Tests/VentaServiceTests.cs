@@ -1035,4 +1035,27 @@ public class VentaServiceTests
 
         Assert.Empty(movimientos);
     }
+
+    [Fact]
+    public async Task CobrarSinCajaNoRegistraVenta()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("ATJ-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+
+        // No se abre caja: el atajo de cobrar debe avisar y no registrar.
+        var vm = new CajaViewModel(
+            prueba.CajaService, prueba.VentaService,
+            prueba.ProductoService, prueba.Sesion);
+
+        vm.AgregarProducto(producto);
+        vm.MontoEfectivoTexto = "100";
+
+        await vm.CobrarCommand.ExecuteAsync(null);
+
+        Assert.Contains("caja abierta", vm.MensajeOperacion);
+        Assert.Equal(0, await prueba.Db.Ventas.CountAsync());
+    }
 }
