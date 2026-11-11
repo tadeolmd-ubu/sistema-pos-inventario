@@ -1079,4 +1079,40 @@ public class VentaServiceTests
         Assert.NotNull(vm.SelectedProducto);
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
     }
+
+    [Fact]
+    public async Task CierreCalculaDiferenciaFaltanteSobranteYSinDiferencia()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+
+        var caja = new Caja
+        {
+            Id = 1,
+            FechaApertura = DateTime.Now,
+            MontoInicial = 1000m,
+            Estado = EstadoCaja.Abierta
+        };
+
+        var vm = new CerrarCajaViewModel(
+            prueba.CajaService, caja, 1000m);
+
+        vm.MontoFinalTexto = "980";
+        Assert.True(vm.HayFaltante);
+        Assert.False(vm.HaySobrante);
+        Assert.Equal(-20m, vm.Diferencia);
+        Assert.Equal("Faltante: 20.00", vm.FaltanteTexto);
+
+        vm.MontoFinalTexto = "1020";
+        Assert.True(vm.HaySobrante);
+        Assert.Equal(20m, vm.Diferencia);
+        Assert.Equal("Sobrante: 20.00", vm.SobranteTexto);
+
+        vm.MontoFinalTexto = "1000";
+        Assert.True(vm.SinDiferencia);
+        Assert.False(vm.HayDiferencia);
+
+        vm.MontoFinalTexto = "abc";
+        Assert.False(vm.MontoContadoValido);
+        Assert.False(vm.HayDiferencia);
+    }
 }

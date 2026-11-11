@@ -11,6 +11,7 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private readonly CajaService? _cajaService;
+    private readonly decimal _montoEsperado;
 
     public CerrarCajaViewModel() { }
 
@@ -26,6 +27,7 @@ public partial class CerrarCajaViewModel : OperacionViewModel
         ResumenPagosCaja? resumen)
     {
         _cajaService = cajaService;
+        _montoEsperado = montoEsperado;
         UsuarioAperturaTexto = caja.UsuarioApertura?.Nombre ?? "—";
         FechaAperturaTexto = caja.FechaApertura.ToString("dd/MM/yyyy HH:mm", Cultura);
         MontoInicialTexto = caja.MontoInicial.ToString("0.00", Cultura);
@@ -55,6 +57,35 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     [ObservableProperty] private string totalTarjetaTexto = string.Empty;
     [ObservableProperty] private string totalTransferenciaTexto = string.Empty;
 
+    public decimal MontoEsperado => _montoEsperado;
+
+    public bool MontoContadoValido =>
+        TryParseDecimal(MontoFinalTexto, out var monto) && monto >= 0;
+
+    public decimal MontoContado =>
+        TryParseDecimal(MontoFinalTexto, out var monto) ? monto : 0m;
+
+    public decimal Diferencia => MontoContado - MontoEsperado;
+
+    public bool HayDiferencia => MontoContadoValido && Diferencia != 0;
+
+    public bool HayFaltante => HayDiferencia && Diferencia < 0;
+
+    public bool HaySobrante => HayDiferencia && Diferencia > 0;
+
+    public bool SinDiferencia => MontoContadoValido && Diferencia == 0;
+
+    public string MontoContadoTexto => MontoContado.ToString("0.00", Cultura);
+
+    public string FaltanteTexto =>
+        $"Faltante: {Math.Abs(Diferencia).ToString("0.00", Cultura)}";
+
+    public string SobranteTexto =>
+        $"Sobrante: {Diferencia.ToString("0.00", Cultura)}";
+
+    public string DiferenciaDetalleTexto =>
+        $"Esperado: {MontoEsperadoTexto} · Contado: {MontoContadoTexto}";
+
     public bool TieneResumen { get; }
 
     public event Action? CajaCerrada;
@@ -64,19 +95,36 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     {
         if (_cajaService is null) return;
 
-        if (!TryParseDecimal(MontoFinalTexto, out var montoFinal) || montoFinal < 0)
+        if (!MontoContadoValido)
         {
             MensajeOperacion = "El monto contado debe ser un número mayor o igual a 0.";
             return;
         }
 
-        var resultado = await _cajaService.CerrarAsync(montoFinal, Observaciones);
+        var resultado = await _cajaService.CerrarAsync(MontoContado, Observaciones);
 
         MensajeOperacion = resultado.Mensaje;
 
         if (resultado.Correcta)
             CajaCerrada?.Invoke();
     });
+
+    partial void OnMontoFinalTextoChanged(string value) => NotificarDiferencia();
+
+    private void NotificarDiferencia()
+    {
+        OnPropertyChanged(nameof(MontoContadoValido));
+        OnPropertyChanged(nameof(MontoContado));
+        OnPropertyChanged(nameof(Diferencia));
+        OnPropertyChanged(nameof(HayDiferencia));
+        OnPropertyChanged(nameof(HayFaltante));
+        OnPropertyChanged(nameof(HaySobrante));
+        OnPropertyChanged(nameof(SinDiferencia));
+        OnPropertyChanged(nameof(MontoContadoTexto));
+        OnPropertyChanged(nameof(FaltanteTexto));
+        OnPropertyChanged(nameof(SobranteTexto));
+        OnPropertyChanged(nameof(DiferenciaDetalleTexto));
+    }
 
     private static bool TryParseDecimal(string? texto, out decimal valor)
     {

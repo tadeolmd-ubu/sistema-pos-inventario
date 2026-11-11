@@ -177,7 +177,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 134 pruebas pasan. El trabajo pendiente (respaldo
+La base está estable y sus 135 pruebas pasan. El trabajo pendiente (respaldo
 automático, restauración, reportes, instalador) está ordenado por fases y
 prioridades en `PENDIENTES.md`.
 
@@ -211,7 +211,9 @@ prioridades en `PENDIENTES.md`.
   abierta (la original si sigue abierta); en ventas mixtas el reembolso se
   reparte proporcionalmente entre los pagos originales y cada uno acumula su
   `MontoDevuelto`. Una caja cerrada nunca se recalcula. `AnularAsync` es el
-  caso especial de devolver todo lo pendiente.
+  caso especial de devolver todo lo pendiente. El cierre (`CerrarCajaWindow`)
+  muestra en vivo el faltante o sobrante y pide confirmación si el monto
+  contado no coincide con el esperado.
 - Catálogos e inventario: `ProductoService`, `ProveedorService`,
   `InventarioService` (motivos de ajuste). En Productos el campo SKU es
   también el código de barras: al escanear y presionar Enter se carga el
