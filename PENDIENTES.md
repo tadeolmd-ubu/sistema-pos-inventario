@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 88 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 99 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -29,6 +29,8 @@
 - [x] Búsqueda y alta por SKU en Caja (compatible con lector de código de barras).
 - [x] Historial global de ventas con filtros y reimpresión de ticket.
 - [x] Desglose por método de pago en cierre e historial de caja.
+- [x] Devoluciones totales y parciales de ventas, con reembolso en efectivo
+  desde la caja abierta y sin recalcular cajas cerradas.
 - [x] Respaldos manuales con `BackupDatabase`.
 - [x] Manejo global de errores y logs en archivo.
 - [x] Instancia única con bloqueo de archivo.
@@ -41,7 +43,8 @@
 - Una sola caja abierta a la vez.
 - Cantidades y stock enteros.
 - Una sola forma de pago por venta.
-- Devoluciones solo con la caja abierta.
+- El reembolso en efectivo de una devolución requiere una caja abierta; con
+  tarjeta o transferencia la devolución se registra de todos modos.
 - Ticket solo en pantalla.
 - Respaldo manual, sin restauración desde la app.
 - Sin facturación ni impuestos.
@@ -65,10 +68,20 @@
   - **Criterio:** la app muestra la versión real sin pedir token al usuario.
   - **Tamaño:** S.
 
-- [ ] **0.3 Definir la política de devoluciones después del cierre de caja**
+- [x] **0.3 Definir la política de devoluciones después del cierre de caja**
   - **Qué:** si se permite, quién puede hacerla y cómo impacta el efectivo de
     una caja ya cerrada.
   - **Criterio:** regla contable documentada antes de programar.
+  - **Política (implementada en `feat/devoluciones-venta`):** las devoluciones
+    pueden ser totales o parciales y solo las hace el vendedor original o un
+    administrador. La caja cerrada es inmutable (sus montos no se recalculan):
+    el reembolso en efectivo sale de la caja abierta actual como movimiento
+    `AnulacionVenta` que referencia la venta; si no hay caja abierta no se
+    reembolsa efectivo, pero las devoluciones con tarjeta o transferencia sí
+    se registran. El descuento se prorratea por unidad y, al devolver todo lo
+    pendiente, se reembolsa el saldo exacto. La venta queda `Anulada` solo
+    cuando ya no tiene unidades pendientes, y los reportes (Inicio, cierre e
+    historiales) se muestran netos de devoluciones.
   - **Tamaño:** S.
 
 - [ ] **0.4 Confirmar si los pagos mixtos entran en la v1 comercial**
@@ -95,7 +108,7 @@
   - **Criterio:** doble clic o botón abre el ticket de esa venta.
   - **Tamaño:** S.
 
-- [ ] **1.3 Devoluciones después del cierre de caja**
+- [x] **1.3 Devoluciones después del cierre de caja**
   - **Qué:** revertir stock y registrar el impacto en efectivo de una venta de
     una caja cerrada.
   - **Reglas:** solo administrador o vendedor original; no se puede devolver dos
@@ -104,6 +117,8 @@
     historial muestra la devolución.
   - **Tests:** permisos, doble devolución, stock y efectivo.
   - **Depende de:** 0.3.
+  - **Hecho en:** rama `feat/devoluciones-venta` (5b35701 y la ventana en
+    4a5ea92).
   - **Tamaño:** L.
 
 - [ ] **1.4 Pagos mixtos**

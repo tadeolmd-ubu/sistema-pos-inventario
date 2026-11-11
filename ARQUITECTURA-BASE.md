@@ -200,7 +200,12 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
 - Inicio: resumen del día con `InicioViewModel`.
 - Caja: `CajaService` + `VentaService` (apertura/cierre con diferencia,
   cobros con descuento, anulación, movimientos de efectivo, ticket en
-  pantalla, desglose por método de pago).
+  pantalla, desglose por método de pago). Las devoluciones
+  (`VentaService.DevolverAsync`) pueden ser totales o parciales: regresan
+  el stock, acumulan `CantidadDevuelta` por línea y `TotalDevuelto` por
+  venta, y reembolsan el efectivo desde la caja abierta (la original si
+  sigue abierta); una caja cerrada nunca se recalcula. `AnularAsync` es el
+  caso especial de devolver todo lo pendiente.
 - Catálogos e inventario: `ProductoService`, `ProveedorService`,
   `InventarioService` (motivos de ajuste). En Productos el campo SKU es
   también el código de barras: al escanear y presionar Enter se carga el
@@ -208,6 +213,12 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
   En Caja el mismo código agrega el producto a la venta.
 - Compras: `CompraService` con líneas y actualización de stock.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión.
+- Devoluciones: `DevolverVentaViewModel`/`DevolverVentaWindow` con checklist
+  por producto o por unidad cuando hay varias iguales, con "Seleccionar
+  todos" y reembolso estimado antes de confirmar. Solo el vendedor original
+  o un administrador, desde el detalle de una caja o el historial de ventas.
+  Los totales de Inicio, cierre e historiales se muestran netos de
+  devoluciones (`Venta.TotalNeto`).
 - Configuración: respaldo manual desde la UI (solo administrador).
 
 ## Módulos opcionales (no incluidos)
