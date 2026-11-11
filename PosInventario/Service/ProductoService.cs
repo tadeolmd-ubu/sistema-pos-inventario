@@ -54,20 +54,24 @@ public class ProductoService
             .FirstOrDefaultAsync(p => p.Id == id);
 
     /// <summary>
-    /// Busca un producto vigente por su SKU exacto (sin distinguir mayúsculas).
-    /// Se usa para agregar productos al POS con un lector de código de barras.
+    /// Busca un producto por su SKU exacto (sin distinguir mayúsculas).
+    /// Caja usa el valor por omisión (solo vigentes); el escaneo en
+    /// Productos incluye archivados para no preparar un alta duplicada.
     /// </summary>
-    public async Task<Producto?> ObtenerPorSkuAsync(string sku)
+    public async Task<Producto?> ObtenerPorSkuAsync(
+        string sku, bool incluirArchivados = false)
     {
         var normalizado = (sku ?? string.Empty).Trim().ToLowerInvariant();
 
         if (normalizado.Length == 0)
             return null;
 
-        return await _db.Productos
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p =>
-                p.FechaArchivado == null && p.Sku.ToLower() == normalizado);
+        var query = _db.Productos.AsNoTracking().AsQueryable();
+
+        if (!incluirArchivados)
+            query = query.Where(p => p.FechaArchivado == null);
+
+        return await query.FirstOrDefaultAsync(p => p.Sku.ToLower() == normalizado);
     }
 
     public async Task<Resultado<Producto>> AgregarAsync(

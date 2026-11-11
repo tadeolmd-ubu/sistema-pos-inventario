@@ -72,13 +72,21 @@
                         <TextBlock Text="Detalle" Classes="subsection"/>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="SKU" Classes="fieldLabel"/>
-                            <TextBox Text="{Binding Sku}" PlaceholderText="ABC-001"/>
+                            <TextBlock Text="Código de barras / SKU" Classes="fieldLabel"/>
+                            <TextBox x:Name="SkuBox"
+                                     Text="{Binding Sku}"
+                                     PlaceholderText="Escanea el código o escríbelo y presiona Enter"
+                                     KeyDown="Sku_KeyDown"/>
+                            <TextBlock Text="Si el código existe se cargan sus datos; si no, se prepara el alta."
+                                       Classes="caption"
+                                       TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <StackPanel Spacing="6">
                             <TextBlock Text="Nombre" Classes="fieldLabel"/>
-                            <TextBox Text="{Binding Nombre}" PlaceholderText="Nombre del producto"/>
+                            <TextBox x:Name="NombreBox"
+                                     Text="{Binding Nombre}"
+                                     PlaceholderText="Nombre del producto"/>
                         </StackPanel>
 
                         <StackPanel Spacing="6">
