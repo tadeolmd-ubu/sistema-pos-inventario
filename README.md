@@ -18,7 +18,9 @@ registro de errores.
   devoluciones totales o parciales desde la caja en curso, el detalle de una
   caja o el historial de ventas (checklist por unidad y reembolso en la caja
   abierta; en ventas mixtas el reembolso se reparte entre los métodos
-  originales) y movimientos de entrada/salida de efectivo.
+  originales) y movimientos de entrada/salida de efectivo. Al cerrar, si el
+  monto contado difiere del esperado, muestra el faltante o sobrante y pide
+  confirmación antes de cerrar.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
@@ -37,7 +39,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 134 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 135 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en

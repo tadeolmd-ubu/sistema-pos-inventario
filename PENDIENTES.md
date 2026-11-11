@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 134 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 135 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -159,10 +159,14 @@
     Enter.
   - **Tamaño:** S.
 
-- [ ] **1.6 Confirmación al cerrar caja con diferencia**
+- [x] **1.6 Confirmación al cerrar caja con diferencia**
   - **Qué:** si el monto contado no coincide con el esperado, pedir
     confirmación y mostrar la diferencia.
   - **Criterio:** no se cierra una caja con diferencia por error.
+  - **Tests:** faltante, sobrante, sin diferencia y monto inválido.
+  - **Hecho en:** rama `feat/cierre-caja-diferencia` (93ed13c): diferencia en
+    vivo en la ventana de cierre y confirmación antes de cerrar cuando no
+    coincide.
   - **Tamaño:** S.
 
 - [ ] **1.7 Apertura de cajón de dinero (si el cliente lo usa)**
