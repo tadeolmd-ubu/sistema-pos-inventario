@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Models;
@@ -10,8 +9,6 @@ namespace PosInventario.ViewModels;
 
 public partial class CancelarVentaViewModel : OperacionViewModel
 {
-    private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
-
     private readonly VentaService? _ventaService;
     private readonly SesionActual? _sesion;
     private readonly int _idCaja;
@@ -30,45 +27,25 @@ public partial class CancelarVentaViewModel : OperacionViewModel
 
     [ObservableProperty] private Venta? selectedVenta;
 
-    public bool PuedeCancelar =>
+    /// <summary>
+    /// Solo se puede devolver una venta completada con unidades pendientes,
+    /// por el vendedor original o un administrador.
+    /// </summary>
+    public bool PuedeDevolver =>
         SelectedVenta is not null &&
         SelectedVenta.Estado == EstadoVenta.Completada &&
+        SelectedVenta.Detalles.Any(d => d.CantidadPendiente > 0) &&
         _sesion is not null &&
         (_sesion.EsAdministrador || SelectedVenta.IdUsuario == _sesion.IdUsuario);
 
     /// <summary>
-    /// Unidades pendientes de la venta seleccionada, una por línea, para
-    /// mostrarlas en la confirmación antes de cancelar.
+    /// Crea el ViewModel del checklist de devolución de la venta
+    /// seleccionada.
     /// </summary>
-    public string ProductosSeleccionadaTexto =>
-        SelectedVenta is null
-            ? ""
-            : string.Join("\n", SelectedVenta.Detalles
-                .Where(d => d.CantidadPendiente > 0)
-                .Select(d => $"{d.CantidadPendiente} × {d.Producto?.Nombre ?? "Producto"}"));
-
-    /// <summary>
-    /// Cómo saldría el reembolso de cancelar la venta seleccionada.
-    /// </summary>
-    public string ReembolsoSeleccionadaTexto
-    {
-        get
-        {
-            if (SelectedVenta is null)
-                return "";
-
-            var monto = SelectedVenta.TotalNeto.ToString("0.00", Cultura);
-
-            return SelectedVenta.MetodoPago == MetodoPago.Efectivo
-                ? $"Se reembolsarán {monto} en efectivo de la caja."
-                : $"El reembolso de {monto} se hace fuera de la app; aquí solo se regresa el stock.";
-        }
-    }
-
-    /// <summary>
-    /// Lo escucha la ventana para cerrarse después de cancelar la venta.
-    /// </summary>
-    public event Action? VentaCancelada;
+    public DevolverVentaViewModel? CrearDevolucionViewModel()
+        => _ventaService is null || SelectedVenta is null
+            ? null
+            : new DevolverVentaViewModel(_ventaService, SelectedVenta);
 
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
@@ -83,25 +60,7 @@ public partial class CancelarVentaViewModel : OperacionViewModel
     }
 
     partial void OnSelectedVentaChanged(Venta? value)
-    {
-        OnPropertyChanged(nameof(PuedeCancelar));
-        OnPropertyChanged(nameof(ProductosSeleccionadaTexto));
-        OnPropertyChanged(nameof(ReembolsoSeleccionadaTexto));
-    }
-
-    public Task CancelarSeleccionadaAsync() => EjecutarSeguroAsync(async () =>
-    {
-        if (_ventaService is null || SelectedVenta is null) return;
-
-        var resultado = await _ventaService.AnularAsync(SelectedVenta.Id);
-
-        MensajeOperacion = resultado.Mensaje;
-
-        if (!resultado.Correcta) return;
-
-        await CargarDatosAsync();
-        VentaCancelada?.Invoke();
-    });
+        => OnPropertyChanged(nameof(PuedeDevolver));
 
     private static void ReemplazarItems<T>(
         ObservableCollection<T> destino, IEnumerable<T> origen)

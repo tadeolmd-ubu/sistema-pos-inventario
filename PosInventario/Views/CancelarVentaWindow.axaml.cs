@@ -6,53 +6,39 @@ namespace PosInventario.Views;
 
 public partial class CancelarVentaWindow : Window
 {
-    private CancelarVentaViewModel? _viewModel;
+    private bool _huboDevolucion;
 
-    public CancelarVentaWindow()
-    {
-        InitializeComponent();
-        DataContextChanged += (_, _) =>
-            ConectarViewModel(DataContext as CancelarVentaViewModel);
-    }
+    public CancelarVentaWindow() => InitializeComponent();
 
-    private void ConectarViewModel(CancelarVentaViewModel? viewModel)
-    {
-        if (_viewModel is not null)
-            _viewModel.VentaCancelada -= OnVentaCancelada;
-
-        _viewModel = viewModel;
-
-        if (_viewModel is not null)
-            _viewModel.VentaCancelada += OnVentaCancelada;
-    }
-
-    private void OnVentaCancelada() => Close(true);
-
-    private void Cerrar_Click(object? sender, RoutedEventArgs e) => Close(false);
-
-    private async void Cancelar_Click(object? sender, RoutedEventArgs e)
-        => await ConfirmarYCancelarAsync();
+    private async void Devolver_Click(object? sender, RoutedEventArgs e)
+        => await AbrirDevolucionAsync();
 
     private async void Ventas_DoubleTapped(
         object? sender, Avalonia.Input.TappedEventArgs e)
-        => await ConfirmarYCancelarAsync();
+        => await AbrirDevolucionAsync();
 
-    private async Task ConfirmarYCancelarAsync()
+    private async Task AbrirDevolucionAsync()
     {
-        if (_viewModel?.SelectedVenta is null || !_viewModel.PuedeCancelar)
+        if (DataContext is not CancelarVentaViewModel viewModel ||
+            !viewModel.PuedeDevolver ||
+            TopLevel.GetTopLevel(this) is not Window ventana)
             return;
 
-        if (TopLevel.GetTopLevel(this) is not Window ventana)
+        var devolucion = viewModel.CrearDevolucionViewModel();
+
+        if (devolucion is null)
             return;
 
-        var confirmacion = new ConfirmacionWindow(
-            "Cancelar venta",
-            $"¿Cancelar la venta V-{_viewModel.SelectedVenta.Id:000000}?\n\n" +
-            "Se devolverá al inventario:\n" +
-            $"{_viewModel.ProductosSeleccionadaTexto}\n\n" +
-            _viewModel.ReembolsoSeleccionadaTexto);
+        var registrada = await new DevolverVentaWindow { DataContext = devolucion }
+            .ShowDialog<bool>(ventana);
 
-        if (await confirmacion.ShowDialog<bool>(ventana))
-            await _viewModel.CancelarSeleccionadaAsync();
+        if (!registrada)
+            return;
+
+        _huboDevolucion = true;
+        await viewModel.CargarAsync();
     }
+
+    private void Cerrar_Click(object? sender, RoutedEventArgs e)
+        => Close(_huboDevolucion);
 }

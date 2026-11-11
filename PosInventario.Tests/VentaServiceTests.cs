@@ -677,22 +677,27 @@ public class VentaServiceTests
     }
 
     [Fact]
-    public async Task CancelarVentaMuestraProductosYReembolsoPendientes()
+    public async Task CancelarVentaAbreElChecklistConLasUnidadesPendientes()
     {
         await using var prueba = await PruebaVentas.CrearAsync();
-        await prueba.CrearAdministradorEnSesionAsync();
-        var producto = await prueba.CrearProductoAsync("DEV-008");
+        var admin = await prueba.CrearAdministradorEnSesionAsync();
+        var cajero = await prueba.CrearCajeroAsync("laura");
+        var otro = await prueba.CrearCajeroAsync("pedro");
+
+        var producto = await prueba.CrearProductoAsync("DEV-009");
         await prueba.InventarioService.RegistrarEntradaAsync(
             producto.Id, 10, "Carga inicial");
         await prueba.AbrirCajaAsync();
 
-        var efectivo = await prueba.VenderAsync(producto, cantidad: 4);
-        var tarjeta = await prueba.VenderAsync(
-            producto, MetodoPago.Tarjeta, cantidad: 2);
-        var parcial = await prueba.VenderAsync(producto, cantidad: 3);
+        prueba.Sesion.Iniciar(cajero);
+
+        var venta = await prueba.VenderAsync(producto, cantidad: 4);
+        var anulada = await prueba.VenderAsync(producto, cantidad: 1);
+
+        prueba.Sesion.Iniciar(admin);
 
         await prueba.VentaService.DevolverAsync(
-            parcial.Id, [new LineaDevolucion(parcial.Detalles.First().Id, 1)]);
+            anulada.Id, [new LineaDevolucion(anulada.Detalles.First().Id, 1)]);
 
         var caja = await prueba.CajaService.ObtenerCajaAbiertaAsync();
         var vm = new CancelarVentaViewModel(
@@ -700,25 +705,22 @@ public class VentaServiceTests
 
         await vm.CargarAsync();
 
-        vm.SelectedVenta = vm.VentasItems.Single(v => v.Id == efectivo.Id);
+        vm.SelectedVenta = vm.VentasItems.Single(v => v.Id == anulada.Id);
+        Assert.False(vm.PuedeDevolver);
 
-        Assert.Equal("4 × Producto DEV-008", vm.ProductosSeleccionadaTexto);
-        Assert.Equal(
-            "Se reembolsarán 400.00 en efectivo de la caja.",
-            vm.ReembolsoSeleccionadaTexto);
+        vm.SelectedVenta = vm.VentasItems.Single(v => v.Id == venta.Id);
+        Assert.True(vm.PuedeDevolver);
 
-        vm.SelectedVenta = vm.VentasItems.Single(v => v.Id == tarjeta.Id);
+        var checklist = vm.CrearDevolucionViewModel();
+        Assert.NotNull(checklist);
 
-        Assert.Equal("2 × Producto DEV-008", vm.ProductosSeleccionadaTexto);
-        Assert.Equal(
-            "El reembolso de 200.00 se hace fuera de la app; aquí solo se regresa el stock.",
-            vm.ReembolsoSeleccionadaTexto);
+        var item = Assert.Single(checklist!.Items);
+        Assert.True(item.EsGrupo);
+        Assert.Equal("Producto DEV-009 - x4", item.TituloGrupo);
+        Assert.Equal(4, item.Unidades.Count);
+        Assert.All(item.Unidades, u => Assert.False(u.Seleccionada));
 
-        vm.SelectedVenta = vm.VentasItems.Single(v => v.Id == parcial.Id);
-
-        Assert.Equal("2 × Producto DEV-008", vm.ProductosSeleccionadaTexto);
-        Assert.Equal(
-            "Se reembolsarán 200.00 en efectivo de la caja.",
-            vm.ReembolsoSeleccionadaTexto);
+        prueba.Sesion.Iniciar(otro);
+        Assert.False(vm.PuedeDevolver);
     }
 }

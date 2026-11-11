@@ -216,7 +216,8 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
 - Devoluciones: `DevolverVentaViewModel`/`DevolverVentaWindow` con checklist
   por producto o por unidad cuando hay varias iguales, con "Seleccionar
   todos" y reembolso estimado antes de confirmar. Solo el vendedor original
-  o un administrador, desde el detalle de una caja o el historial de ventas.
+  o un administrador, desde la caja abierta ("Devolver venta"), el detalle de
+  una caja o el historial de ventas.
   Los totales de Inicio, cierre e historiales se muestran netos de
   devoluciones (`Venta.TotalNeto`).
 - Configuración: respaldo manual desde la UI (solo administrador).

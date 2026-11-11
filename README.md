@@ -12,9 +12,10 @@ registro de errores.
 - **Inicio:** resumen del día (ventas, ingresos, stock bajo, compras recientes).
 - **Caja (POS):** apertura y cierre con diferencia, cobro en efectivo, tarjeta
   o transferencia, descuento sobre el subtotal, búsqueda y alta por SKU
-  (compatible con lector de código de barras), ticket en pantalla, anulación
-  de ventas, devoluciones totales o parciales (con checklist por unidad y
-  reembolso en la caja abierta) y movimientos de entrada/salida de efectivo.
+  (compatible con lector de código de barras), ticket en pantalla,
+  devoluciones totales o parciales desde la caja en curso, el detalle de una
+  caja o el historial de ventas (checklist por unidad y reembolso en la caja
+  abierta) y movimientos de entrada/salida de efectivo.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
