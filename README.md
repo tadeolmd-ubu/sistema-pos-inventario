@@ -25,14 +25,16 @@ registro de errores.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
   método de pago, reimpresión de ticket y botón de devolución (checklist por
   producto o unidad, con reembolso estimado). Cada venta muestra su total neto
-  y, si aplica, cuánto se le ha devuelto.
+  y, si aplica, cuánto se le ha devuelto. El ticket se puede imprimir en papel
+  de 58 mm u 80 mm; si no hay impresora, la venta ya quedó registrada y solo se
+  muestra un aviso.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 100 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 112 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -70,6 +72,15 @@ dotnet tool restore
 dotnet tool run dotnet-ef migrations add <Nombre>
 dotnet tool run dotnet-ef database update
 ```
+
+## Impresión de tickets
+
+El ticket tiene un selector de 58 u 80 mm y un botón **Imprimir**. En Windows
+se usa la impresora predeterminada y la app fija el tamaño del papel; en
+Linux/macOS se envía a CUPS con `lp` o `lpr`. Si no hay impresora o falla, la
+venta queda registrada y el ticket solo muestra un aviso, sin bloquear la
+aplicación. La impresión ESC/POS directa y la apertura del cajón quedan para
+una etapa posterior.
 
 ## Publicación
 

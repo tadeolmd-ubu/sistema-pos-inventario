@@ -24,10 +24,12 @@ roadmap posterior a la v1 vive en `PENDIENTES.md`.
   `AvaloniaUI.DiagnosticsSupport` solo en Debug).
 - CommunityToolkit.Mvvm 8.4.2.
 - EF Core SQLite 10.0.12 (runtime + design).
+- System.Drawing.Common 10.0.12 para la impresión en Windows.
 - xUnit 2.9.3 para pruebas.
 - `dotnet-ef` 10.0.12 como herramienta local (`PosInventario/.config/dotnet-tools.json`).
-- Sin PDF, impresión ni red: la v1 es local (salvo el sondeo de versión
-  contra la API de GitHub en `VersionService`).
+- Sin PDF ni red: la v1 es local (salvo el sondeo de versión contra la API de
+  GitHub en `VersionService`). La impresión usa la cola del sistema (API de
+  Windows o CUPS).
 
 ## Estructura
 
@@ -175,10 +177,9 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La v1 está completa y sus 88 pruebas pasan. El trabajo pendiente (impresión de
-ticket, devoluciones tras cierre, pagos mixtos, respaldo automático,
-restauración, reportes, instalador) está ordenado por fases y prioridades en
-`PENDIENTES.md`.
+La base está estable y sus 112 pruebas pasan. El trabajo pendiente (pagos
+mixtos, respaldo automático, restauración, reportes, instalador) está ordenado
+por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
 
@@ -213,6 +214,11 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
   En Caja el mismo código agrega el producto a la venta.
 - Compras: `CompraService` con líneas y actualización de stock.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión.
+- Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
+  (80 mm); `ImpresoraSistema` lo envía a la impresora predeterminada (API de
+  Windows con tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como
+  `Resultado` y se avisa en la ventana del ticket; la venta ya registrada no se
+  pierde y la aplicación no se bloquea.
 - Devoluciones: `DevolverVentaViewModel`/`DevolverVentaWindow` con checklist
   por producto o por unidad cuando hay varias iguales, con "Seleccionar
   todos" y reembolso estimado antes de confirmar. Solo el vendedor original
@@ -224,5 +230,5 @@ restauración, reportes, instalador) está ordenado por fases y prioridades en
 
 ## Módulos opcionales (no incluidos)
 
-PDF (QuestPDF), impresión de tickets, actualización automática y
-configuración persistente. Se agregan según el roadmap de `PENDIENTES.md`.
+PDF (QuestPDF), actualización automática y configuración persistente. Se
+agregan según el roadmap de `PENDIENTES.md`.
