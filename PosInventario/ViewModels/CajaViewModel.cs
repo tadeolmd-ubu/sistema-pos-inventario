@@ -317,7 +317,7 @@ public partial class CajaViewModel : OperacionViewModel
 
         if (LineasVentaItems.Count == 0)
         {
-            MensajeOperacion = Notificar("Agregá al menos un producto.");
+            MensajeOperacion = Notificar("Agrega al menos un producto.");
             return;
         }
 

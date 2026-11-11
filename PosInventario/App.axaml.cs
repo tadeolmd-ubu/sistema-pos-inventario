@@ -280,7 +280,7 @@ public partial class App : Application
 
         var detalle = new TextBlock
         {
-            Text = "Cerrá la ventana que ya tenés abierta y volvé a iniciar la aplicación.",
+            Text = "Cierra la ventana que ya tienes abierta y vuelve a iniciar la aplicación.",
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             VerticalAlignment = VerticalAlignment.Top
         };

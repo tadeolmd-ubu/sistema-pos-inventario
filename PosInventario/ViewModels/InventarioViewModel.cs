@@ -51,7 +51,7 @@ public partial class InventarioViewModel : OperacionViewModel
     public bool EsAjuste => TipoSeleccionado == TipoMovimiento.Ajuste;
 
     public string StockActualTexto => SelectedProducto is null
-        ? "Seleccioná un producto para mover el stock."
+        ? "Selecciona un producto para mover el stock."
         : $"Stock actual: {SelectedProducto.Stock} · Mínimo: {SelectedProducto.StockMinimo}";
 
     public string TituloMovimientos =>
@@ -113,13 +113,13 @@ public partial class InventarioViewModel : OperacionViewModel
 
         if (SelectedProducto is null)
         {
-            MensajeOperacion = Notificar("Seleccioná un producto.");
+            MensajeOperacion = Notificar("Selecciona un producto.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(MotivoSeleccionado))
         {
-            MensajeOperacion = Notificar("Seleccioná un motivo.");
+            MensajeOperacion = Notificar("Selecciona un motivo.");
             return;
         }
 

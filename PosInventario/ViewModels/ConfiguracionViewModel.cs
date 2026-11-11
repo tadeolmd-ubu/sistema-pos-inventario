@@ -56,7 +56,7 @@ public partial class ConfiguracionViewModel : OperacionViewModel
 
         if (string.IsNullOrWhiteSpace(carpetaDestino))
         {
-            MensajeOperacion = Notificar("Seleccioná una carpeta para el respaldo.");
+            MensajeOperacion = Notificar("Selecciona una carpeta para el respaldo.");
             return;
         }
 

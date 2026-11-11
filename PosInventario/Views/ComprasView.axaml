@@ -105,7 +105,7 @@
                             <StackPanel Grid.Column="1" Spacing="6">
                                 <TextBlock Text="Comprobante" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding NumeroComprobante}"
-                                         PlaceholderText="Factura / remito (opcional)"/>
+                                         PlaceholderText="Factura o nota de remisión (opcional)"/>
                             </StackPanel>
                         </Grid>
 

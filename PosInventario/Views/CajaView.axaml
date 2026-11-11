@@ -82,7 +82,7 @@
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                                 <TextBox x:Name="BusquedaRapidaBox"
                                          Text="{Binding BusquedaRapida}"
-                                         PlaceholderText="Escaneá un código o escribí el SKU y presioná Enter"
+                                         PlaceholderText="Escanea un código o escribe el SKU y presiona Enter"
                                          KeyDown="BusquedaRapida_KeyDown"/>
                                 <Button Grid.Column="1"
                                         Content="Agregar"

@@ -44,7 +44,7 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
     {
         if (SelectedProducto is null)
         {
-            MensajeOperacion = "Seleccioná un producto.";
+            MensajeOperacion = "Selecciona un producto.";
             return;
         }
 

@@ -16,7 +16,7 @@
         <StackPanel Spacing="12">
 
             <TextBlock Text="Cancelar venta" Classes="subsection"/>
-            <TextBlock Text="Seleccioná una venta de esta caja. Se devolverá el stock y, si fue en efectivo, el dinero a la caja."
+            <TextBlock Text="Selecciona una venta de esta caja. Se devolverá el stock y, si fue en efectivo, el dinero a la caja."
                        Classes="caption"
                        TextWrapping="Wrap"/>
 

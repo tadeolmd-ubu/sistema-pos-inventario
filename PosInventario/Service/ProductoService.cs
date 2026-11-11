@@ -121,7 +121,7 @@ public class ProductoService
             return new Resultado(false, "El producto no existe.");
 
         if (producto.FechaArchivado is not null)
-            return new Resultado(false, "Restaurá el producto antes de editarlo.");
+            return new Resultado(false, "Restaura el producto antes de editarlo.");
 
         var error = ValidarCampos(sku, nombre, descripcion, precioVenta, costo, stockMinimo);
         if (error is not null)
@@ -162,7 +162,7 @@ public class ProductoService
 
         if (producto.Stock != 0)
             return new Resultado(
-                false, "No se puede archivar un producto con stock. Ajustá el inventario a 0 primero.");
+                false, "No se puede archivar un producto con stock. Ajusta el inventario a 0 primero.");
 
         producto.FechaArchivado = DateOnly.FromDateTime(DateTime.Today);
         producto.FechaModificacion = DateTime.Now;
