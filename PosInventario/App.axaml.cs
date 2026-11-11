@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Microsoft.Data.Sqlite;
@@ -28,6 +29,14 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            if (Program.OtraInstancia)
+            {
+                desktop.MainWindow = CrearVentanaInstanciaAbierta();
+
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
             Dispatcher.UIThread.UnhandledException += (_, e) =>
             {
                 RegistroApp.Escribir(
@@ -65,7 +74,13 @@ public partial class App : Application
             }
 
             var opciones = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite(new SqliteConnectionStringBuilder { DataSource = rutaBaseDatos }.ToString())
+                .UseSqlite(new SqliteConnectionStringBuilder
+                {
+                    DataSource = rutaBaseDatos,
+                    // Espera a que otra conexión libere la base en lugar de
+                    // fallar de inmediato con "database is locked".
+                    DefaultTimeout = 30
+                }.ToString())
                 .Options;
 
             var dbContext = new AppDbContext(opciones);
@@ -231,6 +246,72 @@ public partial class App : Application
         {
             // Si ni siquiera se puede avisar, el detalle ya quedó en el log.
         }
+    }
+
+    private static Window CrearVentanaInstanciaAbierta()
+    {
+        var ventana = new Window
+        {
+            Title = "Sistema de inventario",
+            Width = 460,
+            Height = 240,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+
+        var cerrar = new Button
+        {
+            Content = "Cerrar",
+            HorizontalAlignment = HorizontalAlignment.Right,
+            MinWidth = 100
+        };
+
+        cerrar.Click += (_, _) => ventana.Close();
+
+        var titulo = new TextBlock
+        {
+            Text = "Sistema de inventario ya está abierto",
+            FontSize = 18,
+            FontWeight = Avalonia.Media.FontWeight.SemiBold,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        };
+
+        var detalle = new TextBlock
+        {
+            Text = "Cerrá la ventana que ya tenés abierta y volvé a iniciar la aplicación.",
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+
+        var acciones = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+
+        acciones.Children.Add(cerrar);
+
+        var contenido = new Grid
+        {
+            RowDefinitions = new RowDefinitions("Auto,*,Auto"),
+            RowSpacing = 16
+        };
+
+        Grid.SetRow(titulo, 0);
+        Grid.SetRow(detalle, 1);
+        Grid.SetRow(acciones, 2);
+
+        contenido.Children.Add(titulo);
+        contenido.Children.Add(detalle);
+        contenido.Children.Add(acciones);
+
+        ventana.Content = new Border
+        {
+            Padding = new Thickness(28),
+            Child = contenido
+        };
+
+        return ventana;
     }
 
     private static string ResolverRutaBaseDatos()
