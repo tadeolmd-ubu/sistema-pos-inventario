@@ -69,6 +69,11 @@
                     <TextBlock Grid.Column="1" Text="{Binding SubtotalTexto}" FontWeight="SemiBold"/>
                 </Grid>
 
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HayDescuento}">
+                    <TextBlock Text="Descuento" Classes="caption"/>
+                    <TextBlock Grid.Column="1" Text="{Binding DescuentoTexto}" FontWeight="SemiBold"/>
+                </Grid>
+
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="TOTAL" FontWeight="Bold"/>
                     <TextBlock Grid.Column="1"

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using PosInventario.Models;
 using PosInventario.ViewModels;
@@ -120,6 +121,17 @@ public partial class CajaView : UserControl
 
         if (cancelada && _viewModel is not null)
             await _viewModel.CargarAsync();
+    }
+
+    private void BusquedaRapida_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+            return;
+
+        e.Handled = true;
+
+        if (_viewModel?.AgregarPorCodigoCommand.CanExecute(null) == true)
+            _viewModel.AgregarPorCodigoCommand.Execute(null);
     }
 
     private async void Movimientos_SelectionChanged(

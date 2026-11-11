@@ -26,6 +26,10 @@ public class TicketViewModel
 
     public string SubtotalTexto => Venta.Subtotal.ToString("0.00", Cultura);
 
+    public bool HayDescuento => Venta.Descuento > 0;
+
+    public string DescuentoTexto => Venta.Descuento.ToString("0.00", Cultura);
+
     public string TotalTexto => Venta.Total.ToString("0.00", Cultura);
 
     public string MetodoPagoTexto => Venta.MetodoPago.ToString();
