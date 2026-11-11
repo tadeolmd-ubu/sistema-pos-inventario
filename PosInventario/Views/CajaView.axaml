@@ -77,7 +77,18 @@
 
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Venta" Classes="subsection"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <TextBox x:Name="BusquedaRapidaBox"
+                                         Text="{Binding BusquedaRapida}"
+                                         PlaceholderText="Escaneá un código o escribí el SKU y presioná Enter"
+                                         KeyDown="BusquedaRapida_KeyDown"/>
                                 <Button Grid.Column="1"
+                                        Content="Agregar"
+                                        Classes="secondary"
+                                        Command="{Binding AgregarPorCodigoCommand}"/>
+                                <Button Grid.Column="2"
                                         Content="Seleccionar productos"
                                         Classes="secondary"
                                         Command="{Binding SeleccionarProductosCommand}"/>
@@ -128,8 +139,17 @@
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Subtotal" Classes="caption"/>
                                 <TextBlock Grid.Column="1"
-                                           Text="{Binding TotalVentaTexto}"
+                                           Text="{Binding SubtotalVentaTexto}"
                                            FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,180">
+                                <TextBlock Text="Descuento"
+                                           Classes="caption"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding DescuentoTexto}"
+                                         PlaceholderText="Descuento"/>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto">

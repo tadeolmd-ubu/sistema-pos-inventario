@@ -204,4 +204,29 @@ public class VentaServiceTests
         Assert.Single(recientes[0].Detalles);
         Assert.NotNull(recientes[0].Detalles.First().Producto);
     }
+
+    [Fact]
+    public async Task RegistrarConDescuentoGuardaSubtotalYTotal()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("VTA-006");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 2)], MetodoPago.Efectivo, 200m, 20m);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+        Assert.Equal(200m, resultado.Valor!.Subtotal);
+        Assert.Equal(20m, resultado.Valor.Descuento);
+        Assert.Equal(180m, resultado.Valor.Total);
+        Assert.Equal(20m, resultado.Valor.Vuelto);
+
+        var movimiento = await prueba.Db.MovimientosCaja
+            .SingleAsync(m => m.IdVenta == resultado.Valor.Id);
+
+        Assert.Equal(180m, movimiento.Monto);
+    }
 }

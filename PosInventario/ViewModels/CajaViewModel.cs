@@ -44,6 +44,8 @@ public partial class CajaViewModel : OperacionViewModel
 
     [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
     [ObservableProperty] private string montoRecibidoTexto = string.Empty;
+    [ObservableProperty] private string descuentoTexto = string.Empty;
+    [ObservableProperty] private string busquedaRapida = string.Empty;
 
     /// <summary>
     /// La vista abre la ventana de selección de productos.
@@ -86,7 +88,18 @@ public partial class CajaViewModel : OperacionViewModel
     public string MontoEsperadoTexto =>
         MontoEsperado.ToString("0.00", Cultura);
 
-    public decimal TotalVenta => LineasVentaItems.Sum(l => l.Subtotal);
+    public decimal SubtotalVenta => LineasVentaItems.Sum(l => l.Subtotal);
+
+    public string SubtotalVentaTexto => SubtotalVenta.ToString("0.00", Cultura);
+
+    public decimal Descuento =>
+        TryParseDecimal(DescuentoTexto, out var descuento) && descuento > 0
+            ? descuento
+            : 0;
+
+    public string DescuentoTextoMostrar => Descuento.ToString("0.00", Cultura);
+
+    public decimal TotalVenta => Math.Max(0, SubtotalVenta - Descuento);
 
     public string TotalVentaTexto => TotalVenta.ToString("0.00", Cultura);
 
@@ -143,6 +156,8 @@ public partial class CajaViewModel : OperacionViewModel
     partial void OnMetodoPagoSeleccionadoChanged(MetodoPago value)
         => OnPropertyChanged(nameof(EsPagoEfectivo));
 
+    partial void OnDescuentoTextoChanged(string value) => NotificarVenta();
+
     [RelayCommand]
     private Task AbrirAsync() => EjecutarSeguroAsync(async () =>
     {
@@ -176,6 +191,37 @@ public partial class CajaViewModel : OperacionViewModel
     [RelayCommand]
     private void SeleccionarDenominacion(string denominacion)
         => MontoRecibidoTexto = denominacion;
+
+    /// <summary>
+    /// Agrega al carrito el producto cuyo SKU coincide con el texto ingresado.
+    /// Pensado para lectores de código de barras que escriben y presionan Enter.
+    /// </summary>
+    [RelayCommand]
+    private Task AgregarPorCodigoAsync() => EjecutarSeguroAsync(async () =>
+    {
+        if (_productoService is null) return;
+
+        var codigo = (BusquedaRapida ?? string.Empty).Trim();
+
+        if (codigo.Length == 0) return;
+
+        if (CajaAbierta is null)
+        {
+            MensajeOperacion = "No hay una caja abierta para vender.";
+            return;
+        }
+
+        var producto = await _productoService.ObtenerPorSkuAsync(codigo);
+
+        if (producto is null)
+        {
+            MensajeOperacion = $"No se encontró un producto con el código {codigo}.";
+            return;
+        }
+
+        AgregarProducto(producto);
+        BusquedaRapida = string.Empty;
+    });
 
     /// <summary>
     /// La llama la vista cuando la ventana de selección devuelve un producto.
@@ -252,6 +298,8 @@ public partial class CajaViewModel : OperacionViewModel
     {
         LineasVentaItems.Clear();
         MontoRecibidoTexto = string.Empty;
+        DescuentoTexto = string.Empty;
+        BusquedaRapida = string.Empty;
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
         NotificarVenta();
     }
@@ -270,6 +318,12 @@ public partial class CajaViewModel : OperacionViewModel
         if (LineasVentaItems.Count == 0)
         {
             MensajeOperacion = Notificar("Agregá al menos un producto.");
+            return;
+        }
+
+        if (Descuento > SubtotalVenta)
+        {
+            MensajeOperacion = Notificar("El descuento no puede superar el subtotal.");
             return;
         }
 
@@ -295,7 +349,7 @@ public partial class CajaViewModel : OperacionViewModel
             .ToList();
 
         var resultado = await _ventaService.RegistrarAsync(
-            lineas, MetodoPagoSeleccionado, montoRecibido);
+            lineas, MetodoPagoSeleccionado, montoRecibido, Descuento);
 
         if (!resultado.Correcta)
         {
@@ -307,6 +361,8 @@ public partial class CajaViewModel : OperacionViewModel
 
         LineasVentaItems.Clear();
         MontoRecibidoTexto = string.Empty;
+        DescuentoTexto = string.Empty;
+        BusquedaRapida = string.Empty;
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
         NotificarVenta();
 
@@ -364,18 +420,22 @@ public partial class CajaViewModel : OperacionViewModel
 
         MontoInicialTexto = string.Empty;
         MontoRecibidoTexto = string.Empty;
+        DescuentoTexto = string.Empty;
+        BusquedaRapida = string.Empty;
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
 
         CajaAbierta = null;
         MontoEsperado = 0;
 
-        OnPropertyChanged(nameof(TotalVenta));
-        OnPropertyChanged(nameof(TotalVentaTexto));
-        OnPropertyChanged(nameof(HayLineasVenta));
+        NotificarVenta();
     }
 
     private void NotificarVenta()
     {
+        OnPropertyChanged(nameof(SubtotalVenta));
+        OnPropertyChanged(nameof(SubtotalVentaTexto));
+        OnPropertyChanged(nameof(Descuento));
+        OnPropertyChanged(nameof(DescuentoTextoMostrar));
         OnPropertyChanged(nameof(TotalVenta));
         OnPropertyChanged(nameof(TotalVentaTexto));
         OnPropertyChanged(nameof(HayLineasVenta));

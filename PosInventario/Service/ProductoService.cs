@@ -53,6 +53,23 @@ public class ProductoService
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
 
+    /// <summary>
+    /// Busca un producto vigente por su SKU exacto (sin distinguir mayúsculas).
+    /// Se usa para agregar productos al POS con un lector de código de barras.
+    /// </summary>
+    public async Task<Producto?> ObtenerPorSkuAsync(string sku)
+    {
+        var normalizado = (sku ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (normalizado.Length == 0)
+            return null;
+
+        return await _db.Productos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p =>
+                p.FechaArchivado == null && p.Sku.ToLower() == normalizado);
+    }
+
     public async Task<Resultado<Producto>> AgregarAsync(
         string sku, string nombre, string? descripcion,
         decimal precioVenta, decimal costo, int stockMinimo)
