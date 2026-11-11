@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using PosInventario.Service;
@@ -8,9 +7,6 @@ namespace PosInventario;
 
 class Program
 {
-    private static readonly string NombreInstancia =
-        $"SistemaInventario.{Environment.UserName}.InstanciaUnica";
-
     /// <summary>
     /// Indica que ya había otra instancia abierta y esta debe cerrarse.
     /// </summary>
@@ -33,10 +29,7 @@ class Program
             e.SetObserved();
         };
 
-        using var instancia = new Mutex(
-            initiallyOwned: true, NombreInstancia, out var creada);
-
-        if (!creada)
+        if (!InstanciaUnica.TryAdquirir(out var instancia) || instancia is null)
         {
             OtraInstancia = true;
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -49,7 +42,7 @@ class Program
         }
         finally
         {
-            instancia.ReleaseMutex();
+            instancia.Dispose();
         }
     }
 
