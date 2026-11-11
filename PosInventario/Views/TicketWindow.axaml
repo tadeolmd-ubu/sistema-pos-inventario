@@ -35,6 +35,7 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                     <Button Content="Imprimir"
                             Classes="primary"
+                            ToolTip.Tip="Ctrl+P"
                             Command="{Binding ImprimirCommand}"
                             IsEnabled="{Binding !Imprimiendo}"
                             HorizontalAlignment="Stretch"/>
@@ -42,6 +43,8 @@
                             Content="Cerrar"
                             Classes="secondary"
                             IsDefault="True"
+                            IsCancel="True"
+                            ToolTip.Tip="Esc"
                             HorizontalAlignment="Stretch"
                             Click="Cerrar_Click"/>
                 </Grid>

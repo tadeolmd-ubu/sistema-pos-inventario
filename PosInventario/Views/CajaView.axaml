@@ -87,18 +87,26 @@
                                 <Button Grid.Column="1"
                                         Content="Agregar"
                                         Classes="secondary"
+                                        ToolTip.Tip="Enter en la búsqueda"
                                         Command="{Binding AgregarPorCodigoCommand}"/>
                                 <Button Grid.Column="2"
                                         Content="Seleccionar productos"
                                         Classes="secondary"
+                                        ToolTip.Tip="F3"
                                         Command="{Binding SeleccionarProductosCommand}"/>
                             </Grid>
 
-                            <DataGrid ItemsSource="{Binding LineasVentaItems}"
+                            <TextBlock Text="Atajos: F2 buscar · F3 productos · F4 cobrar · F1 ayuda · Esc limpiar"
+                                       Classes="caption"/>
+
+                            <DataGrid x:Name="LineasVentaGrid"
+                                      ItemsSource="{Binding LineasVentaItems}"
                                       AutoGenerateColumns="False"
                                       IsReadOnly="True"
                                       HeadersVisibility="Column"
                                       GridLinesVisibility="Horizontal"
+                                      SelectionMode="Single"
+                                      IsTabStop="True"
                                       MaxHeight="280">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Producto"
@@ -147,7 +155,8 @@
                                 <TextBlock Text="Descuento"
                                            Classes="caption"
                                            VerticalAlignment="Center"/>
-                                <TextBox Grid.Column="1"
+                                <TextBox x:Name="DescuentoBox"
+                                         Grid.Column="1"
                                          Text="{Binding DescuentoTexto}"
                                          PlaceholderText="Descuento"/>
                             </Grid>
@@ -164,7 +173,8 @@
                                   IsVisible="{Binding !EsPagoMixto}">
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Método de pago" Classes="fieldLabel"/>
-                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                    <ComboBox x:Name="MetodoPagoSimpleBox"
+                                              ItemsSource="{Binding MetodosPago}"
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="enums:MetodoPago">
@@ -178,15 +188,18 @@
                                             Spacing="6"
                                             IsVisible="{Binding EsPagoEfectivo}">
                                     <TextBlock Text="Paga con" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoEfectivoTexto}"
-                                             PlaceholderText="0.00"/>
+                                    <TextBox x:Name="PagoEfectivoBox"
+                                             Text="{Binding MontoEfectivoTexto}"
+                                             PlaceholderText="0.00"
+                                             KeyDown="Pago_KeyDown"/>
                                 </StackPanel>
                             </Grid>
 
                             <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Método de pago" Classes="fieldLabel"/>
-                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                    <ComboBox x:Name="MetodoPagoMixtoBox"
+                                              ItemsSource="{Binding MetodosPago}"
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="enums:MetodoPago">
@@ -203,21 +216,27 @@
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Efectivo" Classes="fieldLabel"/>
-                                        <TextBox Text="{Binding MontoEfectivoTexto}"
-                                                 PlaceholderText="0.00"/>
+                                        <TextBox x:Name="PagoEfectivoMixtoBox"
+                                                 Text="{Binding MontoEfectivoTexto}"
+                                                 PlaceholderText="0.00"
+                                                 KeyDown="Pago_KeyDown"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Spacing="6">
                                         <TextBlock Text="Tarjeta" Classes="fieldLabel"/>
-                                        <TextBox Text="{Binding MontoTarjetaTexto}"
-                                                 PlaceholderText="0.00"/>
+                                        <TextBox x:Name="PagoTarjetaBox"
+                                                 Text="{Binding MontoTarjetaTexto}"
+                                                 PlaceholderText="0.00"
+                                                 KeyDown="Pago_KeyDown"/>
                                     </StackPanel>
                                 </Grid>
 
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Transferencia" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoTransferenciaTexto}"
-                                             PlaceholderText="0.00"/>
+                                    <TextBox x:Name="PagoTransferenciaBox"
+                                             Text="{Binding MontoTransferenciaTexto}"
+                                             PlaceholderText="0.00"
+                                             KeyDown="Pago_KeyDown"/>
                                 </StackPanel>
                             </StackPanel>
 
@@ -278,9 +297,11 @@
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Button Content="Realizar venta"
                                         Classes="primary"
+                                        ToolTip.Tip="F4 o Ctrl+Enter"
                                         Command="{Binding CobrarCommand}"/>
                                 <Button Content="Limpiar"
                                         Classes="secondary"
+                                        ToolTip.Tip="Esc"
                                         Command="{Binding LimpiarVentaCommand}"/>
                             </StackPanel>
 
@@ -364,14 +385,17 @@
                     <Button Content="Devolver venta"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F8"
                             Command="{Binding SolicitarCancelarVentaCommand}"/>
                     <Button Content="Registrar movimiento de efectivo"
                             Classes="secondary"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F9"
                             Command="{Binding SolicitarRegistrarMovimientoCommand}"/>
                     <Button Content="Cerrar caja"
                             Classes="danger"
                             HorizontalAlignment="Left"
+                            ToolTip.Tip="F10"
                             Command="{Binding SolicitarCerrarCajaCommand}"/>
                 </StackPanel>
 

@@ -148,4 +148,24 @@ public class CajaViewModelTests
         Assert.Equal(100m, vm.TotalRecibido);
         Assert.Equal(0m, vm.Cambio);
     }
+
+    [Fact]
+    public void LimpiarVentaLimpiaPagosYMetodo()
+    {
+        var vm = new CajaViewModel();
+        vm.AgregarProducto(CrearProducto(precio: 100m));
+        vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
+        vm.MontoEfectivoTexto = "50";
+        vm.MontoTarjetaTexto = "60";
+        vm.DescuentoTexto = "10";
+
+        vm.LimpiarVentaCommand.Execute(null);
+
+        Assert.Empty(vm.LineasVentaItems);
+        Assert.Equal(MetodoPago.Efectivo, vm.MetodoPagoSeleccionado);
+        Assert.Equal(string.Empty, vm.MontoEfectivoTexto);
+        Assert.Equal(string.Empty, vm.MontoTarjetaTexto);
+        Assert.Equal(string.Empty, vm.MontoTransferenciaTexto);
+        Assert.Equal(0m, vm.TotalVenta);
+    }
 }

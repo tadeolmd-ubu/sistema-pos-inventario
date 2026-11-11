@@ -177,7 +177,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 129 pruebas pasan. El trabajo pendiente (respaldo
+La base está estable y sus 134 pruebas pasan. El trabajo pendiente (respaldo
 automático, restauración, reportes, instalador) está ordenado por fases y
 prioridades en `PENDIENTES.md`.
 
@@ -226,6 +226,14 @@ prioridades en `PENDIENTES.md`.
   Windows con tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como
   `Resultado` y se avisa en la ventana del ticket; la venta ya registrada no se
   pierde y la aplicación no se bloquea.
+- Atajos y foco: `CajaView` captura F1–F10, Esc, Ctrl+Enter, Delete y +/-;
+  al entrar a Caja enfoca la búsqueda y la restaura al cerrar diálogos. F2/F4
+  se capturan en fase Tunnel para que ComboBox/DataGrid no los consuman; Esc
+  en fase Bubble para respetar diálogos y desplegables. El menú lateral
+  muestra `ComandosItems` según la pestaña y el control enfocado
+  (`AtajoItem`), y F1 abre la ayuda del contexto. El selector de productos
+  permite navegar con ↑/↓ y agregar con Enter. El detalle está en
+  `README.md`.
 - Devoluciones: `DevolverVentaViewModel`/`DevolverVentaWindow` con checklist
   por producto o por unidad cuando hay varias iguales, con "Seleccionar
   todos" y reembolso estimado antes de confirmar. Solo el vendedor original

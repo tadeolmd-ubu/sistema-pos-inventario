@@ -40,6 +40,8 @@
                     Classes="primary small"
                     HorizontalAlignment="Right"
                     MinWidth="100"
+                    IsDefault="True"
+                    IsCancel="True"
                     Click="Aceptar_Click"
                     Content="Aceptar"/>
 

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Service;
@@ -58,14 +59,22 @@ public partial class MainViewModel : OperacionViewModel
 
         VistaActual = _inicioViewModel;
         TituloVistaActual = "Inicio";
+        EstablecerComandos("Inicio", ComandosPorDefecto("Inicio"));
     }
 
     [ObservableProperty] private object vistaActual = null!;
     [ObservableProperty] private string tituloVistaActual = string.Empty;
+    [ObservableProperty] private string comandosTitulo = "Inicio";
     [ObservableProperty] private string textoVersionMenu = string.Empty;
     [ObservableProperty] private bool esAdministrador;
     [ObservableProperty] private string nombreUsuarioActual = string.Empty;
     [ObservableProperty] private string rolUsuarioActual = string.Empty;
+
+    /// <summary>
+    /// Atajos que se muestran en el panel lateral según la pestaña y el
+    /// control enfocado.
+    /// </summary>
+    public ObservableCollection<AtajoItem> ComandosItems { get; } = [];
 
     /// <summary>
     /// Lo escucha App para cerrar la sesión y volver al login.
@@ -97,7 +106,36 @@ public partial class MainViewModel : OperacionViewModel
 
         VistaActual = vista;
         TituloVistaActual = titulo;
+        EstablecerComandos(titulo, ComandosPorDefecto(titulo));
     }
+
+    /// <summary>
+    /// Reemplaza los atajos del panel lateral.
+    /// </summary>
+    public void EstablecerComandos(string titulo, IEnumerable<AtajoItem> items)
+    {
+        ComandosTitulo = titulo;
+        ComandosItems.Clear();
+
+        foreach (var item in items)
+            ComandosItems.Add(item);
+    }
+
+    public static IReadOnlyList<AtajoItem> ComandosPorDefecto(string titulo)
+        => titulo == "Caja"
+            ? [
+                new("F1", "Ayuda"),
+                new("F2", "Buscar"),
+                new("F3", "Productos"),
+                new("F4", "Cobrar"),
+                new("Tab", "Navegar")
+            ]
+            : [
+                new("Tab", "Navegar"),
+                new("Enter", "Activar"),
+                new("Esc", "Cerrar diálogo"),
+                new("F1", "Ayuda")
+            ];
 
     [RelayCommand]
     private async Task IrAInicioAsync()
