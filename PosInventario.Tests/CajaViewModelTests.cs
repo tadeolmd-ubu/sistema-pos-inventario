@@ -75,60 +75,77 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagoMixtoCalculaFaltanteYCambio()
+    public void PagoEfectivoUnicoCalculaFaltanteYCambio()
     {
         var vm = new CajaViewModel();
         vm.AgregarProducto(CrearProducto(precio: 100m));
 
-        Assert.Equal(100m, vm.TotalPagado);
+        Assert.False(vm.PagosValidos);
 
-        vm.PagosItems[0].MontoTexto = "40";
-        vm.PagosItems[0].RecibidoTexto = "50";
-        vm.AgregarPagoCommand.Execute(null);
+        vm.MontoEfectivoTexto = "120";
 
-        Assert.Equal(2, vm.PagosItems.Count);
-        Assert.Equal(MetodoPago.Tarjeta, vm.PagosItems[1].Metodo);
-        Assert.Equal(60m, vm.PagosItems[1].Monto);
-        Assert.Equal(100m, vm.TotalPagado);
-        Assert.Equal(0m, vm.Faltante);
-        Assert.Equal(10m, vm.Cambio);
         Assert.True(vm.PagosValidos);
+        Assert.Equal(100m, vm.TotalPagado);
+        Assert.Equal(120m, vm.TotalRecibido);
+        Assert.Equal(0m, vm.Faltante);
+        Assert.Equal(20m, vm.Cambio);
+        Assert.True(vm.HayCambio);
     }
 
     [Fact]
-    public void PagoQueNoCubreElTotalNoEsValido()
+    public void PagoMixtoSumaLosTresMetodosYCalculaCambio()
     {
         var vm = new CajaViewModel();
         vm.AgregarProducto(CrearProducto(precio: 100m));
+        vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
+        vm.MontoEfectivoTexto = "50";
+        vm.MontoTarjetaTexto = "60";
 
-        vm.PagosItems[0].MontoTexto = "40";
+        Assert.True(vm.PagosValidos);
+        Assert.Equal(110m, vm.TotalRecibido);
+        Assert.Equal(100m, vm.TotalPagado);
+        Assert.Equal(0m, vm.Faltante);
+        Assert.Equal(10m, vm.Cambio);
+    }
+
+    [Fact]
+    public void PagoMixtoNoEsValidoSiLaSumaNoCubreElTotal()
+    {
+        var vm = new CajaViewModel();
+        vm.AgregarProducto(CrearProducto(precio: 100m));
+        vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
+        vm.MontoEfectivoTexto = "30";
+        vm.MontoTarjetaTexto = "60";
 
         Assert.False(vm.PagosValidos);
-        Assert.Equal(60m, vm.Faltante);
+        Assert.Equal(90m, vm.TotalRecibido);
+        Assert.Equal(10m, vm.Faltante);
         Assert.True(vm.HayFaltante);
     }
 
     [Fact]
-    public void EfectivoRecibidoMenorAlAplicadoNoEsValido()
+    public void PagosElectronicosNoPuedenSuperarElTotal()
     {
         var vm = new CajaViewModel();
         vm.AgregarProducto(CrearProducto(precio: 100m));
-
-        vm.PagosItems[0].RecibidoTexto = "50";
+        vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
+        vm.MontoTarjetaTexto = "60";
+        vm.MontoTransferenciaTexto = "50";
 
         Assert.False(vm.PagosValidos);
-        Assert.Equal(0m, vm.Cambio);
+        Assert.Equal(110m, vm.TotalRecibido);
     }
 
     [Fact]
-    public void NoPermiteRepetirMetodoDePago()
+    public void PagoConTarjetaNoRequiereCapturarMonto()
     {
         var vm = new CajaViewModel();
         vm.AgregarProducto(CrearProducto(precio: 100m));
-        vm.AgregarPagoCommand.Execute(null);
+        vm.MetodoPagoSeleccionado = MetodoPago.Tarjeta;
 
-        vm.PagosItems[1].Metodo = MetodoPago.Efectivo;
-
-        Assert.False(vm.PagosValidos);
+        Assert.True(vm.PagosValidos);
+        Assert.Equal(100m, vm.TotalPagado);
+        Assert.Equal(100m, vm.TotalRecibido);
+        Assert.Equal(0m, vm.Cambio);
     }
 }

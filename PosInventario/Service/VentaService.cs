@@ -197,6 +197,11 @@ public class VentaService
 
         foreach (var pago in pagosNormalizados)
         {
+            // El efectivo con monto 0 se usa solo para calcular el cambio
+            // cuando tarjeta/transferencia ya cubrieron el total.
+            if (pago.Monto <= 0)
+                continue;
+
             venta.Pagos.Add(new PagoVenta
             {
                 Metodo = pago.Metodo,
@@ -293,15 +298,21 @@ public class VentaService
 
         foreach (var pago in pagos)
         {
-            if (pago.Monto <= 0)
+            if (pago.Monto < 0)
             {
-                error = "El monto de cada pago debe ser mayor que 0.";
+                error = "El monto de cada pago no puede ser negativo.";
                 return normalizados;
             }
 
             if (pago.Metodo == MetodoPago.Efectivo)
             {
                 var recibido = pago.MontoRecibido ?? pago.Monto;
+
+                if (pago.Monto == 0 && recibido <= 0)
+                {
+                    error = "El monto de cada pago debe ser mayor que 0.";
+                    return normalizados;
+                }
 
                 if (recibido < pago.Monto)
                 {
@@ -313,6 +324,12 @@ public class VentaService
             }
             else
             {
+                if (pago.Monto == 0)
+                {
+                    error = "El monto de cada pago debe ser mayor que 0.";
+                    return normalizados;
+                }
+
                 normalizados.Add(pago with { MontoRecibido = null });
             }
         }

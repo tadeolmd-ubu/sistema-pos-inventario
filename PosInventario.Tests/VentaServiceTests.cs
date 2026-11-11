@@ -1002,4 +1002,37 @@ public class VentaServiceTests
 
         Assert.Empty(reembolsos);
     }
+
+    [Fact]
+    public async Task PagoConTarjetaYCambioEnEfectivoGuardaSoloLaTarjeta()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-008");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Tarjeta, 100m),
+                new LineaPago(MetodoPago.Efectivo, 0m, 20m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var venta = resultado.Valor!;
+
+        Assert.Single(venta.Pagos);
+        Assert.Equal(MetodoPago.Tarjeta, venta.Pagos.Single().Metodo);
+        Assert.Equal(20m, venta.Vuelto);
+        Assert.Equal(120m, venta.MontoRecibido);
+
+        var movimientos = await prueba.Db.MovimientosCaja
+            .Where(m => m.IdVenta == venta.Id)
+            .ToListAsync();
+
+        Assert.Empty(movimientos);
+    }
 }

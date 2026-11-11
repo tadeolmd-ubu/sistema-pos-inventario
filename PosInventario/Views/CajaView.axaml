@@ -160,102 +160,52 @@
                             </Grid>
 
                             <StackPanel Spacing="6">
-                                <TextBlock Text="Pagos" Classes="fieldLabel"/>
-
-                                <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="8">
-                                    <TextBlock Text="Método" Classes="caption"/>
-                                    <TextBlock Grid.Column="1" Text="Aplicado" Classes="caption"/>
-                                    <TextBlock Grid.Column="2"
-                                               Text="Recibido"
-                                               Classes="caption"
-                                               IsVisible="{Binding HayPagoEfectivo}"/>
-                                </Grid>
-
-                                <ItemsControl ItemsSource="{Binding PagosItems}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:PagoVentaItem">
-                                            <Grid ColumnDefinitions="1.2*,*,*,Auto"
-                                                  ColumnSpacing="8"
-                                                  Margin="0,2">
-                                                <ComboBox ItemsSource="{Binding MetodosPago}"
-                                                          SelectedItem="{Binding Metodo}">
-                                                    <ComboBox.ItemTemplate>
-                                                        <DataTemplate x:DataType="enums:MetodoPago">
-                                                            <TextBlock Text="{Binding}"/>
-                                                        </DataTemplate>
-                                                    </ComboBox.ItemTemplate>
-                                                </ComboBox>
-
-                                                <TextBox Grid.Column="1"
-                                                         Text="{Binding MontoTexto}"
-                                                         PlaceholderText="0.00"/>
-
-                                                <TextBox Grid.Column="2"
-                                                         Text="{Binding RecibidoTexto}"
-                                                         PlaceholderText="0.00"
-                                                         IsVisible="{Binding EsEfectivo}"/>
-
-                                                <Button Grid.Column="3"
-                                                        Content="Quitar"
-                                                        Classes="danger small"
-                                                        Command="{Binding EliminarCommand}"/>
-                                            </Grid>
+                                <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                <ComboBox ItemsSource="{Binding MetodosPago}"
+                                          SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="enums:MetodoPago">
+                                            <TextBlock Text="{Binding}"/>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <Button Content="Agregar pago"
-                                        Classes="secondary small"
-                                        HorizontalAlignment="Left"
-                                        Command="{Binding AgregarPagoCommand}"/>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
 
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Pagado" Classes="caption"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding TotalPagadoTexto}"
-                                           FontWeight="SemiBold"/>
-                            </Grid>
+                            <StackPanel Spacing="6" IsVisible="{Binding EsPagoEfectivo}">
+                                <TextBlock Text="Paga con" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding MontoEfectivoTexto}"
+                                         PlaceholderText="0.00"/>
+                            </StackPanel>
 
-                            <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding HayFaltante}">
-                                <TextBlock Text="Faltante" Classes="caption"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding FaltanteTexto}"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource ErrorBrush}"/>
-                            </Grid>
+                            <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
+                                <TextBlock Text="Escribe cuánto se pagó con cada método. La suma debe cubrir el total; tarjeta y transferencia no pueden superarlo y el excedente en efectivo es cambio."
+                                           Classes="caption"
+                                           TextWrapping="Wrap"/>
 
-                            <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding HaySobrante}">
-                                <TextBlock Text="Sobra en pagos" Classes="caption"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding SobranteTexto}"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource ErrorBrush}"/>
-                            </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Efectivo" Classes="fieldLabel"/>
+                                        <TextBox Text="{Binding MontoEfectivoTexto}"
+                                                 PlaceholderText="0.00"/>
+                                    </StackPanel>
 
-                            <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding HayPagoEfectivo}">
-                                <TextBlock Text="Efectivo recibido" Classes="caption"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding EfectivoRecibidoTexto}"
-                                           FontWeight="SemiBold"/>
-                            </Grid>
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Tarjeta" Classes="fieldLabel"/>
+                                        <TextBox Text="{Binding MontoTarjetaTexto}"
+                                                 PlaceholderText="0.00"/>
+                                    </StackPanel>
+                                </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto"
-                                  IsVisible="{Binding HayPagoEfectivo}">
-                                <TextBlock Text="Cambio" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding CambioTexto}"
-                                           FontSize="16"
-                                           FontWeight="ExtraBold"
-                                           Foreground="{StaticResource SuccessBrush}"/>
-                            </Grid>
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Transferencia" Classes="fieldLabel"/>
+                                    <TextBox Text="{Binding MontoTransferenciaTexto}"
+                                             PlaceholderText="0.00"/>
+                                </StackPanel>
+                            </StackPanel>
 
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8"
-                                        IsVisible="{Binding HayPagoEfectivo}">
+                                        IsVisible="{Binding MuestraEfectivo}">
                                 <TextBlock Text="Rápido:"
                                            Classes="caption"
                                            VerticalAlignment="Center"/>
@@ -280,6 +230,32 @@
                                         Command="{Binding SeleccionarDenominacionCommand}"
                                         CommandParameter="500"/>
                             </StackPanel>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Recibido" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TotalRecibidoTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayFaltante}">
+                                <TextBlock Text="Faltante" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding FaltanteTexto}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource ErrorBrush}"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayCambio}">
+                                <TextBlock Text="Cambio" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding CambioTexto}"
+                                           FontSize="16"
+                                           FontWeight="ExtraBold"
+                                           Foreground="{StaticResource SuccessBrush}"/>
+                            </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Button Content="Realizar venta"

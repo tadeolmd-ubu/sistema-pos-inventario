@@ -17,7 +17,7 @@ public partial class CajaViewModel : OperacionViewModel
     private readonly ProductoService? _productoService;
     private readonly SesionActual? _sesion;
 
-    public CajaViewModel() => ReiniciarPagos();
+    public CajaViewModel() { }
 
     public CajaViewModel(
         CajaService cajaService,
@@ -29,19 +29,23 @@ public partial class CajaViewModel : OperacionViewModel
         _ventaService = ventaService;
         _productoService = productoService;
         _sesion = sesion;
-
-        ReiniciarPagos();
     }
 
     public ObservableCollection<MovimientoCaja> MovimientosItems { get; } = [];
     public ObservableCollection<Caja> HistorialItems { get; } = [];
     public ObservableCollection<LineaVentaItem> LineasVentaItems { get; } = [];
-    public ObservableCollection<PagoVentaItem> PagosItems { get; } = [];
+
+    public IReadOnlyList<MetodoPago> MetodosPago { get; } =
+        [MetodoPago.Efectivo, MetodoPago.Tarjeta, MetodoPago.Transferencia, MetodoPago.Mixto];
 
     [ObservableProperty] private Caja? cajaAbierta;
     [ObservableProperty] private decimal montoEsperado;
     [ObservableProperty] private string montoInicialTexto = string.Empty;
 
+    [ObservableProperty] private MetodoPago metodoPagoSeleccionado = MetodoPago.Efectivo;
+    [ObservableProperty] private string montoEfectivoTexto = string.Empty;
+    [ObservableProperty] private string montoTarjetaTexto = string.Empty;
+    [ObservableProperty] private string montoTransferenciaTexto = string.Empty;
     [ObservableProperty] private string descuentoTexto = string.Empty;
     [ObservableProperty] private string busquedaRapida = string.Empty;
 
@@ -103,44 +107,74 @@ public partial class CajaViewModel : OperacionViewModel
 
     public bool HayLineasVenta => LineasVentaItems.Count > 0;
 
-    public decimal TotalPagado => PagosItems.Sum(p => p.Monto);
+    public bool EsPagoEfectivo => MetodoPagoSeleccionado == MetodoPago.Efectivo;
 
-    public decimal Faltante => Math.Max(0m, TotalVenta - TotalPagado);
+    public bool EsPagoMixto => MetodoPagoSeleccionado == MetodoPago.Mixto;
 
-    public decimal Sobrante => Math.Max(0m, TotalPagado - TotalVenta);
+    public bool MuestraEfectivo => EsPagoEfectivo || EsPagoMixto;
+
+    public decimal MontoEfectivo => Parse(MontoEfectivoTexto);
+
+    public decimal MontoTarjeta => Parse(MontoTarjetaTexto);
+
+    public decimal MontoTransferencia => Parse(MontoTransferenciaTexto);
+
+    /// <summary>
+    /// Parte del efectivo que se aplica a la venta. En mixto es el total menos
+    /// lo pagado con tarjeta y transferencia; el resto del efectivo es cambio.
+    /// </summary>
+    public decimal EfectivoAplicado =>
+        TotalVenta == 0
+            ? 0
+            : EsPagoMixto
+                ? Math.Max(0, TotalVenta - MontoTarjeta - MontoTransferencia)
+                : EsPagoEfectivo
+                    ? TotalVenta
+                    : 0;
+
+    public decimal EfectivoRecibido => MuestraEfectivo ? MontoEfectivo : 0;
+
+    public decimal TotalRecibido =>
+        EsPagoMixto
+            ? MontoEfectivo + MontoTarjeta + MontoTransferencia
+            : EsPagoEfectivo
+                ? MontoEfectivo
+                : TotalVenta;
+
+    public decimal TotalPagado =>
+        EsPagoMixto
+            ? EfectivoAplicado + MontoTarjeta + MontoTransferencia
+            : TotalVenta;
+
+    public decimal Faltante => Math.Max(0, TotalVenta - TotalRecibido);
+
+    public decimal Cambio => MuestraEfectivo
+        ? Math.Max(0, EfectivoRecibido - EfectivoAplicado)
+        : 0;
 
     public bool HayFaltante => Faltante > 0;
 
-    public bool HaySobrante => Sobrante > 0;
+    public bool HayCambio => Cambio > 0;
 
-    public bool HayPagoEfectivo => PagosItems.Any(p => p.EsEfectivo);
-
-    public decimal EfectivoRecibido => PagosItems
-        .Where(p => p.EsEfectivo)
-        .Sum(p => p.Recibido);
-
-    public decimal Cambio => PagosItems
-        .Where(p => p.EsEfectivo)
-        .Sum(p => p.Cambio);
+    public string TotalRecibidoTexto => TotalRecibido.ToString("0.00", Cultura);
 
     public string TotalPagadoTexto => TotalPagado.ToString("0.00", Cultura);
 
     public string FaltanteTexto => Faltante.ToString("0.00", Cultura);
 
-    public string SobranteTexto => Sobrante.ToString("0.00", Cultura);
-
-    public string EfectivoRecibidoTexto =>
-        EfectivoRecibido.ToString("0.00", Cultura);
-
     public string CambioTexto => Cambio.ToString("0.00", Cultura);
 
     public bool PagosValidos =>
         TotalVenta == 0 ||
-        (PagosItems.Count > 0 &&
-         PagosItems.All(p => p.Monto > 0) &&
-         PagosItems.Select(p => p.Metodo).Distinct().Count() == PagosItems.Count &&
-         TotalPagado == TotalVenta &&
-         PagosItems.All(p => p.RecibidoValido));
+        (EsPagoEfectivo
+            ? MontoEfectivo >= TotalVenta
+            : EsPagoMixto
+                ? MontoTarjeta >= 0 &&
+                  MontoTransferencia >= 0 &&
+                  MontoEfectivo >= 0 &&
+                  MontoTarjeta + MontoTransferencia <= TotalVenta &&
+                  TotalRecibido >= TotalVenta
+                : true);
 
     public event Action<CancelarVentaViewModel>? CancelarVentaSolicitado;
 
@@ -187,6 +221,15 @@ public partial class CajaViewModel : OperacionViewModel
 
     partial void OnDescuentoTextoChanged(string value) => NotificarVenta();
 
+    partial void OnMetodoPagoSeleccionadoChanged(MetodoPago value)
+        => NotificarPagos();
+
+    partial void OnMontoEfectivoTextoChanged(string value) => NotificarPagos();
+
+    partial void OnMontoTarjetaTextoChanged(string value) => NotificarPagos();
+
+    partial void OnMontoTransferenciaTextoChanged(string value) => NotificarPagos();
+
     [RelayCommand]
     private Task AbrirAsync() => EjecutarSeguroAsync(async () =>
     {
@@ -219,12 +262,7 @@ public partial class CajaViewModel : OperacionViewModel
 
     [RelayCommand]
     private void SeleccionarDenominacion(string denominacion)
-    {
-        var efectivo = PagosItems.FirstOrDefault(p => p.EsEfectivo);
-
-        if (efectivo is not null)
-            efectivo.RecibidoTexto = denominacion;
-    }
+        => MontoEfectivoTexto = denominacion;
 
     /// <summary>
     /// Agrega al carrito el producto cuyo SKU coincide con el texto ingresado.
@@ -333,7 +371,10 @@ public partial class CajaViewModel : OperacionViewModel
         LineasVentaItems.Clear();
         DescuentoTexto = string.Empty;
         BusquedaRapida = string.Empty;
-        ReiniciarPagos();
+        MetodoPagoSeleccionado = MetodoPago.Efectivo;
+        MontoEfectivoTexto = string.Empty;
+        MontoTarjetaTexto = string.Empty;
+        MontoTransferenciaTexto = string.Empty;
         NotificarVenta();
     }
 
@@ -370,17 +411,7 @@ public partial class CajaViewModel : OperacionViewModel
             .Select(l => new LineaVenta(l.Producto.Id, l.Cantidad))
             .ToList();
 
-        var pagos = new List<LineaPago>();
-
-        if (TotalVenta > 0)
-        {
-            pagos = PagosItems
-                .Select(p => new LineaPago(
-                    p.Metodo,
-                    p.Monto,
-                    p.EsEfectivo ? p.Recibido : null))
-                .ToList();
-        }
+        var pagos = ConstruirPagos();
 
         var resultado = await _ventaService.RegistrarAsync(
             lineas, pagos, Descuento);
@@ -393,11 +424,7 @@ public partial class CajaViewModel : OperacionViewModel
 
         MensajeOperacion = resultado.Mensaje;
 
-        LineasVentaItems.Clear();
-        DescuentoTexto = string.Empty;
-        BusquedaRapida = string.Empty;
-        ReiniciarPagos();
-        NotificarVenta();
+        LimpiarVenta();
 
         await CargarDatosAsync();
 
@@ -456,18 +483,19 @@ public partial class CajaViewModel : OperacionViewModel
         MontoInicialTexto = string.Empty;
         DescuentoTexto = string.Empty;
         BusquedaRapida = string.Empty;
+        MetodoPagoSeleccionado = MetodoPago.Efectivo;
+        MontoEfectivoTexto = string.Empty;
+        MontoTarjetaTexto = string.Empty;
+        MontoTransferenciaTexto = string.Empty;
 
         CajaAbierta = null;
         MontoEsperado = 0;
 
-        ReiniciarPagos();
         NotificarVenta();
     }
 
     private void NotificarVenta()
     {
-        SincronizarPagoUnico();
-
         OnPropertyChanged(nameof(SubtotalVenta));
         OnPropertyChanged(nameof(SubtotalVentaTexto));
         OnPropertyChanged(nameof(Descuento));
@@ -479,108 +507,103 @@ public partial class CajaViewModel : OperacionViewModel
         NotificarPagos();
     }
 
-    private void ReiniciarPagos()
+    private List<LineaPago> ConstruirPagos()
     {
-        PagosItems.Clear();
-        PagosItems.Add(new PagoVentaItem(
-            MetodoPago.Efectivo, TotalVenta, NotificarPagos, QuitarPago));
+        if (TotalVenta <= 0)
+            return [];
 
-        NotificarPagos();
-    }
-
-    private void SincronizarPagoUnico()
-    {
-        if (PagosItems.Count != 1) return;
-
-        PagosItems[0].MontoTexto = TotalVenta.ToString("0.00", Cultura);
-    }
-
-    [RelayCommand]
-    private void AgregarPago()
-    {
-        if (PagosItems.Count >= 3)
+        if (EsPagoEfectivo)
         {
-            MensajeOperacion = Notificar(
-                "Ya agregaste todos los métodos de pago disponibles.");
-            return;
+            return
+            [
+                new LineaPago(MetodoPago.Efectivo, TotalVenta, MontoEfectivo)
+            ];
         }
 
-        var usados = PagosItems.Select(p => p.Metodo).ToHashSet();
-
-        var metodo = new[]
+        if (!EsPagoMixto)
         {
-            MetodoPago.Efectivo,
-            MetodoPago.Tarjeta,
-            MetodoPago.Transferencia
-        }.FirstOrDefault(m => !usados.Contains(m));
-
-        if (usados.Contains(metodo))
-        {
-            MensajeOperacion = Notificar(
-                "Ya agregaste todos los métodos de pago disponibles.");
-            return;
+            return [new LineaPago(MetodoPagoSeleccionado, TotalVenta)];
         }
 
-        PagosItems.Add(new PagoVentaItem(
-            metodo, Faltante, NotificarPagos, QuitarPago));
+        var pagos = new List<LineaPago>();
 
-        MensajeOperacion = string.Empty;
-        NotificarPagos();
-    }
+        if (MontoTarjeta > 0)
+            pagos.Add(new LineaPago(MetodoPago.Tarjeta, MontoTarjeta));
 
-    private void QuitarPago(PagoVentaItem pago)
-    {
-        if (PagosItems.Count <= 1)
+        if (MontoTransferencia > 0)
         {
-            MensajeOperacion = Notificar(
-                "Debe quedar al menos un método de pago.");
-            return;
+            pagos.Add(new LineaPago(
+                MetodoPago.Transferencia, MontoTransferencia));
         }
 
-        PagosItems.Remove(pago);
-        NotificarPagos();
+        var efectivoAplicado = TotalVenta - MontoTarjeta - MontoTransferencia;
+
+        if (efectivoAplicado > 0)
+        {
+            pagos.Add(new LineaPago(
+                MetodoPago.Efectivo, efectivoAplicado, MontoEfectivo));
+        }
+        else if (MontoEfectivo > 0)
+        {
+            // La tarjeta/transferencia ya cubrieron el total; el efectivo
+            // recibido se registra solo para calcular el cambio.
+            pagos.Add(new LineaPago(MetodoPago.Efectivo, 0m, MontoEfectivo));
+        }
+
+        return pagos;
     }
 
     private void NotificarPagos()
     {
+        OnPropertyChanged(nameof(EsPagoEfectivo));
+        OnPropertyChanged(nameof(EsPagoMixto));
+        OnPropertyChanged(nameof(MuestraEfectivo));
+        OnPropertyChanged(nameof(MontoEfectivo));
+        OnPropertyChanged(nameof(MontoTarjeta));
+        OnPropertyChanged(nameof(MontoTransferencia));
+        OnPropertyChanged(nameof(EfectivoAplicado));
+        OnPropertyChanged(nameof(EfectivoRecibido));
+        OnPropertyChanged(nameof(TotalRecibido));
+        OnPropertyChanged(nameof(TotalRecibidoTexto));
         OnPropertyChanged(nameof(TotalPagado));
         OnPropertyChanged(nameof(TotalPagadoTexto));
         OnPropertyChanged(nameof(Faltante));
         OnPropertyChanged(nameof(FaltanteTexto));
         OnPropertyChanged(nameof(HayFaltante));
-        OnPropertyChanged(nameof(Sobrante));
-        OnPropertyChanged(nameof(SobranteTexto));
-        OnPropertyChanged(nameof(HaySobrante));
-        OnPropertyChanged(nameof(HayPagoEfectivo));
-        OnPropertyChanged(nameof(EfectivoRecibido));
-        OnPropertyChanged(nameof(EfectivoRecibidoTexto));
         OnPropertyChanged(nameof(Cambio));
         OnPropertyChanged(nameof(CambioTexto));
+        OnPropertyChanged(nameof(HayCambio));
         OnPropertyChanged(nameof(PagosValidos));
     }
 
     private string MensajePagosInvalido()
     {
-        if (PagosItems.Count == 0)
-            return "Agrega al menos un método de pago.";
+        if (MontoEfectivo < 0 || MontoTarjeta < 0 || MontoTransferencia < 0)
+            return "Los montos de pago no pueden ser negativos.";
 
-        if (PagosItems.Any(p => p.Monto <= 0))
-            return "El monto de cada pago debe ser mayor que 0.";
+        if (EsPagoEfectivo)
+            return "El efectivo recibido es menor al total de la venta.";
 
-        if (PagosItems.Select(p => p.Metodo).Distinct().Count() != PagosItems.Count)
-            return "No se puede repetir el mismo método de pago.";
+        if (EsPagoMixto)
+        {
+            if (MontoTarjeta + MontoTransferencia > TotalVenta)
+            {
+                return "Los pagos con tarjeta o transferencia no pueden " +
+                       "superar el total de la venta.";
+            }
 
-        if (PagosItems.Any(p => !p.RecibidoValido))
-            return "El efectivo recibido es menor al monto en efectivo.";
-
-        if (TotalPagado < TotalVenta)
-            return "Los pagos no cubren el total de la venta.";
-
-        if (TotalPagado > TotalVenta)
-            return "Los montos aplicados superan el total de la venta.";
+            if (TotalRecibido < TotalVenta)
+            {
+                return "La suma de los pagos debe ser al menos el total " +
+                       "de la venta.";
+            }
+        }
 
         return "Revisa los pagos de la venta.";
     }
+
+    private decimal Parse(string? texto)
+        => TryParseDecimal(texto, out var valor) ? valor : 0m;
 
     private static bool TryParseDecimal(string? texto, out decimal valor)
     {
