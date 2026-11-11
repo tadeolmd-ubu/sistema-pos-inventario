@@ -11,11 +11,14 @@ registro de errores.
   sesión. Roles `Administrador` y `Cajero` con menús restringidos.
 - **Inicio:** resumen del día (ventas, ingresos, stock bajo, compras recientes).
 - **Caja (POS):** apertura y cierre con diferencia, cobro en efectivo, tarjeta
-  o transferencia, descuento sobre el subtotal, búsqueda y alta por SKU
+  o transferencia, **pagos mixtos** (se elige "Mixto" y se capturan los tres
+  montos; la suma debe cubrir el total y el excedente en efectivo es cambio),
+  descuento sobre el subtotal, búsqueda y alta por SKU
   (compatible con lector de código de barras), ticket en pantalla,
   devoluciones totales o parciales desde la caja en curso, el detalle de una
   caja o el historial de ventas (checklist por unidad y reembolso en la caja
-  abierta) y movimientos de entrada/salida de efectivo.
+  abierta; en ventas mixtas el reembolso se reparte entre los métodos
+  originales) y movimientos de entrada/salida de efectivo.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
@@ -34,7 +37,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 113 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 129 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en

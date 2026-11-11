@@ -42,6 +42,7 @@ public class Venta
     public int? IdUsuarioAnulacion { get; set; }
 
     public ICollection<DetalleVenta> Detalles { get; set; } = [];
+    public ICollection<PagoVenta> Pagos { get; set; } = [];
     public ICollection<MovimientoCaja> MovimientosCaja { get; set; } = [];
     public ICollection<MovimientoInventario> Movimientos { get; set; } = [];
 }

@@ -68,16 +68,19 @@ public partial class CajaHistorialViewModel : OperacionViewModel
     public bool HayVentasCanceladas => VentasCanceladas.Count > 0;
 
     public decimal TotalEfectivo => VentasCompletadas
-        .Where(i => i.Venta.MetodoPago == MetodoPago.Efectivo)
-        .Sum(i => i.Venta.TotalNeto);
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Efectivo)
+        .Sum(p => p.Monto - p.MontoDevuelto);
 
     public decimal TotalTarjeta => VentasCompletadas
-        .Where(i => i.Venta.MetodoPago == MetodoPago.Tarjeta)
-        .Sum(i => i.Venta.TotalNeto);
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Tarjeta)
+        .Sum(p => p.Monto - p.MontoDevuelto);
 
     public decimal TotalTransferencia => VentasCompletadas
-        .Where(i => i.Venta.MetodoPago == MetodoPago.Transferencia)
-        .Sum(i => i.Venta.TotalNeto);
+        .SelectMany(i => i.Venta.Pagos)
+        .Where(p => p.Metodo == MetodoPago.Transferencia)
+        .Sum(p => p.Monto - p.MontoDevuelto);
 
     public string TotalEfectivoTexto => TotalEfectivo.ToString("0.00", Cultura);
 

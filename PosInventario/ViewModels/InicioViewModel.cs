@@ -103,15 +103,18 @@ public partial class InicioViewModel : OperacionViewModel
 
         VentasDelDia = ventasHoy.Count;
         TotalDelDia = ventasHoy.Sum(v => v.TotalNeto);
-        TotalEfectivo = ventasHoy
-            .Where(v => v.MetodoPago == MetodoPago.Efectivo)
-            .Sum(v => v.TotalNeto);
-        TotalTarjeta = ventasHoy
-            .Where(v => v.MetodoPago == MetodoPago.Tarjeta)
-            .Sum(v => v.TotalNeto);
-        TotalTransferencia = ventasHoy
-            .Where(v => v.MetodoPago == MetodoPago.Transferencia)
-            .Sum(v => v.TotalNeto);
+
+        var pagos = ventasHoy.SelectMany(v => v.Pagos).ToList();
+
+        TotalEfectivo = pagos
+            .Where(p => p.Metodo == MetodoPago.Efectivo)
+            .Sum(p => p.Monto - p.MontoDevuelto);
+        TotalTarjeta = pagos
+            .Where(p => p.Metodo == MetodoPago.Tarjeta)
+            .Sum(p => p.Monto - p.MontoDevuelto);
+        TotalTransferencia = pagos
+            .Where(p => p.Metodo == MetodoPago.Transferencia)
+            .Sum(p => p.Monto - p.MontoDevuelto);
 
         TicketPromedio = VentasDelDia > 0
             ? TotalDelDia / VentasDelDia

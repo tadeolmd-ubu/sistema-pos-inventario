@@ -143,14 +143,22 @@
 
                     <Border Height="1" Background="{StaticResource BorderBrush}"/>
 
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Método de pago" Classes="caption"/>
-                        <TextBlock Grid.Column="1" Text="{Binding MetodoPagoTexto}" FontWeight="SemiBold"/>
-                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Pagos}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:PagoVenta">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{Binding Metodo}" Classes="caption"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Monto, StringFormat='{}{0:0.00}'}"
+                                               FontWeight="SemiBold"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                    <StackPanel Spacing="1" IsVisible="{Binding EsEfectivo}">
+                    <StackPanel Spacing="1" IsVisible="{Binding HayPagoEfectivo}">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="Paga con" Classes="caption"/>
+                            <TextBlock Text="Recibido" Classes="caption"/>
                             <TextBlock Grid.Column="1" Text="{Binding MontoRecibidoTexto}" FontWeight="SemiBold"/>
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">

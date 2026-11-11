@@ -56,12 +56,35 @@ public static class GeneradorTicketTexto
         }
 
         lineas.Add(new string('-', columnas));
-        AgregarDosColumnas(lineas, "Método de pago", venta.MetodoPago.ToString(), columnas);
 
-        if (venta.MetodoPago == MetodoPago.Efectivo)
+        var pagos = venta.Pagos.Count > 0
+            ? venta.Pagos.ToList()
+            : [new PagoVenta { Metodo = venta.MetodoPago, Monto = venta.Total }];
+
+        if (pagos.Count > 0 && venta.Total > 0)
         {
-            AgregarDosColumnas(lineas, "Paga con", venta.MontoRecibido.ToString("0.00", Cultura), columnas);
-            AgregarDosColumnas(lineas, "Cambio", venta.Vuelto.ToString("0.00", Cultura), columnas);
+            foreach (var pago in pagos)
+            {
+                AgregarDosColumnas(
+                    lineas,
+                    pago.Metodo.ToString(),
+                    pago.Monto.ToString("0.00", Cultura),
+                    columnas);
+            }
+
+            var efectivoAplicado = pagos
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.Monto);
+
+            if (efectivoAplicado > 0)
+            {
+                var recibido = efectivoAplicado + venta.Vuelto;
+
+                AgregarDosColumnas(
+                    lineas, "Recibido", recibido.ToString("0.00", Cultura), columnas);
+                AgregarDosColumnas(
+                    lineas, "Cambio", venta.Vuelto.ToString("0.00", Cultura), columnas);
+            }
         }
 
         lineas.Add(new string('-', columnas));

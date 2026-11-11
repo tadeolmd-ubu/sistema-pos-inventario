@@ -72,6 +72,9 @@
                                    Text="{Binding ReembolsoTexto}"
                                    FontWeight="SemiBold"/>
                     </Grid>
+                    <TextBlock Text="{Binding DesgloseReembolsoTexto}"
+                               Classes="caption"
+                               IsVisible="{Binding HayDesgloseReembolso}"/>
                     <TextBlock Text="{Binding NotaReembolsoTexto}"
                                Classes="caption"
                                TextWrapping="Wrap"/>

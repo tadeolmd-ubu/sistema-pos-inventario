@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 113 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 129 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -79,14 +79,19 @@
     `AnulacionVenta` que referencia la venta; si no hay caja abierta no se
     reembolsa efectivo, pero las devoluciones con tarjeta o transferencia sí
     se registran. El descuento se prorratea por unidad y, al devolver todo lo
-    pendiente, se reembolsa el saldo exacto. La venta queda `Anulada` solo
-    cuando ya no tiene unidades pendientes, y los reportes (Inicio, cierre e
-    historiales) se muestran netos de devoluciones.
+    pendiente, se reembolsa el saldo exacto. En ventas con pagos mixtos el
+    reembolso se reparte proporcionalmente entre los pagos originales y cada
+    uno acumula su `MontoDevuelto`; solo la parte en efectivo sale de la caja.
+    La venta queda `Anulada` solo cuando ya no tiene unidades pendientes, y
+    los reportes (Inicio, cierre e historiales) se muestran netos de
+    devoluciones.
   - **Tamaño:** S.
 
-- [ ] **0.4 Confirmar si los pagos mixtos entran en la v1 comercial**
+- [x] **0.4 Confirmar si los pagos mixtos entran en la v1 comercial**
   - **Qué:** una venta pagada parte en efectivo y parte con tarjeta.
   - **Criterio:** decisión tomada; si es sí, se agenda el ítem 1.4.
+  - **Decisión:** sí; se implementaron en el ítem 1.4 (rama
+    `feat/pagos-mixtos`).
   - **Tamaño:** S.
 
 ---
@@ -125,7 +130,7 @@
     4a5ea92).
   - **Tamaño:** L.
 
-- [ ] **1.4 Pagos mixtos**
+- [x] **1.4 Pagos mixtos**
   - **Qué:** registrar varios pagos por venta (efectivo + tarjeta, por ejemplo).
   - **Modelo:** nueva entidad o columnas de pagos; migración de EF.
   - **UI:** agregar pagos hasta cubrir el total; el cambio solo aplica al
@@ -134,6 +139,10 @@
     esperado de la caja coincide.
   - **Tests:** suma de pagos, vuelto, cierre y ticket.
   - **Depende de:** 0.4.
+  - **Hecho en:** rama `feat/pagos-mixtos` (c774529 y 6524a3a): tabla
+    `PagoVenta`, migración con backfill, selector Mixto con los montos de
+    efectivo/tarjeta/transferencia, desglose en ticket/cierre y devoluciones
+    por método.
   - **Tamaño:** L.
 
 - [ ] **1.5 Atajos de teclado y foco en el POS**

@@ -102,7 +102,14 @@ public class VentaServiceTests
             var total = producto.PrecioVenta * cantidad - descuento;
 
             var resultado = await VentaService.RegistrarAsync(
-                [new LineaVenta(producto.Id, cantidad)], metodo, total, descuento);
+                [new LineaVenta(producto.Id, cantidad)],
+                [
+                    new LineaPago(
+                        metodo,
+                        total,
+                        metodo == MetodoPago.Efectivo ? total : null)
+                ],
+                descuento);
 
             Assert.True(resultado.Correcta, resultado.Mensaje);
             return resultado.Valor!;
@@ -322,7 +329,9 @@ public class VentaServiceTests
         await prueba.AbrirCajaAsync();
 
         var resultado = await prueba.VentaService.RegistrarAsync(
-            [new LineaVenta(producto.Id, 2)], MetodoPago.Efectivo, 200m, 20m);
+            [new LineaVenta(producto.Id, 2)],
+            [new LineaPago(MetodoPago.Efectivo, 180m, 200m)],
+            20m);
 
         Assert.True(resultado.Correcta, resultado.Mensaje);
         Assert.Equal(200m, resultado.Valor!.Subtotal);
@@ -726,5 +735,304 @@ public class VentaServiceTests
 
         prueba.Sesion.Iniciar(otro);
         Assert.False(vm.PuedeDevolver);
+    }
+
+    [Fact]
+    public async Task RegistrarPagoMixtoGuardaPagosYMovimientoSoloDeEfectivo()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 50m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var venta = resultado.Valor!;
+
+        Assert.Equal(MetodoPago.Mixto, venta.MetodoPago);
+        Assert.Equal(2, venta.Pagos.Count);
+        Assert.Equal(
+            40m,
+            venta.Pagos.Single(p => p.Metodo == MetodoPago.Efectivo).Monto);
+        Assert.Equal(
+            60m,
+            venta.Pagos.Single(p => p.Metodo == MetodoPago.Tarjeta).Monto);
+        Assert.Equal(10m, venta.Vuelto);
+        Assert.Equal(110m, venta.MontoRecibido);
+
+        var movimientos = await prueba.Db.MovimientosCaja
+            .Where(m => m.IdVenta == venta.Id)
+            .ToListAsync();
+
+        var movimiento = Assert.Single(movimientos);
+        Assert.Equal(40m, movimiento.Monto);
+    }
+
+    [Fact]
+    public async Task RegistrarPagoMixtoValidaSumaMetodosYRecibido()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-002");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var sumaIncorrecta = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 50m)
+            ]);
+
+        Assert.False(sumaIncorrecta.Correcta);
+        Assert.Contains("suma de los pagos", sumaIncorrecta.Mensaje);
+
+        var repetido = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 50m, 50m),
+                new LineaPago(MetodoPago.Efectivo, 50m, 50m)
+            ]);
+
+        Assert.False(repetido.Correcta);
+        Assert.Contains("repetir", repetido.Mensaje);
+
+        var recibidoInsuficiente = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [new LineaPago(MetodoPago.Efectivo, 100m, 90m)]);
+
+        Assert.False(recibidoInsuficiente.Correcta);
+        Assert.Contains("efectivo recibido", recibidoInsuficiente.Mensaje);
+    }
+
+    [Fact]
+    public async Task ResumenPagosSeparaUnaVentaMixta()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-003");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var caja = await prueba.CajaService.ObtenerCajaAbiertaAsync();
+        var resumen = await prueba.CajaService.ObtenerResumenPagosAsync(caja!.Id);
+
+        Assert.Equal(1, resumen.CantidadVentas);
+        Assert.Equal(40m, resumen.Efectivo);
+        Assert.Equal(60m, resumen.Tarjeta);
+        Assert.Equal(0m, resumen.Transferencia);
+        Assert.Equal(100m, resumen.Total);
+    }
+
+    [Fact]
+    public async Task DevolucionParcialDeVentaMixtaReparteElReembolso()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-004");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 2)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 80m, 80m),
+                new LineaPago(MetodoPago.Tarjeta, 120m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var venta = resultado.Valor!;
+        var linea = venta.Detalles.First();
+
+        var devolucion = await prueba.VentaService.DevolverAsync(
+            venta.Id, [new LineaDevolucion(linea.Id, 1)]);
+
+        Assert.True(devolucion.Correcta, devolucion.Mensaje);
+
+        var ventaDb = await prueba.Db.Ventas
+            .Include(v => v.Pagos)
+            .SingleAsync(v => v.Id == venta.Id);
+
+        Assert.Equal(EstadoVenta.Completada, ventaDb.Estado);
+        Assert.Equal(100m, ventaDb.TotalDevuelto);
+        Assert.Equal(
+            40m,
+            ventaDb.Pagos.Single(p => p.Metodo == MetodoPago.Efectivo).MontoDevuelto);
+        Assert.Equal(
+            60m,
+            ventaDb.Pagos.Single(p => p.Metodo == MetodoPago.Tarjeta).MontoDevuelto);
+
+        var reembolso = await prueba.Db.MovimientosCaja
+            .SingleAsync(m => m.IdVenta == venta.Id &&
+                              m.Tipo == TipoMovimientoCaja.AnulacionVenta);
+
+        Assert.Equal(40m, reembolso.Monto);
+    }
+
+    [Fact]
+    public async Task DevolucionTotalDeVentaMixtaUsaElSaldoExacto()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-005");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var venta = resultado.Valor!;
+
+        var devolucion = await prueba.VentaService.DevolverAsync(
+            venta.Id, lineas: null);
+
+        Assert.True(devolucion.Correcta, devolucion.Mensaje);
+
+        var ventaDb = await prueba.Db.Ventas
+            .Include(v => v.Pagos)
+            .SingleAsync(v => v.Id == venta.Id);
+
+        Assert.Equal(EstadoVenta.Anulada, ventaDb.Estado);
+        Assert.Equal(100m, ventaDb.TotalDevuelto);
+        Assert.Equal(
+            40m,
+            ventaDb.Pagos.Single(p => p.Metodo == MetodoPago.Efectivo).MontoDevuelto);
+        Assert.Equal(
+            60m,
+            ventaDb.Pagos.Single(p => p.Metodo == MetodoPago.Tarjeta).MontoDevuelto);
+
+        var reembolso = await prueba.Db.MovimientosCaja
+            .SingleAsync(m => m.IdVenta == venta.Id &&
+                              m.Tipo == TipoMovimientoCaja.AnulacionVenta);
+
+        Assert.Equal(40m, reembolso.Monto);
+    }
+
+    [Fact]
+    public async Task DevolucionMixtaSinCajaAbiertaBloqueaElEfectivo()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-006");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var stockAntes = producto.Stock;
+        await prueba.CerrarCajaAsync(1000m);
+
+        var devolucion = await prueba.VentaService.DevolverAsync(
+            resultado.Valor!.Id, lineas: null);
+
+        Assert.False(devolucion.Correcta);
+        Assert.Contains("caja abierta", devolucion.Mensaje);
+        Assert.Equal(stockAntes, producto.Stock);
+    }
+
+    [Fact]
+    public async Task DevolucionSoloTarjetaFuncionaSinCajaAbierta()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-007");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [new LineaPago(MetodoPago.Tarjeta, 100m)]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        await prueba.CerrarCajaAsync(1000m);
+
+        var devolucion = await prueba.VentaService.DevolverAsync(
+            resultado.Valor!.Id, lineas: null);
+
+        Assert.True(devolucion.Correcta, devolucion.Mensaje);
+
+        var ventaDb = await prueba.Db.Ventas
+            .Include(v => v.Pagos)
+            .SingleAsync(v => v.Id == resultado.Valor.Id);
+
+        Assert.Equal(100m, ventaDb.TotalDevuelto);
+        var reembolsos = await prueba.Db.MovimientosCaja
+            .Where(m => m.IdVenta == ventaDb.Id &&
+                        m.Tipo == TipoMovimientoCaja.AnulacionVenta)
+            .ToListAsync();
+
+        Assert.Empty(reembolsos);
+    }
+
+    [Fact]
+    public async Task PagoConTarjetaYCambioEnEfectivoGuardaSoloLaTarjeta()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("MIX-008");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var resultado = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Tarjeta, 100m),
+                new LineaPago(MetodoPago.Efectivo, 0m, 20m)
+            ]);
+
+        Assert.True(resultado.Correcta, resultado.Mensaje);
+
+        var venta = resultado.Valor!;
+
+        Assert.Single(venta.Pagos);
+        Assert.Equal(MetodoPago.Tarjeta, venta.Pagos.Single().Metodo);
+        Assert.Equal(20m, venta.Vuelto);
+        Assert.Equal(120m, venta.MontoRecibido);
+
+        var movimientos = await prueba.Db.MovimientosCaja
+            .Where(m => m.IdVenta == venta.Id)
+            .ToListAsync();
+
+        Assert.Empty(movimientos);
     }
 }

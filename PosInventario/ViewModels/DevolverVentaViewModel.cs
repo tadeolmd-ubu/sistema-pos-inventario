@@ -49,12 +49,23 @@ public partial class DevolverVentaViewModel : OperacionViewModel
         "Esta venta ya no tiene unidades pendientes de devolver.";
 
     /// <summary>
-    /// Aclara por dónde sale el reembolso según el método de pago original.
+    /// Aclara por dónde sale el reembolso según los pagos de la venta.
     /// </summary>
+    public bool HayPagoEfectivo =>
+        _venta is not null &&
+        (_venta.Pagos.Count > 0
+            ? _venta.Pagos.Any(p => p.Metodo == MetodoPago.Efectivo)
+            : _venta.MetodoPago == MetodoPago.Efectivo);
+
+    public bool HayDesgloseReembolso =>
+        _venta is not null && _venta.Pagos.Count > 1;
+
     public string NotaReembolsoTexto =>
-        _venta?.MetodoPago == MetodoPago.Efectivo
-            ? "El reembolso en efectivo se descuenta de la caja abierta."
+        HayPagoEfectivo
+            ? "La parte en efectivo del reembolso se descuenta de la caja abierta."
             : "El reembolso de este método de pago se hace fuera de la app; aquí solo se regresa el stock.";
+
+    [ObservableProperty] private string desgloseReembolsoTexto = string.Empty;
 
     public bool PuedeConfirmar => ConstruirLineas().Count > 0;
 
@@ -105,9 +116,25 @@ public partial class DevolverVentaViewModel : OperacionViewModel
         var lineas = ConstruirLineas();
 
         UnidadesTexto = lineas.Sum(l => l.Cantidad).ToString();
-        ReembolsoTexto = _ventaService is not null && _venta is not null
-            ? _ventaService.CalcularReembolso(_venta, lineas).ToString("0.00", Cultura)
-            : 0m.ToString("0.00", Cultura);
+
+        if (_ventaService is not null && _venta is not null)
+        {
+            var reembolso = _ventaService.CalcularReembolso(_venta, lineas);
+
+            ReembolsoTexto = reembolso.ToString("0.00", Cultura);
+
+            DesgloseReembolsoTexto = string.Join(
+                " · ",
+                _ventaService.CalcularReembolsoPorPago(_venta, lineas)
+                    .Where(r => r.Monto > 0)
+                    .Select(r =>
+                        $"{r.Pago.Metodo}: {r.Monto.ToString("0.00", Cultura)}"));
+        }
+        else
+        {
+            ReembolsoTexto = 0m.ToString("0.00", Cultura);
+            DesgloseReembolsoTexto = string.Empty;
+        }
 
         _actualizandoSeleccionGlobal = true;
         SeleccionarTodos = Items.Count > 0 && Items.All(i => i.TodasSeleccionadas);

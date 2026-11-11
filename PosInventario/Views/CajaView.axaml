@@ -159,8 +159,10 @@
                                            Classes="subsection"/>
                             </Grid>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <StackPanel Grid.Column="0" Spacing="6">
+                            <Grid ColumnDefinitions="*,*"
+                                  ColumnSpacing="12"
+                                  IsVisible="{Binding !EsPagoMixto}">
+                                <StackPanel Spacing="6">
                                     <TextBlock Text="Método de pago" Classes="fieldLabel"/>
                                     <ComboBox ItemsSource="{Binding MetodosPago}"
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
@@ -172,16 +174,56 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="1" Spacing="6" IsVisible="{Binding EsPagoEfectivo}">
+                                <StackPanel Grid.Column="1"
+                                            Spacing="6"
+                                            IsVisible="{Binding EsPagoEfectivo}">
                                     <TextBlock Text="Paga con" Classes="fieldLabel"/>
-                                    <TextBox Text="{Binding MontoRecibidoTexto}"
-                                             PlaceholderText="Ingresa una cantidad"/>
+                                    <TextBox Text="{Binding MontoEfectivoTexto}"
+                                             PlaceholderText="0.00"/>
                                 </StackPanel>
                             </Grid>
 
+                            <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                              SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:MetodoPago">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <TextBlock Text="Escribe cuánto se pagó con cada método. La suma debe cubrir el total; tarjeta y transferencia no pueden superarlo y el excedente en efectivo es cambio."
+                                           Classes="caption"
+                                           TextWrapping="Wrap"/>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Efectivo" Classes="fieldLabel"/>
+                                        <TextBox Text="{Binding MontoEfectivoTexto}"
+                                                 PlaceholderText="0.00"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Tarjeta" Classes="fieldLabel"/>
+                                        <TextBox Text="{Binding MontoTarjetaTexto}"
+                                                 PlaceholderText="0.00"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Transferencia" Classes="fieldLabel"/>
+                                    <TextBox Text="{Binding MontoTransferenciaTexto}"
+                                             PlaceholderText="0.00"/>
+                                </StackPanel>
+                            </StackPanel>
+
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8"
-                                        IsVisible="{Binding EsPagoEfectivo}">
+                                        IsVisible="{Binding MuestraEfectivo}">
                                 <TextBlock Text="Rápido:"
                                            Classes="caption"
                                            VerticalAlignment="Center"/>
@@ -206,6 +248,32 @@
                                         Command="{Binding SeleccionarDenominacionCommand}"
                                         CommandParameter="500"/>
                             </StackPanel>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Recibido" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TotalRecibidoTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayFaltante}">
+                                <TextBlock Text="Faltante" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding FaltanteTexto}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource ErrorBrush}"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding HayCambio}">
+                                <TextBlock Text="Cambio" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding CambioTexto}"
+                                           FontSize="16"
+                                           FontWeight="ExtraBold"
+                                           Foreground="{StaticResource SuccessBrush}"/>
+                            </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Button Content="Realizar venta"
