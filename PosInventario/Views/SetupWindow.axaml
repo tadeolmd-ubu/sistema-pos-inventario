@@ -15,7 +15,7 @@
 
             <StackPanel Spacing="4">
                 <TextBlock Text="Configuración inicial" Classes="sectionTitle"/>
-                <TextBlock Text="Creá el primer administrador del sistema. Este asistente no vuelve a aparecer."
+                <TextBlock Text="Crea el primer administrador del sistema. Este asistente no vuelve a aparecer."
                            Classes="caption"
                            TextWrapping="Wrap"/>
             </StackPanel>

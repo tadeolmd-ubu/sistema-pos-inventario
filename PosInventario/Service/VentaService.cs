@@ -94,7 +94,7 @@ public class VentaService
             return new Resultado<Venta>(false, "La sesión no está iniciada.", null);
 
         if (lineas is null || lineas.Count == 0)
-            return new Resultado<Venta>(false, "Agregá al menos un producto.", null);
+            return new Resultado<Venta>(false, "Agrega al menos un producto.", null);
 
         var caja = await _db.Cajas
             .FirstOrDefaultAsync(c => c.Estado == EstadoCaja.Abierta);

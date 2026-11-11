@@ -80,7 +80,7 @@
                         </StackPanel>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Email" Classes="fieldLabel"/>
+                            <TextBlock Text="Correo electrónico" Classes="fieldLabel"/>
                             <TextBox Text="{Binding Email}" PlaceholderText="correo@ejemplo.com"/>
                         </StackPanel>
 

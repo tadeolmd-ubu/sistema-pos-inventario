@@ -195,7 +195,7 @@ public class UsuarioService
             return new Resultado(false, "El usuario no existe.");
 
         if (usuario.Id == _sesion.IdUsuario)
-            return new Resultado(false, "No podés desactivar tu propio usuario.");
+            return new Resultado(false, "No puedes desactivar tu propio usuario.");
 
         if (usuario.Rol == RolUsuario.Administrador &&
             !await ExisteOtroAdministradorActivoAsync(id))
@@ -217,7 +217,7 @@ public class UsuarioService
         if (string.IsNullOrWhiteSpace(nombreUsuario) ||
             string.IsNullOrWhiteSpace(contrasena))
             return new Resultado<Usuario>(
-                false, "Ingresá tu usuario y contraseña.", null);
+                false, "Ingresa tu usuario y contraseña.", null);
 
         var usuario = await _db.Usuarios
             .FirstOrDefaultAsync(u =>
