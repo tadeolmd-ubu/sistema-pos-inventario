@@ -68,8 +68,35 @@
 
             <StackPanel Spacing="6">
                 <TextBlock Text="Monto contado" Classes="fieldLabel"/>
-                <TextBox Text="{Binding MontoFinalTexto}" PlaceholderText="Monto contado"/>
+                <TextBox x:Name="MontoFinalBox"
+                         Text="{Binding MontoFinalTexto}"
+                         PlaceholderText="Monto contado"/>
+                <TextBlock Text="Si no coincide con el esperado, se pedirá confirmación."
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
             </StackPanel>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12"
+                    IsVisible="{Binding MontoContadoValido}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding DiferenciaDetalleTexto}"
+                               Classes="caption"/>
+                    <TextBlock Text="{Binding FaltanteTexto}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource ErrorBrush}"
+                               IsVisible="{Binding HayFaltante}"/>
+                    <TextBlock Text="{Binding SobranteTexto}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource ErrorBrush}"
+                               IsVisible="{Binding HaySobrante}"/>
+                    <TextBlock Text="Sin diferencia"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessBrush}"
+                               IsVisible="{Binding SinDiferencia}"/>
+                </StackPanel>
+            </Border>
 
             <StackPanel Spacing="6">
                 <TextBlock Text="Observaciones" Classes="fieldLabel"/>
@@ -94,7 +121,7 @@
                 <Button Content="Cerrar caja"
                         Classes="danger"
                         IsDefault="True"
-                        Command="{Binding CerrarCommand}"/>
+                        Click="Cerrar_Click"/>
             </StackPanel>
 
         </StackPanel>
