@@ -28,6 +28,11 @@ public class Venta
     /// </summary>
     public decimal TotalNeto => Total - TotalDevuelto;
 
+    /// <summary>
+    /// Indica si la venta ya tiene alguna devolución registrada.
+    /// </summary>
+    public bool HayDevolucion => TotalDevuelto > 0;
+
     public MetodoPago MetodoPago { get; set; } = MetodoPago.Efectivo;
     public decimal MontoRecibido { get; set; }
     public decimal Vuelto { get; set; }

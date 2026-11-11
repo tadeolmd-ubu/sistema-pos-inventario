@@ -24,7 +24,8 @@ registro de errores.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
   método de pago, reimpresión de ticket y botón de devolución (checklist por
-  producto o unidad, con reembolso estimado).
+  producto o unidad, con reembolso estimado). Cada venta muestra su total neto
+  y, si aplica, cuánto se le ha devuelto.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.

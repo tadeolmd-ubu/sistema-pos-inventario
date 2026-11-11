@@ -674,6 +674,10 @@ public class VentaServiceTests
         await vm.CargarAsync();
 
         Assert.Equal("300.00", vm.TotalVendidoTexto);
+
+        var ventaEfectivo = vm.VentasItems.Single(v => v.Id == efectivo.Id);
+        Assert.Equal(200m, ventaEfectivo.TotalNeto);
+        Assert.True(ventaEfectivo.HayDevolucion);
     }
 
     [Fact]
