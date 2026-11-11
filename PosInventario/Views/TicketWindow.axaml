@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:PosInventario.Models"
+        xmlns:service="using:PosInventario.Service"
         xmlns:vm="using:PosInventario.ViewModels"
         x:DataType="vm:TicketViewModel"
         x:Class="PosInventario.Views.TicketWindow"
@@ -13,109 +14,162 @@
         Background="{StaticResource ContentBackgroundBrush}">
 
     <Border Classes="card" Margin="18" Padding="24">
-        <ScrollViewer MaxHeight="620" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="10">
+        <DockPanel LastChildFill="True">
 
-                <StackPanel Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Text="Sistema de inventario"
-                               FontSize="18"
-                               FontWeight="ExtraBold"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding Numero, StringFormat='Ticket {0}'}"
-                               Classes="caption"
-                               HorizontalAlignment="Center"/>
+            <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,14,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ancho del papel" Classes="fieldLabel"/>
+                    <ComboBox ItemsSource="{Binding AnchosTicket}"
+                              SelectedItem="{Binding AnchoSeleccionado}"
+                              IsEnabled="{Binding !Imprimiendo}"
+                              Width="130"
+                              HorizontalAlignment="Left">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="service:AnchoTicketOpcion">
+                                <TextBlock Text="{Binding Etiqueta}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
 
-                <Border Background="{StaticResource ErrorBrush}"
-                        CornerRadius="6"
-                        Padding="10,4"
-                        HorizontalAlignment="Center"
-                        IsVisible="{Binding EsAnulada}">
-                    <TextBlock Text="ANULADA"
-                               FontWeight="Bold"
-                               Foreground="{StaticResource SurfaceBrush}"/>
-                </Border>
-
-                <StackPanel Spacing="1">
-                    <TextBlock Text="{Binding Fecha, StringFormat='Fecha: {0}'}" Classes="caption"/>
-                    <TextBlock Text="{Binding Cajero, StringFormat='Cajero: {0}'}" Classes="caption"/>
-                </StackPanel>
-
-                <Border Height="1" Background="{StaticResource BorderBrush}"/>
-
-                <ItemsControl ItemsSource="{Binding Detalles}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:DetalleVenta">
-                            <StackPanel Spacing="1" Margin="0,3">
-                                <TextBlock Text="{Binding Producto.Nombre}" FontWeight="SemiBold"/>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{Binding Cantidad, StringFormat='{}{0} x '}" Classes="caption"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="{Binding PrecioUnitario, StringFormat='{}{0:0.00}'}"
-                                                   Classes="caption"/>
-                                        <TextBlock Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
-                                                   FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <Border Height="1" Background="{StaticResource BorderBrush}"/>
-
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Subtotal" Classes="caption"/>
-                    <TextBlock Grid.Column="1" Text="{Binding SubtotalTexto}" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Content="Imprimir"
+                            Classes="primary"
+                            Command="{Binding ImprimirCommand}"
+                            IsEnabled="{Binding !Imprimiendo}"
+                            HorizontalAlignment="Stretch"/>
+                    <Button Grid.Column="1"
+                            Content="Cerrar"
+                            Classes="secondary"
+                            IsDefault="True"
+                            HorizontalAlignment="Stretch"
+                            Click="Cerrar_Click"/>
                 </Grid>
 
-                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HayDescuento}">
-                    <TextBlock Text="Descuento" Classes="caption"/>
-                    <TextBlock Grid.Column="1" Text="{Binding DescuentoTexto}" FontWeight="SemiBold"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="TOTAL" FontWeight="Bold"/>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding TotalTexto}"
-                               FontSize="18"
-                               FontWeight="ExtraBold"/>
-                </Grid>
-
-                <Border Height="1" Background="{StaticResource BorderBrush}"/>
-
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Método de pago" Classes="caption"/>
-                    <TextBlock Grid.Column="1" Text="{Binding MetodoPagoTexto}" FontWeight="SemiBold"/>
-                </Grid>
-
-                <StackPanel Spacing="1" IsVisible="{Binding EsEfectivo}">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Paga con" Classes="caption"/>
-                        <TextBlock Grid.Column="1" Text="{Binding MontoRecibidoTexto}" FontWeight="SemiBold"/>
-                    </Grid>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Cambio" FontWeight="SemiBold"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding VueltoTexto}"
-                                   FontSize="16"
-                                   FontWeight="ExtraBold"
-                                   Foreground="{StaticResource SuccessBrush}"/>
-                    </Grid>
-                </StackPanel>
-
-                <TextBlock Text="¡Gracias por su compra!"
+                <TextBlock Text="{Binding MensajeImpresion}"
                            Classes="caption"
-                           HorizontalAlignment="Center"
-                           Margin="0,8,0,0"/>
-
-                <Button Content="Cerrar"
-                        Classes="primary"
-                        HorizontalAlignment="Stretch"
-                        IsDefault="True"
-                        Click="Cerrar_Click"/>
-
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding EsMensajeExito}"
+                           Foreground="{StaticResource SuccessBrush}"/>
+                <TextBlock Text="{Binding MensajeImpresion}"
+                           Classes="caption"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding EsMensajeError}"
+                           Foreground="{StaticResource ErrorBrush}"/>
             </StackPanel>
-        </ScrollViewer>
+
+            <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+
+                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                        <TextBlock Text="Sistema de inventario"
+                                   FontSize="18"
+                                   FontWeight="ExtraBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding Numero, StringFormat='Ticket {0}'}"
+                                   Classes="caption"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Background="{StaticResource ErrorBrush}"
+                            CornerRadius="6"
+                            Padding="10,4"
+                            HorizontalAlignment="Center"
+                            IsVisible="{Binding EsAnulada}">
+                        <TextBlock Text="ANULADA"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource SurfaceBrush}"/>
+                    </Border>
+
+                    <StackPanel Spacing="1">
+                        <TextBlock Text="{Binding Fecha, StringFormat='Fecha: {0}'}" Classes="caption"/>
+                        <TextBlock Text="{Binding Cajero, StringFormat='Cajero: {0}'}" Classes="caption"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <ItemsControl ItemsSource="{Binding Detalles}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:DetalleVenta">
+                                <StackPanel Spacing="1" Margin="0,3">
+                                    <TextBlock Text="{Binding Producto.Nombre}" FontWeight="SemiBold"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Cantidad, StringFormat='{}{0} x '}" Classes="caption"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding PrecioUnitario, StringFormat='{}{0:0.00}'}"
+                                                       Classes="caption"/>
+                                            <TextBlock Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Subtotal" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding SubtotalTexto}" FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HayDescuento}">
+                        <TextBlock Text="Descuento" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding DescuentoTexto}" FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="TOTAL" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TotalTexto}"
+                                   FontSize="18"
+                                   FontWeight="ExtraBold"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HayDevolucion}">
+                        <TextBlock Text="Devuelto" Classes="caption"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TotalDevueltoTexto}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HayDevolucion}">
+                        <TextBlock Text="Total neto" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TotalNetoTexto}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Método de pago" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding MetodoPagoTexto}" FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <StackPanel Spacing="1" IsVisible="{Binding EsEfectivo}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Paga con" Classes="caption"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MontoRecibidoTexto}" FontWeight="SemiBold"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Cambio" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding VueltoTexto}"
+                                       FontSize="16"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource SuccessBrush}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <TextBlock Text="¡Gracias por su compra!"
+                               Classes="caption"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
     </Border>
 </Window>
