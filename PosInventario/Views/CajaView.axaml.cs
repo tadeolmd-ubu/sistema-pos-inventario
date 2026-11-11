@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using PosInventario.Models;
 using PosInventario.ViewModels;
 using PosInventario.Views.DesignTime;
@@ -15,8 +16,13 @@ public partial class CajaView : UserControl
     {
         InitializeComponent();
 
+        AddHandler(KeyDownEvent, Caja_KeyDownTunnel, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, Caja_KeyDownBubble, RoutingStrategies.Bubble);
+
         DataContextChanged += (_, _) =>
             ConectarViewModel(DataContext as CajaViewModel);
+
+        Loaded += (_, _) => EnfocarBusqueda();
 
         if (Design.IsDesignMode)
             DataContext = DesignTimeData.Caja;
@@ -45,6 +51,8 @@ public partial class CajaView : UserControl
             _viewModel.CerrarCajaSolicitado += OnCerrarCaja;
             _viewModel.CancelarVentaSolicitado += OnCancelarVenta;
         }
+
+        EnfocarBusqueda();
     }
 
     private async void OnSeleccionarProducto(SeleccionarProductoViewModel viewModel)
@@ -59,6 +67,8 @@ public partial class CajaView : UserControl
 
         if (producto is not null)
             _viewModel?.AgregarProducto(producto);
+
+        EnfocarBusqueda();
     }
 
     private async void OnEliminarLinea(LineaVentaItem linea)
@@ -72,6 +82,8 @@ public partial class CajaView : UserControl
 
         if (await confirmacion.ShowDialog<bool>(ventana))
             _viewModel?.EliminarLinea(linea);
+
+        EnfocarBusqueda();
     }
 
     private async void OnTicket(Venta venta)
@@ -83,6 +95,8 @@ public partial class CajaView : UserControl
         {
             DataContext = new TicketViewModel(venta)
         }.ShowDialog(ventana);
+
+        EnfocarBusqueda();
     }
 
     private async void OnRegistrarMovimiento(RegistrarMovimientoCajaViewModel viewModel)
@@ -95,6 +109,8 @@ public partial class CajaView : UserControl
 
         if (registrado && _viewModel is not null)
             await _viewModel.CargarAsync();
+
+        EnfocarBusqueda();
     }
 
     private async void OnCerrarCaja(CerrarCajaViewModel viewModel)
@@ -107,6 +123,8 @@ public partial class CajaView : UserControl
 
         if (cerrada && _viewModel is not null)
             await _viewModel.CargarAsync();
+
+        EnfocarBusqueda();
     }
 
     private async void OnCancelarVenta(CancelarVentaViewModel viewModel)
@@ -121,9 +139,11 @@ public partial class CajaView : UserControl
 
         if (cancelada && _viewModel is not null)
             await _viewModel.CargarAsync();
+
+        EnfocarBusqueda();
     }
 
-    private void BusquedaRapida_KeyDown(object? sender, KeyEventArgs e)
+    private async void BusquedaRapida_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Enter)
             return;
@@ -131,7 +151,19 @@ public partial class CajaView : UserControl
         e.Handled = true;
 
         if (_viewModel?.AgregarPorCodigoCommand.CanExecute(null) == true)
-            _viewModel.AgregarPorCodigoCommand.Execute(null);
+            await _viewModel.AgregarPorCodigoCommand.ExecuteAsync(null);
+
+        EnfocarBusqueda();
+    }
+
+    private async void Pago_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+            return;
+
+        e.Handled = true;
+
+        await CobrarAsync();
     }
 
     private async void Movimientos_SelectionChanged(
@@ -150,6 +182,8 @@ public partial class CajaView : UserControl
         {
             DataContext = new MovimientoCajaViewModel(movimiento)
         }.ShowDialog(ventana);
+
+        EnfocarBusqueda();
     }
 
     private async void Historial_SelectionChanged(
@@ -166,12 +200,112 @@ public partial class CajaView : UserControl
         var detalle = await _viewModel.CrearHistorialViewModelAsync(caja);
 
         if (detalle is null)
+        {
+            EnfocarBusqueda();
             return;
+        }
 
         var huboDevolucion = await new CajaHistorialWindow { DataContext = detalle }
             .ShowDialog<bool>(ventana);
 
         if (huboDevolucion && _viewModel is not null)
             await _viewModel.CargarAsync();
+
+        EnfocarBusqueda();
+    }
+
+    private async void Caja_KeyDownTunnel(object? sender, KeyEventArgs e)
+    {
+        if (_viewModel is null)
+            return;
+
+        if (e.Key == Key.F2)
+        {
+            e.Handled = true;
+            EnfocarBusqueda();
+            return;
+        }
+
+        if (e.Key == Key.F4 ||
+            (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control)))
+        {
+            e.Handled = true;
+            await CobrarAsync();
+        }
+    }
+
+    private async void Caja_KeyDownBubble(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || _viewModel is null || e.Key != Key.Escape)
+            return;
+
+        var texto = TextoEnfocado();
+
+        if (texto is not null && !string.IsNullOrEmpty(texto.Text))
+        {
+            texto.Text = string.Empty;
+            e.Handled = true;
+            return;
+        }
+
+        e.Handled = true;
+
+        await LimpiarVentaConConfirmacionAsync();
+    }
+
+    private async Task CobrarAsync()
+    {
+        if (_viewModel is null)
+            return;
+
+        await _viewModel.CobrarCommand.ExecuteAsync(null);
+
+        EnfocarBusqueda();
+    }
+
+    private async Task LimpiarVentaConConfirmacionAsync()
+    {
+        if (_viewModel is null)
+            return;
+
+        if (_viewModel.LineasVentaItems.Count == 0)
+        {
+            _viewModel.LimpiarVentaCommand.Execute(null);
+            EnfocarBusqueda();
+            return;
+        }
+
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var confirmacion = new ConfirmacionWindow(
+            "Limpiar venta",
+            "¿Quitar todos los productos de la venta?");
+
+        if (await confirmacion.ShowDialog<bool>(ventana))
+            _viewModel.LimpiarVentaCommand.Execute(null);
+
+        EnfocarBusqueda();
+    }
+
+    private TextBox? TextoEnfocado()
+    {
+        if (BusquedaRapidaBox.IsFocused) return BusquedaRapidaBox;
+        if (DescuentoBox.IsFocused) return DescuentoBox;
+        if (PagoEfectivoBox.IsFocused) return PagoEfectivoBox;
+        if (PagoEfectivoMixtoBox.IsFocused) return PagoEfectivoMixtoBox;
+        if (PagoTarjetaBox.IsFocused) return PagoTarjetaBox;
+        if (PagoTransferenciaBox.IsFocused) return PagoTransferenciaBox;
+
+        return null;
+    }
+
+    private void EnfocarBusqueda()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            BusquedaRapidaBox.Focus();
+            BusquedaRapidaBox.SelectAll();
+        }, DispatcherPriority.Input);
     }
 }
