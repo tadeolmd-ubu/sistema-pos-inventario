@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
@@ -14,6 +15,8 @@ namespace PosInventario;
 
 public partial class App : Application
 {
+    private static bool _errorGlobalMostrado;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,8 +24,19 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        RegistroApp.LimpiarAntiguos();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            Dispatcher.UIThread.UnhandledException += (_, e) =>
+            {
+                RegistroApp.Escribir(
+                    "Excepción no controlada en la interfaz.", e.Exception);
+
+                e.Handled = true;
+                MostrarErrorGlobal(desktop, e.Exception);
+            };
+
             string rutaBaseDatos;
             try
             {
@@ -30,6 +44,9 @@ public partial class App : Application
             }
             catch (Exception ex)
             {
+                RegistroApp.Escribir(
+                    "No se pudo preparar la base de datos al iniciar.", ex);
+
                 desktop.MainWindow = new Window
                 {
                     Title = "Error al iniciar Sistema de inventario",
@@ -107,6 +124,9 @@ public partial class App : Application
                 }
                 catch (Exception ex)
                 {
+                    RegistroApp.Escribir(
+                        "No se pudo iniciar la base de datos o la sesión.", ex);
+
                     mainWindow.Content = new TextBlock
                     {
                         Text = $"No se pudo iniciar la base de datos: {ex.Message}",
@@ -179,6 +199,38 @@ public partial class App : Application
         _ = mainViewModel.ActualizarVersionAsync();
 
         return true;
+    }
+
+    /// <summary>
+    /// Muestra un aviso cuando ocurre un error no controlado. Se muestra una
+    /// sola vez para no llenar la pantalla de ventanas.
+    /// </summary>
+    private static void MostrarErrorGlobal(
+        IClassicDesktopStyleApplicationLifetime desktop, Exception ex)
+    {
+        if (_errorGlobalMostrado)
+            return;
+
+        _errorGlobalMostrado = true;
+
+        try
+        {
+            var ventana = new MensajeWindow(new MensajeDialogo(
+                "Ocurrió un error inesperado",
+                $"{ex.Message}\n\nEl detalle se guardó en:\n{RegistroApp.ArchivoActual}",
+                TipoMensajeOperacion.Error));
+
+            var principal = desktop.MainWindow;
+
+            if (principal is { IsVisible: true })
+                _ = ventana.ShowDialog(principal);
+            else
+                ventana.Show();
+        }
+        catch
+        {
+            // Si ni siquiera se puede avisar, el detalle ya quedó en el log.
+        }
     }
 
     private static string ResolverRutaBaseDatos()
