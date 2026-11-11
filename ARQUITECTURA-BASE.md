@@ -177,7 +177,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 112 pruebas pasan. El trabajo pendiente (pagos
+La base está estable y sus 113 pruebas pasan. El trabajo pendiente (pagos
 mixtos, respaldo automático, restauración, reportes, instalador) está ordenado
 por fases y prioridades en `PENDIENTES.md`.
 
@@ -213,7 +213,9 @@ por fases y prioridades en `PENDIENTES.md`.
   producto existente o se prepara el alta con ese SKU (`EscanearCodigoAsync`).
   En Caja el mismo código agrega el producto a la venta.
 - Compras: `CompraService` con líneas y actualización de stock.
-- Historial de ventas: `VentasViewModel` con filtros y reimpresión.
+- Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
+  de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
+  el botón "Ver ticket" o doble clic, incluidas las canceladas.
 - Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
   (80 mm); `ImpresoraSistema` lo envía a la impresora predeterminada (API de
   Windows con tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como

@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 112 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 113 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -105,9 +105,11 @@
     impresión por la API de Windows o CUPS, y aviso en la ventana si falla.
   - **Tamaño:** M.
 
-- [ ] **1.2 Reimprimir ticket desde el detalle de una caja cerrada**
+- [x] **1.2 Reimprimir ticket desde el detalle de una caja cerrada**
   - **Qué:** que las ventas listadas en `CajaHistorialWindow` abran su ticket.
   - **Criterio:** doble clic o botón abre el ticket de esa venta.
+  - **Hecho en:** rama `feat/impresion-ticket` (742f1f0): botón "Ver ticket"
+    y doble clic en cada venta, incluidas las canceladas.
   - **Tamaño:** S.
 
 - [x] **1.3 Devoluciones después del cierre de caja**

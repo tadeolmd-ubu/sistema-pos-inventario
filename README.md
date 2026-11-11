@@ -23,18 +23,18 @@ registro de errores.
 - **Inventario:** entradas/salidas con motivo y ajuste de stock.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
-  método de pago, reimpresión de ticket y botón de devolución (checklist por
-  producto o unidad, con reembolso estimado). Cada venta muestra su total neto
-  y, si aplica, cuánto se le ha devuelto. El ticket se puede imprimir en papel
-  de 58 mm u 80 mm; si no hay impresora, la venta ya quedó registrada y solo se
-  muestra un aviso.
+  método de pago, reimpresión de ticket desde el historial o el detalle de una
+  caja cerrada y botón de devolución (checklist por producto o unidad, con
+  reembolso estimado). Cada venta muestra su total neto y, si aplica, cuánto se
+  le ha devuelto. El ticket se puede imprimir en papel de 58 mm u 80 mm; si no
+  hay impresora, la venta ya quedó registrada y solo se muestra un aviso.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 112 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 113 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
