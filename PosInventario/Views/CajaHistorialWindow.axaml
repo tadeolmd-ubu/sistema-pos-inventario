@@ -80,8 +80,11 @@
                 <ItemsControl ItemsSource="{Binding VentasCompletadas}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:VentaHistorialItem">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Margin="0,4">
-                                <StackPanel Spacing="2">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10" Margin="0,4">
+                                <StackPanel Spacing="2"
+                                            Background="Transparent"
+                                            Cursor="Hand"
+                                            DoubleTapped="Venta_DoubleTapped">
                                     <TextBlock Text="{Binding Ticket}"
                                                FontWeight="SemiBold"/>
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -101,6 +104,11 @@
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                                 <Button Grid.Column="2"
+                                        Content="Ver ticket"
+                                        Classes="small secondary"
+                                        VerticalAlignment="Center"
+                                        Click="VerTicket_Click"/>
+                                <Button Grid.Column="3"
                                         Content="Devolver"
                                         Classes="small secondary"
                                         IsVisible="{Binding PuedeDevolver}"
@@ -118,8 +126,11 @@
                     <ItemsControl ItemsSource="{Binding VentasCanceladas}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:VentaHistorialItem">
-                                <Grid ColumnDefinitions="*,Auto" Margin="0,3">
-                                    <StackPanel Spacing="1">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" Margin="0,3">
+                                    <StackPanel Spacing="1"
+                                                Background="Transparent"
+                                                Cursor="Hand"
+                                                DoubleTapped="Venta_DoubleTapped">
                                         <TextBlock Text="{Binding Ticket}"
                                                    FontWeight="SemiBold"/>
                                         <TextBlock Text="{Binding FechaTexto}"
@@ -127,7 +138,13 @@
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding TotalTexto}"
-                                               FontWeight="SemiBold"/>
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2"
+                                            Content="Ver ticket"
+                                            Classes="small secondary"
+                                            VerticalAlignment="Center"
+                                            Click="VerTicket_Click"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

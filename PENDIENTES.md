@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 100 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 113 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -93,7 +93,7 @@
 
 ## Fase 1 — Operación diaria en el mostrador
 
-- [ ] **1.1 Impresión de ticket**
+- [x] **1.1 Impresión de ticket**
   - **Por qué:** un negocio no puede entregar la pantalla al cliente.
   - **Alcance mínimo:** botón Imprimir en el ticket; diseño para 58 mm y 80 mm;
     si la impresora falla, la venta ya quedó registrada y solo se avisa.
@@ -101,11 +101,15 @@
   - **Criterio:** ticket legible impreso desde una venta y desde una
     reimpresión; la app no se bloquea si no hay impresora.
   - **Tests:** generación del contenido y manejo de error de impresión.
+  - **Hecho en:** rama `feat/impresion-ticket` (f01e6d3): selector de 58/80 mm,
+    impresión por la API de Windows o CUPS, y aviso en la ventana si falla.
   - **Tamaño:** M.
 
-- [ ] **1.2 Reimprimir ticket desde el detalle de una caja cerrada**
+- [x] **1.2 Reimprimir ticket desde el detalle de una caja cerrada**
   - **Qué:** que las ventas listadas en `CajaHistorialWindow` abran su ticket.
   - **Criterio:** doble clic o botón abre el ticket de esa venta.
+  - **Hecho en:** rama `feat/impresion-ticket` (742f1f0): botón "Ver ticket"
+    y doble clic en cada venta, incluidas las canceladas.
   - **Tamaño:** S.
 
 - [x] **1.3 Devoluciones después del cierre de caja**

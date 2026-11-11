@@ -100,6 +100,12 @@ public partial class CajaHistorialViewModel : OperacionViewModel
     }
 
     /// <summary>
+    /// Crea el ViewModel del ticket de una venta de esta caja para verlo o
+    /// reimprimirlo, incluso si la caja ya está cerrada.
+    /// </summary>
+    public TicketViewModel CrearTicketViewModel(Venta venta) => new(venta);
+
+    /// <summary>
     /// Vuelve a leer las ventas de la caja; la ventana lo llama después de
     /// registrar una devolución.
     /// </summary>

@@ -132,4 +132,52 @@ public class AjustesV1Tests
         Assert.Equal(1, vm.CantidadVentas);
         Assert.Equal("100.00", vm.TotalVentasTexto);
     }
+
+    [Fact]
+    public async Task HistorialCreaElTicketDeUnaVenta()
+    {
+        await using var prueba = await PruebaUsuarios.CrearAsync();
+
+        var caja = new Caja
+        {
+            Id = 1,
+            FechaApertura = DateTime.Now,
+            MontoInicial = 1000m,
+            Estado = EstadoCaja.Cerrada
+        };
+
+        var producto = new Producto { Id = 1, Nombre = "Coca Cola" };
+
+        var venta = new Venta
+        {
+            Id = 7,
+            Fecha = DateTime.Now,
+            Subtotal = 100m,
+            Total = 100m,
+            Estado = EstadoVenta.Completada
+        };
+
+        venta.Detalles.Add(new DetalleVenta
+        {
+            Id = 1,
+            IdVenta = venta.Id,
+            IdProducto = producto.Id,
+            Producto = producto,
+            Cantidad = 1,
+            PrecioUnitario = 100m,
+            Subtotal = 100m
+        });
+
+        var vm = new CajaHistorialViewModel(
+            caja, [venta],
+            new VentaService(prueba.Db, prueba.Sesion), prueba.Sesion);
+
+        var item = Assert.Single(vm.VentasCompletadas);
+        var ticket = vm.CrearTicketViewModel(item.Venta);
+
+        Assert.Same(venta, item.Venta);
+        Assert.Same(venta, ticket.Venta);
+        Assert.Equal("V-000007", ticket.Numero);
+        Assert.Single(ticket.Detalles);
+    }
 }
