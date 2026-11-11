@@ -16,6 +16,27 @@
         <DataTemplate DataType="vm:InicioViewModel">
             <views:InicioView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:CajaViewModel">
+            <views:CajaView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ProductosViewModel">
+            <views:ProductosView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ProveedoresViewModel">
+            <views:ProveedoresView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:InventarioViewModel">
+            <views:InventarioView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ComprasViewModel">
+            <views:ComprasView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:UsuariosViewModel">
+            <views:UsuariosView/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ConfiguracionViewModel">
+            <views:ConfiguracionView/>
+        </DataTemplate>
     </Window.DataTemplates>
 
     <Grid ColumnDefinitions="262,*">

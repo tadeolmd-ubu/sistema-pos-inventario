@@ -93,3 +93,35 @@ public class VistaActualConverter : IValueConverter
         object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+public class ActivoFondoConverter : IValueConverter
+{
+    private static readonly SolidColorBrush FondoInactivo =
+        new(Color.Parse("#F8D7DA"));
+
+    public object? Convert(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is int activo && activo == 0
+            ? FondoInactivo
+            : Brushes.Transparent;
+
+    public object? ConvertBack(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class ArchivadoFondoConverter : IValueConverter
+{
+    private static readonly SolidColorBrush FondoArchivado =
+        new(Color.Parse("#F8D7DA"));
+
+    public object? Convert(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is DateOnly
+            ? FondoArchivado
+            : Brushes.Transparent;
+
+    public object? ConvertBack(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

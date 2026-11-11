@@ -5,10 +5,10 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
+using PosInventario.Models;
 using PosInventario.Service;
 using PosInventario.ViewModels;
 using PosInventario.Views;
-using System.Diagnostics;
 
 namespace PosInventario;
 
@@ -53,14 +53,34 @@ public partial class App : Application
 
             var dbContext = new AppDbContext(opciones);
 
-            // 1. Un servicio por entidad.
+            var sesion = new SesionActual();
             var respaldoService = new RespaldoService(dbContext);
+            var usuarioService = new UsuarioService(dbContext, sesion);
+            var productoService = new ProductoService(dbContext, sesion);
+            var proveedorService = new ProveedorService(dbContext, sesion);
+            var inventarioService = new InventarioService(dbContext, sesion);
+            var compraService = new CompraService(dbContext, sesion);
+            var cajaService = new CajaService(dbContext, sesion);
+            var ventaService = new VentaService(dbContext, sesion);
+            var versionService = new VersionService();
 
-            // 2. Un ViewModel por pantalla.
-            var inicioViewModel = new InicioViewModel();
+            var inicioViewModel = new InicioViewModel(
+                ventaService, productoService, cajaService, compraService, sesion);
+            var cajaViewModel = new CajaViewModel(
+                cajaService, ventaService, productoService, sesion);
+            var productosViewModel = new ProductosViewModel(productoService);
+            var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
+            var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
+            var comprasViewModel = new ComprasViewModel(
+                compraService, proveedorService, productoService);
+            var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
+            var configuracionViewModel = new ConfiguracionViewModel(
+                respaldoService, rutaBaseDatos, sesion);
 
-            // 3. Shell principal.
-            var mainViewModel = new MainViewModel(inicioViewModel);
+            var mainViewModel = new MainViewModel(
+                inicioViewModel, cajaViewModel, productosViewModel,
+                proveedoresViewModel, inventarioViewModel, comprasViewModel,
+                usuariosViewModel, configuracionViewModel, versionService, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 
@@ -80,8 +100,10 @@ public partial class App : Application
                     }
 
                     await dbContext.Database.MigrateAsync();
-                    await mainViewModel.InicializarAsync();
-                    mainWindow.IsEnabled = true;
+
+                    if (!await IniciarSesionAsync(
+                            mainWindow, desktop, sesion, usuarioService, mainViewModel))
+                        return;
                 }
                 catch (Exception ex)
                 {
@@ -92,23 +114,18 @@ public partial class App : Application
                         Margin = new Thickness(24)
                     };
                     mainWindow.IsEnabled = true;
-                    return;
                 }
+            };
 
-                // Módulo opcional de actualización:
-                // #if !DEBUG
-                // try
-                // {
-                //     var actualizacion = await UpdateService.BuscarAsync();
-                //     if (actualizacion is not null && mainWindow.IsVisible &&
-                //         await new ActualizacionWindow(actualizacion).ShowDialog<bool>(mainWindow))
-                //         desktop.Shutdown();
-                // }
-                // catch (Exception ex)
-                // {
-                //     Trace.TraceWarning("No se pudo consultar la actualización: {0}", ex.Message);
-                // }
-                // #endif
+            mainViewModel.CerrarSesionSolicitado += async () =>
+            {
+                mainWindow.IsEnabled = false;
+                sesion.Cerrar();
+                mainViewModel.AplicarSesion();
+                await mainViewModel.InicializarAsync();
+
+                await IniciarSesionAsync(
+                    mainWindow, desktop, sesion, usuarioService, mainViewModel);
             };
 
             desktop.Exit += (_, _) => dbContext.Dispose();
@@ -116,6 +133,52 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Muestra el asistente de primer administrador si hace falta y luego el
+    /// login. Devuelve false cuando la aplicación debe cerrarse.
+    /// </summary>
+    private static async Task<bool> IniciarSesionAsync(
+        Window ventana,
+        IClassicDesktopStyleApplicationLifetime desktop,
+        SesionActual sesion,
+        UsuarioService usuarioService,
+        MainViewModel mainViewModel)
+    {
+        if (!await usuarioService.ExisteAlgunUsuarioAsync())
+        {
+            var setupViewModel = new SetupViewModel(usuarioService);
+
+            var creado = await new SetupWindow { DataContext = setupViewModel }
+                .ShowDialog<bool>(ventana);
+
+            if (!creado)
+            {
+                desktop.Shutdown();
+                return false;
+            }
+        }
+
+        var loginViewModel = new LoginViewModel(usuarioService);
+
+        var usuario = await new LoginWindow { DataContext = loginViewModel }
+            .ShowDialog<Usuario?>(ventana);
+
+        if (usuario is null)
+        {
+            desktop.Shutdown();
+            return false;
+        }
+
+        sesion.Iniciar(usuario);
+        mainViewModel.AplicarSesion();
+        await mainViewModel.InicializarAsync();
+        ventana.IsEnabled = true;
+
+        _ = mainViewModel.ActualizarVersionAsync();
+
+        return true;
     }
 
     private static string ResolverRutaBaseDatos()

@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:PosInventario.Models"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:MovimientoCajaViewModel"
+        x:Class="PosInventario.Views.MovimientoCajaWindow"
+        Title="Detalle del movimiento"
+        Width="440"
+        SizeToContent="Height"
+        MaxHeight="720"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+
+                <TextBlock Text="Detalle del movimiento" Classes="subsection"/>
+
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+                    <TextBlock Grid.Row="0" Text="Tipo" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Tipo}" FontWeight="SemiBold"/>
+
+                    <TextBlock Grid.Row="1" Text="Fecha" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Fecha}"/>
+
+                    <TextBlock Grid.Row="2" Text="Usuario" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Usuario}"/>
+
+                    <TextBlock Grid.Row="3" Text="Caja" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CajaTexto}"/>
+
+                    <TextBlock Grid.Row="4" Text="Monto" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="4"
+                               Grid.Column="1"
+                               Text="{Binding MontoTexto}"
+                               FontSize="18"
+                               FontWeight="ExtraBold"/>
+
+                    <TextBlock Grid.Row="5" Text="Descripción" Classes="fieldLabel"/>
+                    <TextBlock Grid.Row="5"
+                               Grid.Column="1"
+                               Text="{Binding Descripcion}"
+                               TextWrapping="Wrap"/>
+                </Grid>
+
+                <StackPanel Spacing="8" IsVisible="{Binding EsVenta}">
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <TextBlock Text="{Binding VentaNumero, StringFormat='Venta {0}'}"
+                               Classes="subsection"/>
+
+                    <ItemsControl ItemsSource="{Binding Detalles}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:DetalleVenta">
+                                <StackPanel Spacing="1" Margin="0,3">
+                                    <TextBlock Text="{Binding Producto.Nombre}" FontWeight="SemiBold"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Cantidad, StringFormat='Cantidad {0}'}"
+                                                   Classes="caption"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Método de pago" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding MetodoPagoTexto}" FontWeight="SemiBold"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Total" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding TotalVentaTexto}"
+                                   FontSize="18"
+                                   FontWeight="ExtraBold"/>
+                    </Grid>
+                </StackPanel>
+
+                <Button Content="Cerrar"
+                        Classes="primary"
+                        HorizontalAlignment="Stretch"
+                        IsDefault="True"
+                        Click="Cerrar_Click"/>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</Window>

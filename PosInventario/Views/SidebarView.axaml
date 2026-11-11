@@ -9,6 +9,7 @@
         <conv:VistaActualConverter x:Key="VistaFondo"/>
         <conv:VistaActualConverter x:Key="VistaTexto" Modo="texto"/>
         <conv:VistaActualConverter x:Key="VistaBarra" Modo="barra"/>
+        <conv:InicialesConverter x:Key="Iniciales"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -74,15 +75,193 @@
                         </Grid>
                     </Button>
 
+                    <Button Classes="navPill"
+                            Command="{Binding IrACajaCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=CajaViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=CajaViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Caja"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=CajaViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAProductosCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ProductosViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ProductosViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Productos"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ProductosViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAProveedoresCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ProveedoresViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ProveedoresViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Proveedores"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ProveedoresViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAInventarioCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=InventarioViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=InventarioViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Inventario"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=InventarioViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAComprasCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ComprasViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ComprasViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Compras"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ComprasViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAUsuariosCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=UsuariosViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=UsuariosViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Usuarios"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=UsuariosViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAConfiguracionCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ConfiguracionViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ConfiguracionViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Configuración"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ConfiguracionViewModel}"/>
+                        </Grid>
+                    </Button>
+
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Padding="18,10" Background="#26000000">
-                <TextBlock Text="{Binding TextoVersionMenu}"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource NavyBrush}"
-                           HorizontalAlignment="Center"/>
+            <Border Grid.Row="2" Padding="18,12" Background="#26000000">
+                <StackPanel Spacing="8">
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Border Width="34" Height="34" CornerRadius="17"
+                                Background="{StaticResource NavyBrush}">
+                            <TextBlock Text="{Binding NombreUsuarioActual, Converter={StaticResource Iniciales}}"
+                                       FontSize="13"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource SurfaceBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="0">
+                            <TextBlock Text="{Binding NombreUsuarioActual}"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource NavyBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding RolUsuarioActual}"
+                                       FontSize="11"
+                                       Foreground="{StaticResource NavyBrush}"
+                                       Opacity="0.75"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Content="Cerrar sesión"
+                            Classes="secondary small"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding CerrarSesionCommand}"/>
+
+                    <TextBlock Text="{Binding TextoVersionMenu}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource NavyBrush}"
+                               HorizontalAlignment="Center"/>
+
+                </StackPanel>
             </Border>
 
         </Grid>

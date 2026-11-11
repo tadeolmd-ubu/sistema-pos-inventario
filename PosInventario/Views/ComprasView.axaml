@@ -1,0 +1,200 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Compras}"
+             x:DataType="vm:ComprasViewModel"
+             x:Class="PosInventario.Views.ComprasView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <controls:ResponsiveTwoPane ExpandedListWidth="420"
+                                    MinListWidth="260"
+                                    ListWidthRatio="0.44"
+                                    Spacing="22">
+
+            <!-- Izquierda: historial -->
+            <Border Classes="cardFlat" Padding="16">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+
+                    <StackPanel Grid.Row="0" Spacing="4">
+                        <TextBlock Text="Compras" Classes="sectionTitle"/>
+                        <TextBlock Text="Historial reciente" Classes="caption"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ComprasItems}"
+                             SelectedItem="{Binding SelectedCompra}"
+                             Classes="entityList">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Compra">
+                                <StackPanel Spacing="2">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Proveedor.Nombre}" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Total, StringFormat='{}{0:0.00}'}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Id, StringFormat='C-{0:000000}'}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Classes="caption"/>
+                                        <TextBlock Text="·" Classes="caption"/>
+                                        <TextBlock Text="{Binding Estado}" Classes="caption"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Grid.Row="2" Spacing="8">
+                        <TextBlock Text="Detalle de la compra" Classes="fieldLabel"/>
+
+                        <ListBox ItemsSource="{Binding SelectedCompra.Detalles}"
+                                 MaxHeight="150"
+                                 Classes="entityList">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:DetalleCompra">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding Producto.Nombre}" Classes="caption"/>
+                                            <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}"
+                                                       Classes="caption"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                   Classes="caption"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Button Content="Anular compra"
+                                Classes="danger"
+                                IsVisible="{Binding PuedeAnular}"
+                                Click="Anular_Click"/>
+                    </StackPanel>
+
+                </Grid>
+            </Border>
+
+            <!-- Derecha: nueva compra -->
+            <Border Classes="cardFlat" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+
+                        <TextBlock Text="Nueva compra" Classes="subsection"/>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Proveedor" Classes="fieldLabel"/>
+                                <ComboBox ItemsSource="{Binding ProveedoresItems}"
+                                          SelectedItem="{Binding SelectedProveedor}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Proveedor">
+                                            <TextBlock Text="{Binding Nombre}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Comprobante" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding NumeroComprobante}"
+                                         PlaceholderText="Factura / remito (opcional)"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="2*,*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Producto" Classes="fieldLabel"/>
+                                <ComboBox ItemsSource="{Binding ProductosItems}"
+                                          SelectedItem="{Binding SelectedProducto}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Producto">
+                                            <TextBlock Text="{Binding Nombre}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Cantidad" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="6">
+                                <TextBlock Text="Costo unitario" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding CostoTexto}" PlaceholderText="Costo unitario"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Content="Agregar línea"
+                                Classes="secondary"
+                                Command="{Binding AgregarLineaCommand}"/>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}"
+                                CornerRadius="10"
+                                Padding="12">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Líneas de la compra" Classes="fieldLabel"/>
+
+                                <ListBox ItemsSource="{Binding LineasItems}"
+                                         SelectedItem="{Binding SelectedLinea}"
+                                         MaxHeight="180"
+                                         Classes="entityList">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LineaCompraItem">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}"
+                                                               Classes="caption"/>
+                                                    <TextBlock Text="{Binding CostoUnitario, StringFormat='{}{0:0.00}'}"
+                                                               Classes="caption"/>
+                                                    <TextBlock Text="=" Classes="caption"/>
+                                                    <TextBlock Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                               Classes="caption"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <Button Content="Quitar línea"
+                                        Classes="secondary small"
+                                        Command="{Binding QuitarLineaCommand}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Total" Classes="subsection"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TotalTexto}"
+                                       Classes="subsection"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Registrar compra"
+                                    Classes="primary"
+                                    Command="{Binding RegistrarCommand}"/>
+                            <Button Content="Limpiar"
+                                    Classes="secondary"
+                                    Command="{Binding LimpiarFormularioCommand}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding MensajeOperacion}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </controls:ResponsiveTwoPane>
+    </Border>
+</UserControl>

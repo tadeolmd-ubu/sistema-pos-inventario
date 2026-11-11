@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:RestablecerContrasenaViewModel"
+        x:Class="PosInventario.Views.RestablecerContrasenaWindow"
+        Title="Restablecer contraseña — Sistema de inventario"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="28">
+        <StackPanel Spacing="16">
+
+            <TextBlock Text="{Binding Titulo}" Classes="subsection" TextWrapping="Wrap"/>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Nueva contraseña" Classes="fieldLabel"/>
+                <TextBox Text="{Binding NuevaContrasena}" PasswordChar="●"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Confirmar contraseña" Classes="fieldLabel"/>
+                <TextBox Text="{Binding ConfirmarContrasena}" PasswordChar="●"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Guardar"
+                        Classes="primary"
+                        IsDefault="True"
+                        Command="{Binding GuardarCommand}"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"/>
+
+        </StackPanel>
+    </Border>
+</Window>

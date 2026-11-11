@@ -1,0 +1,293 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:enums="using:PosInventario.Models.Enums"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Caja}"
+             x:DataType="vm:CajaViewModel"
+             x:Class="PosInventario.Views.CajaView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" MaxWidth="1100" HorizontalAlignment="Left">
+
+                <TextBlock Text="Caja" Classes="sectionTitle"/>
+
+                <!-- Abrir caja -->
+                <Border Classes="cardFlat" Padding="22" IsVisible="{Binding SinCajaAbierta}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Abrir caja" Classes="subsection"/>
+                        <TextBlock Text="No hay ninguna caja abierta." Classes="caption"/>
+
+                        <StackPanel Spacing="6" Width="220" HorizontalAlignment="Left">
+                            <TextBlock Text="Monto inicial" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding MontoInicialTexto}" PlaceholderText="Monto inicial"/>
+                        </StackPanel>
+
+                        <Button Content="Abrir caja"
+                                Classes="primary"
+                                HorizontalAlignment="Left"
+                                Command="{Binding AbrirCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Caja abierta -->
+                <StackPanel Spacing="16" IsVisible="{Binding HayCajaAbierta}">
+
+                    <Border Classes="cardFlat" Padding="22">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Caja abierta" Classes="subsection"/>
+
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Abierta por" Classes="fieldLabel"/>
+                                    <TextBlock Text="{Binding UsuarioAperturaTexto}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="Fecha de apertura" Classes="fieldLabel"/>
+                                    <TextBlock Text="{Binding FechaAperturaTexto}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="2">
+                                    <TextBlock Text="Monto inicial" Classes="fieldLabel"/>
+                                    <TextBlock Text="{Binding MontoInicialMostrar}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Background="{StaticResource SurfaceAltBrush}"
+                                    CornerRadius="10"
+                                    Padding="14">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Efectivo esperado" Classes="fieldLabel"/>
+                                    <TextBlock Text="{Binding MontoEsperadoTexto}"
+                                               FontSize="26"
+                                               FontWeight="ExtraBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Venta -->
+                    <Border Classes="cardFlat" Padding="22">
+                        <StackPanel Spacing="12">
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Venta" Classes="subsection"/>
+                                <Button Grid.Column="1"
+                                        Content="Seleccionar productos"
+                                        Classes="secondary"
+                                        Command="{Binding SeleccionarProductosCommand}"/>
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding LineasVentaItems}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      MaxHeight="280">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Producto"
+                                                        Binding="{Binding Nombre}"
+                                                        Width="*"/>
+                                    <DataGridTextColumn Header="SKU"
+                                                        Binding="{Binding Sku}"
+                                                        Width="120"/>
+                                    <DataGridTextColumn Header="Precio"
+                                                        Binding="{Binding PrecioUnitario, StringFormat='{}{0:0.00}'}"
+                                                        Width="105"/>
+                                    <DataGridTextColumn Header="Cantidad"
+                                                        Binding="{Binding Cantidad}"
+                                                        Width="90"/>
+                                    <DataGridTextColumn Header="Subtotal"
+                                                        Binding="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                        Width="110"/>
+                                    <DataGridTemplateColumn Header="Acciones" Width="165">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="vm:LineaVentaItem">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <Button Content="+"
+                                                            Classes="secondary small"
+                                                            Command="{Binding AumentarCommand}"/>
+                                                    <Button Content="−"
+                                                            Classes="secondary small"
+                                                            Command="{Binding DisminuirCommand}"/>
+                                                    <Button Content="✕"
+                                                            Classes="danger small"
+                                                            Command="{Binding EliminarCommand}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Subtotal" Classes="caption"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TotalVentaTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Total" Classes="subsection"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TotalVentaTexto}"
+                                           Classes="subsection"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <TextBlock Text="Método de pago" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding MetodosPago}"
+                                              SelectedItem="{Binding MetodoPagoSeleccionado}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="enums:MetodoPago">
+                                                <TextBlock Text="{Binding}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6" IsVisible="{Binding EsPagoEfectivo}">
+                                    <TextBlock Text="Paga con" Classes="fieldLabel"/>
+                                    <TextBox Text="{Binding MontoRecibidoTexto}"
+                                             PlaceholderText="Ingresa una cantidad"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        IsVisible="{Binding EsPagoEfectivo}">
+                                <TextBlock Text="Rápido:"
+                                           Classes="caption"
+                                           VerticalAlignment="Center"/>
+                                <Button Content="20"
+                                        Classes="secondary small"
+                                        Command="{Binding SeleccionarDenominacionCommand}"
+                                        CommandParameter="20"/>
+                                <Button Content="50"
+                                        Classes="secondary small"
+                                        Command="{Binding SeleccionarDenominacionCommand}"
+                                        CommandParameter="50"/>
+                                <Button Content="100"
+                                        Classes="secondary small"
+                                        Command="{Binding SeleccionarDenominacionCommand}"
+                                        CommandParameter="100"/>
+                                <Button Content="200"
+                                        Classes="secondary small"
+                                        Command="{Binding SeleccionarDenominacionCommand}"
+                                        CommandParameter="200"/>
+                                <Button Content="500"
+                                        Classes="secondary small"
+                                        Command="{Binding SeleccionarDenominacionCommand}"
+                                        CommandParameter="500"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="Realizar venta"
+                                        Classes="primary"
+                                        Command="{Binding CobrarCommand}"/>
+                                <Button Content="Limpiar"
+                                        Classes="secondary"
+                                        Command="{Binding LimpiarVentaCommand}"/>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="cardFlat" Padding="22">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Movimientos" Classes="subsection"/>
+
+                            <ListBox ItemsSource="{Binding MovimientosItems}"
+                                     SelectionChanged="Movimientos_SelectionChanged"
+                                     MaxHeight="220"
+                                     Classes="entityList">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MovimientoCaja">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding Tipo}" FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                               Classes="caption"/>
+                                                    <TextBlock Text="·" Classes="caption"/>
+                                                    <TextBlock Text="{Binding Descripcion}" Classes="caption"/>
+                                                    <TextBlock Text="·" Classes="caption"/>
+                                                    <TextBlock Text="{Binding Usuario.Nombre}" Classes="caption"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Monto, StringFormat='{}{0:0.00}'}"
+                                                       FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <TextBlock Text="{Binding MensajeOperacion}"
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
+
+                <!-- Historial -->
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Historial de cajas cerradas" Classes="subsection"/>
+
+                        <ListBox ItemsSource="{Binding HistorialItems}"
+                                 SelectionChanged="Historial_SelectionChanged"
+                                 MaxHeight="220"
+                                 Classes="entityList">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:Caja">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding UsuarioApertura.Nombre}" FontWeight="SemiBold"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="{Binding FechaCierre, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                           Classes="caption"/>
+                                                <TextBlock Text="·" Classes="caption"/>
+                                                <TextBlock Text="{Binding MontoEsperado, StringFormat='Esperado {0:0.00}'}"
+                                                           Classes="caption"/>
+                                                <TextBlock Text="·" Classes="caption"/>
+                                                <TextBlock Text="{Binding Diferencia, StringFormat='Diferencia {0:0.00}'}"
+                                                           Classes="caption"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding MontoFinal, StringFormat='{}{0:0.00}'}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Spacing="10" IsVisible="{Binding HayCajaAbierta}">
+                    <Button Content="Cancelar venta"
+                            Classes="danger"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarCancelarVentaCommand}"/>
+                    <Button Content="Registrar movimiento de efectivo"
+                            Classes="secondary"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarRegistrarMovimientoCommand}"/>
+                    <Button Content="Cerrar caja"
+                            Classes="danger"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SolicitarCerrarCajaCommand}"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>
