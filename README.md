@@ -37,7 +37,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 131 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 133 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -80,6 +80,11 @@ dotnet tool run dotnet-ef database update
 
 En Caja el foco entra automáticamente en la búsqueda. Al cerrar un diálogo o
 el ticket, el foco regresa a la búsqueda para seguir escaneando.
+
+El menú lateral tiene un panel **Comandos** que cambia según la pestaña y el
+control enfocado: búsqueda, carrito, descuento, pago, selector, lista, botón,
+casilla o fecha. **F1** muestra la ayuda del contexto actual; en Caja abre el
+listado completo.
 
 | Atajo | Acción | Caso de uso |
 |---|---|---|
