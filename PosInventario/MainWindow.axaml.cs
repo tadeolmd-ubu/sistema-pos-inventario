@@ -73,7 +73,7 @@ public partial class MainWindow : Window
                     {
                         new("Enter", "Cobrar"),
                         new("Esc", "Limpiar campo"),
-                        new("F7", "Método de pago"),
+                        new("F7", "Monto de pago"),
                         new("F4", "Cobrar"),
                         new("F1", "Ayuda")
                     }),
@@ -136,7 +136,7 @@ public partial class MainWindow : Window
                     new("↑/↓", "Cambiar"),
                     new("Enter", "Abrir"),
                     new("Esc", "Cerrar"),
-                    new("F7", "Método de pago"),
+                    new("F7", "Ir al monto"),
                     new("F4", "Cobrar"),
                     new("F1", "Ayuda")
                 });

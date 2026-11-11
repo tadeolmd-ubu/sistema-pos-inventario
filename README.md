@@ -94,7 +94,7 @@ listado completo.
 | **F4** o **Ctrl+Enter** | Cobrar | Cerrar la venta y abrir el ticket |
 | **F5** | Actualizar caja | Refrescar movimientos e historial |
 | **F6** | Enfocar descuento | Aplicar un descuento sobre el subtotal |
-| **F7** | Enfocar método de pago | Cambiar entre efectivo, tarjeta, transferencia o mixto |
+| **F7** | Enfocar monto de pago | Capturar el efectivo o el monto con el que se paga |
 | **F8** | Devolver venta | Abrir el selector de ventas para devolución |
 | **F9** | Registrar movimiento | Ingreso o retiro de efectivo |
 | **F10** | Cerrar caja | Abrir la ventana de cierre |

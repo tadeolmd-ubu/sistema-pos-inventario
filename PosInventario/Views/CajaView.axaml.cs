@@ -265,7 +265,7 @@ public partial class CajaView : UserControl
                 break;
             case Key.F7:
                 e.Handled = true;
-                EnfocarMetodoPago();
+                EnfocarMontoPago();
                 break;
             case Key.F8:
                 e.Handled = true;
@@ -310,12 +310,44 @@ public partial class CajaView : UserControl
         }
     }
 
-    private void EnfocarMetodoPago()
+    private void EnfocarMontoPago()
     {
-        if (_viewModel?.EsPagoMixto == true)
-            MetodoPagoMixtoBox.Focus();
-        else
-            MetodoPagoSimpleBox.Focus();
+        if (_viewModel is null)
+            return;
+
+        if (_viewModel.EsPagoMixto)
+        {
+            var campo = PrimerCampoVacio(
+                PagoEfectivoMixtoBox,
+                PagoTarjetaBox,
+                PagoTransferenciaBox);
+
+            campo.Focus();
+            campo.SelectAll();
+            return;
+        }
+
+        if (_viewModel.EsPagoEfectivo)
+        {
+            PagoEfectivoBox.Focus();
+            PagoEfectivoBox.SelectAll();
+            return;
+        }
+
+        // Tarjeta y transferencia cobran el total automáticamente: no hay
+        // monto que capturar, así que se deja el foco en el selector.
+        MetodoPagoSimpleBox.Focus();
+    }
+
+    private static TextBox PrimerCampoVacio(params TextBox[] campos)
+    {
+        foreach (var campo in campos)
+        {
+            if (string.IsNullOrWhiteSpace(campo.Text))
+                return campo;
+        }
+
+        return campos[0];
     }
 
     private async Task MostrarAtajosAsync()
@@ -331,7 +363,7 @@ public partial class CajaView : UserControl
             "F4   Cobrar",
             "F5   Actualizar caja",
             "F6   Enfocar descuento",
-            "F7   Enfocar método de pago",
+            "F7   Enfocar monto de pago",
             "F8   Devolver venta",
             "F9   Registrar movimiento de efectivo",
             "F10  Cerrar caja",
