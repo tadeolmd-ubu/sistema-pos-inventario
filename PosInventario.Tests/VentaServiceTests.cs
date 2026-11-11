@@ -1058,4 +1058,25 @@ public class VentaServiceTests
         Assert.Contains("caja abierta", vm.MensajeOperacion);
         Assert.Equal(0, await prueba.Db.Ventas.CountAsync());
     }
+
+    [Fact]
+    public async Task SelectorDeProductosSeleccionaElPrimeroAlFiltrar()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("SEL-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+
+        var vm = new SeleccionarProductoViewModel(prueba.ProductoService);
+        await vm.CargarAsync();
+
+        Assert.NotNull(vm.SelectedProducto);
+        Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
+
+        vm.Busqueda = "SEL-001";
+
+        Assert.NotNull(vm.SelectedProducto);
+        Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
+    }
 }

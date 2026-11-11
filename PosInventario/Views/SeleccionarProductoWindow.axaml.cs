@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using PosInventario.Models;
 using PosInventario.ViewModels;
 
@@ -13,8 +14,17 @@ public partial class SeleccionarProductoWindow : Window
     public SeleccionarProductoWindow()
     {
         InitializeComponent();
+
         DataContextChanged += (_, _) =>
             ConectarViewModel(DataContext as SeleccionarProductoViewModel);
+
+        AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
+
+        Opened += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            BusquedaBox.Focus();
+            BusquedaBox.SelectAll();
+        });
     }
 
     private void ConectarViewModel(SeleccionarProductoViewModel? viewModel)
@@ -26,6 +36,38 @@ public partial class SeleccionarProductoWindow : Window
 
         if (_viewModel is not null)
             _viewModel.ProductoSeleccionado += OnProductoSeleccionado;
+    }
+
+    private void OnKeyDownTunnel(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || _viewModel is null)
+            return;
+
+        if (BusquedaBox.IsKeyboardFocusWithin)
+        {
+            e.Handled = true;
+
+            if (_viewModel.SelectedProducto is null &&
+                _viewModel.ProductosItems.Count > 0)
+            {
+                _viewModel.SelectedProducto = _viewModel.ProductosItems[0];
+            }
+
+            SeleccionarProducto();
+            return;
+        }
+
+        if (ProductosLista.IsKeyboardFocusWithin)
+        {
+            e.Handled = true;
+            SeleccionarProducto();
+        }
+    }
+
+    private void SeleccionarProducto()
+    {
+        if (_viewModel?.SeleccionarCommand.CanExecute(null) == true)
+            _viewModel.SeleccionarCommand.Execute(null);
     }
 
     private void OnProductoSeleccionado(Producto producto) => Close(producto);
