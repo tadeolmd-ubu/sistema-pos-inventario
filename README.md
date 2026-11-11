@@ -37,7 +37,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 129 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 131 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -75,6 +75,34 @@ dotnet tool restore
 dotnet tool run dotnet-ef migrations add <Nombre>
 dotnet tool run dotnet-ef database update
 ```
+
+## Atajos de teclado
+
+En Caja el foco entra automáticamente en la búsqueda. Al cerrar un diálogo o
+el ticket, el foco regresa a la búsqueda para seguir escaneando.
+
+| Atajo | Acción | Caso de uso |
+|---|---|---|
+| **F1** | Ayuda de atajos | Consultar el listado completo |
+| **F2** | Enfocar búsqueda/SKU | Escanear o buscar sin usar el mouse |
+| **F3** | Seleccionar productos | Agregar productos sin código de barras |
+| **F4** o **Ctrl+Enter** | Cobrar | Cerrar la venta y abrir el ticket |
+| **F5** | Actualizar caja | Refrescar movimientos e historial |
+| **F6** | Enfocar descuento | Aplicar un descuento sobre el subtotal |
+| **F7** | Enfocar método de pago | Cambiar entre efectivo, tarjeta, transferencia o mixto |
+| **F8** | Devolver venta | Abrir el selector de ventas para devolución |
+| **F9** | Registrar movimiento | Ingreso o retiro de efectivo |
+| **F10** | Cerrar caja | Abrir la ventana de cierre |
+| **Esc** | Limpiar venta / cerrar diálogo | Cancelar la captura actual; pide confirmación si hay productos |
+| **Enter en búsqueda** | Agregar producto por SKU | Escanear o teclear un código |
+| **Enter en pago** | Cobrar | Confirmar la venta desde el campo de pago |
+| **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
+| **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
+| **Ctrl+P** (ticket) | Imprimir | Imprimir o reimprimir el ticket |
+| **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
+
+Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
+campo; si está vacío, limpia la venta (con confirmación cuando hay productos).
 
 ## Impresión de tickets
 
