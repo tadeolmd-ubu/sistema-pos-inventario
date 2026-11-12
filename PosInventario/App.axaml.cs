@@ -18,6 +18,12 @@ public partial class App : Application
 {
     private static bool _errorGlobalMostrado;
 
+    /// <summary>
+    /// Lo consulta Program después de cerrar la aplicación para volver a
+    /// iniciarla cuando se restauró un respaldo.
+    /// </summary>
+    public static bool ReiniciarSolicitado { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -86,7 +92,7 @@ public partial class App : Application
             var dbContext = new AppDbContext(opciones);
 
             var sesion = new SesionActual();
-            var respaldoService = new RespaldoService(dbContext);
+            var respaldoService = new RespaldoService(dbContext, sesion);
             var usuarioService = new UsuarioService(dbContext, sesion);
             var productoService = new ProductoService(dbContext, sesion);
             var proveedorService = new ProveedorService(dbContext, sesion);
@@ -117,6 +123,12 @@ public partial class App : Application
                 versionService, sesion);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
+
+            configuracionViewModel.ReinicioSolicitado += () =>
+            {
+                ReiniciarSolicitado = true;
+                desktop.Shutdown();
+            };
 
             mainWindow.IsEnabled = false;
             mainWindow.Opened += async (_, _) =>

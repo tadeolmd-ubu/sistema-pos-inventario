@@ -31,6 +31,12 @@ public partial class ConfiguracionViewModel : OperacionViewModel
 
     public bool HayUltimoRespaldo => !string.IsNullOrEmpty(UltimoRespaldoTexto);
 
+    /// <summary>
+    /// Lo escucha App para cerrar la ventana principal y reiniciar el proceso
+    /// después de restaurar la base.
+    /// </summary>
+    public event Action? ReinicioSolicitado;
+
     public override void LimpiarPantalla()
     {
         base.LimpiarPantalla();
@@ -48,7 +54,7 @@ public partial class ConfiguracionViewModel : OperacionViewModel
     {
         if (_respaldoService is null) return;
 
-        if (_sesion is not null && !_sesion.EsAdministrador)
+        if (!EsAdministrador())
         {
             MensajeOperacion = Notificar("Solo un administrador puede crear respaldos.");
             return;
@@ -67,4 +73,71 @@ public partial class ConfiguracionViewModel : OperacionViewModel
         if (resultado.Correcta && resultado.Valor is not null)
             UltimoRespaldoTexto = resultado.Valor;
     });
+
+    /// <summary>
+    /// Valida el archivo antes de pedir confirmación. Devuelve null cuando el
+    /// archivo no se puede usar; en ese caso el mensaje ya se mostró.
+    /// </summary>
+    public async Task<Resultado<RespaldoInfo>?> ValidarRespaldoAsync(string ruta)
+    {
+        if (_respaldoService is null) return null;
+
+        if (!EsAdministrador())
+        {
+            MensajeOperacion = Notificar(
+                "Solo un administrador puede restaurar un respaldo.");
+            return null;
+        }
+
+        Resultado<RespaldoInfo>? resultado = null;
+
+        await EjecutarSeguroAsync(async () =>
+        {
+            resultado = await _respaldoService.ValidarRespaldoAsync(ruta);
+
+            if (!resultado.Correcta)
+                MensajeOperacion = Notificar(resultado.Mensaje);
+        });
+
+        return resultado;
+    }
+
+    /// <summary>
+    /// Restaura el respaldo y devuelve el resultado para que la vista muestre
+    /// la confirmación final antes de reiniciar la aplicación.
+    /// </summary>
+    public async Task<Resultado<RestauracionRespaldo>?> RestaurarRespaldoAsync(string ruta)
+    {
+        if (_respaldoService is null) return null;
+
+        if (!EsAdministrador())
+        {
+            MensajeOperacion = Notificar(
+                "Solo un administrador puede restaurar un respaldo.");
+            return null;
+        }
+
+        Resultado<RestauracionRespaldo>? resultado = null;
+
+        await EjecutarSeguroAsync(async () =>
+        {
+            resultado = await _respaldoService.RestaurarRespaldoAsync(
+                ruta, CarpetaSugerida);
+
+            MensajeOperacion = resultado.Correcta
+                ? resultado.Mensaje
+                : Notificar(resultado.Mensaje);
+        });
+
+        return resultado;
+    }
+
+    /// <summary>
+    /// Pide a la aplicación que se cierre y se vuelva a abrir para leer la
+    /// base restaurada. Se llama después de avisar al usuario.
+    /// </summary>
+    public void SolicitarReinicio() => ReinicioSolicitado?.Invoke();
+
+    private bool EsAdministrador()
+        => _sesion is null || _sesion.EsAdministrador;
 }

@@ -65,12 +65,29 @@
                                            TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-
-                        <TextBlock Text="{Binding MensajeOperacion}"
-                                   Classes="caption"
-                                   TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
+
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Restaurar respaldo" Classes="subsection"/>
+                        <TextBlock Text="Reemplaza la base actual con un archivo de respaldo validado. Antes de restaurar se crea un respaldo de seguridad de la base actual."
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="Solo un administrador puede restaurar. La aplicación se reinicia al terminar para leer la base restaurada."
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                        <Button Content="Seleccionar respaldo..."
+                                Classes="danger"
+                                IsEnabled="{Binding !IsBusy}"
+                                Click="RestaurarRespaldo_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding MensajeOperacion}"
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
 
             </StackPanel>
         </ScrollViewer>
