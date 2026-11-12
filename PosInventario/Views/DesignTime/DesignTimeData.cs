@@ -23,8 +23,12 @@ public sealed class ConfiguracionDesignTime : ConfiguracionViewModel
     {
         RutaBaseDatos = "/home/usuario/.local/share/SistemaInventario/SistemaInventario.db";
         CarpetaSugerida = "/home/usuario/.local/share/SistemaInventario/Respaldos";
+        CarpetaDestinoRespaldo =
+            "/home/usuario/.local/share/SistemaInventario/Respaldos";
         UltimoRespaldoTexto =
             "/home/usuario/.local/share/SistemaInventario/Respaldos/respaldo_20261110_101500_abcd.db";
+        RespaldosAutomaticos = true;
+        RetencionDiasSeleccionados = 30;
     }
 }
 

@@ -34,7 +34,7 @@ public partial class ConfiguracionView : UserControl
         var carpeta = carpetas.FirstOrDefault()?.Path.LocalPath;
 
         if (!string.IsNullOrWhiteSpace(carpeta))
-            await viewModel.CrearRespaldoAsync(carpeta);
+            viewModel.SeleccionarCarpetaRespaldo(carpeta);
     }
 
     private async void RestaurarRespaldo_Click(object? sender, RoutedEventArgs e)

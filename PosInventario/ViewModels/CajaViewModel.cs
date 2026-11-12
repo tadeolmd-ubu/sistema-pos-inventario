@@ -16,6 +16,7 @@ public partial class CajaViewModel : OperacionViewModel
     private readonly VentaService? _ventaService;
     private readonly ProductoService? _productoService;
     private readonly SesionActual? _sesion;
+    private readonly RespaldoAutomaticoService? _respaldoAutomatico;
 
     public CajaViewModel() { }
 
@@ -23,12 +24,14 @@ public partial class CajaViewModel : OperacionViewModel
         CajaService cajaService,
         VentaService ventaService,
         ProductoService productoService,
-        SesionActual sesion)
+        SesionActual sesion,
+        RespaldoAutomaticoService? respaldoAutomatico = null)
     {
         _cajaService = cajaService;
         _ventaService = ventaService;
         _productoService = productoService;
         _sesion = sesion;
+        _respaldoAutomatico = respaldoAutomatico;
     }
 
     public ObservableCollection<MovimientoCaja> MovimientosItems { get; } = [];
@@ -460,6 +463,23 @@ public partial class CajaViewModel : OperacionViewModel
         CerrarCajaSolicitado?.Invoke(
             new CerrarCajaViewModel(_cajaService, CajaAbierta, MontoEsperado, resumen));
     });
+
+    /// <summary>
+    /// Se ejecuta después de que la ventana de cierre confirma que la caja se
+    /// cerró. Si el respaldo automático falla, lo avisa en la pantalla.
+    /// </summary>
+    public async Task EjecutarRespaldoAlCerrarCajaAsync()
+    {
+        if (_respaldoAutomatico is null) return;
+
+        await EjecutarSeguroAsync(async () =>
+        {
+            var resultado = await _respaldoAutomatico.CrearAlCerrarCajaAsync();
+
+            if (!resultado.Correcta)
+                MensajeOperacion = Notificar(resultado.Mensaje);
+        });
+    }
 
     /// <summary>
     /// La vista lo usa al seleccionar una caja del historial.

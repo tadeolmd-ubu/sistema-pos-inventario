@@ -42,10 +42,12 @@ PosInventario/
 ├── Data/                      AppDbContext, AppDbContextFactory
 ├── Migrations/                generadas con dotnet-ef (InitialCreate)
 ├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
-├── Service/                   Resultado, RespaldoService, RegistroApp,
-│                              InstanciaUnica, SesionActual, VersionService,
-│                              Usuario/Producto/Proveedor/Inventario/
-│                              Compra/Caja/VentaService, Linea*, ResumenPagosCaja
+├── Service/                   Resultado, RespaldoService,
+│                              RespaldoAutomaticoService, ConfiguracionAppService,
+│                              RegistroApp, InstanciaUnica, SesionActual,
+│                              VersionService, Usuario/Producto/Proveedor/
+│                              Inventario/Compra/Caja/VentaService, Linea*,
+│                              ResumenPagosCaja
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
@@ -97,15 +99,16 @@ Views → ViewModels → Service → Data + Models
    `Release`: `LocalApplicationData` + importación portable).
 3. Crea **un** `AppDbContext` con `DefaultTimeout = 30` (espera el bloqueo de
    SQLite en vez de fallar de inmediato).
-4. Crea un servicio por entidad + `SesionActual`, `RespaldoService` y
-   `VersionService`.
+4. Crea un servicio por entidad + `SesionActual`, `RespaldoService`,
+   `ConfiguracionAppService`, `RespaldoAutomaticoService` y `VersionService`.
 5. Crea un ViewModel por pantalla y el `MainViewModel`; asigna `DataContext` a
    `MainWindow` (inhabilitada hasta iniciar sesión).
 6. En `Opened`: respaldo previo si hay migraciones pendientes, `MigrateAsync()`,
    luego `IniciarSesionAsync`.
 7. `IniciarSesionAsync`: abre el `SetupWindow` si no existe ningún usuario y
    luego el `LoginWindow`; al entrar, `sesion.Iniciar`, `AplicarSesion`,
-   `InicializarAsync` y sondeo de versión remota en segundo plano.
+   `InicializarAsync`, respaldo diario automático y sondeo de versión remota en
+   segundo plano.
 8. En `desktop.Exit`: `Dispose()` del contexto.
 
 ## Sesión y roles
@@ -124,10 +127,18 @@ Views → ViewModels → Service → Data + Models
   con retención de 30 días. Nunca lanza.
 - `InstanciaUnica`: bloqueo de archivo para una sola ejecución.
 - `RespaldoService`: respaldo con `BackupDatabase` de SQLite; nombra
-  `respaldo_<fecha>_<hash>.db` en la carpeta destino. Además valida archivos
-  con `PRAGMA integrity_check`, el esquema mínimo y el historial de
-  migraciones, y restaura reemplazando la base actual después de guardar un
-  respaldo de seguridad.
+  `respaldo_<fecha>_<hash>.db` en la carpeta destino. Antes de guardarlo
+  verifica que abra, pase `PRAGMA integrity_check` y tenga el esquema mínimo y
+  el historial de migraciones; si falla, descarta el archivo. También valida
+  respaldos existentes y restaura reemplazando la base actual después de
+  guardar un respaldo de seguridad. Los respaldos automáticos usan el prefijo
+  `respaldo_auto_`.
+- `ConfiguracionAppService`: preferencias locales en
+  `LocalApplicationData/SistemaInventario/configuracion.json`; si el archivo
+  falta o está dañado usa valores predeterminados.
+- `RespaldoAutomaticoService`: crea un respaldo al iniciar sesión (máximo uno
+  por día) y al cerrar la caja. Aplica la retención en días solo sobre los
+  archivos `respaldo_auto_*`; los respaldos manuales no se eliminan.
 - `VersionService`: versión del ensamblado o de la última release de GitHub.
 
 ## Reglas de negocio
@@ -180,9 +191,8 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 139 pruebas pasan. El trabajo pendiente (respaldo
-automático, reportes, instalador) está ordenado por fases y prioridades en
-`PENDIENTES.md`.
+La base está estable y sus 147 pruebas pasan. El trabajo pendiente (reportes,
+instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
 
@@ -248,9 +258,11 @@ automático, reportes, instalador) está ordenado por fases y prioridades en
   devoluciones (`Venta.TotalNeto`).
 - Configuración: respaldo manual desde la UI (solo administrador) y
   restauración de un archivo validado, con respaldo de seguridad previo y
-  reinicio automático de la aplicación.
+  reinicio automático de la aplicación. Los respaldos automáticos se activan o
+  desactivan y su retención se configura desde la misma pantalla.
 
 ## Módulos opcionales (no incluidos)
 
-PDF (QuestPDF), actualización automática y configuración persistente. Se
-agregan según el roadmap de `PENDIENTES.md`.
+PDF (QuestPDF), actualización automática y configuración persistente de otras
+preferencias (por ahora solo se guardan los ajustes de respaldos automáticos).
+Se agregan según el roadmap de `PENDIENTES.md`.

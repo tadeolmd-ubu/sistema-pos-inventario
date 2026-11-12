@@ -27,7 +27,18 @@ public class RespaldoService
         _sesion = sesion;
     }
 
-    public async Task<Resultado<string>> CrearRespaldoAsync(string carpetaDestino)
+    public Task<Resultado<string>> CrearRespaldoAsync(string carpetaDestino)
+        => CrearRespaldoInternoAsync(carpetaDestino, "respaldo");
+
+    /// <summary>
+    /// Respaldo identificable como automático para que la retención pueda
+    /// limpiarlo sin borrar los respaldos manuales.
+    /// </summary>
+    public Task<Resultado<string>> CrearRespaldoAutomaticoAsync(string carpetaDestino)
+        => CrearRespaldoInternoAsync(carpetaDestino, "respaldo_auto");
+
+    private async Task<Resultado<string>> CrearRespaldoInternoAsync(
+        string carpetaDestino, string prefijo)
     {
         if (string.IsNullOrWhiteSpace(carpetaDestino))
             return new Resultado<string>(
@@ -59,7 +70,7 @@ public class RespaldoService
 
             var identificador = Guid.NewGuid().ToString("N");
             var nombreArchivo =
-                $"respaldo_{DateTime.Now:yyyyMMdd_HHmmss}_{identificador}.db";
+                $"{prefijo}_{DateTime.Now:yyyyMMdd_HHmmss}_{identificador}.db";
             var rutaDestino = Path.Combine(carpeta, nombreArchivo);
 
             rutaTemporal = Path.Combine(carpeta, $".respaldo_{identificador}.tmp");
@@ -81,7 +92,26 @@ public class RespaldoService
                 origen.BackupDatabase(destino);
             }
 
+            var verificacion = await ValidarRespaldoGeneradoAsync(rutaTemporal);
+
+            if (!verificacion.Correcta)
+            {
+                RegistroApp.Escribir(
+                    "El respaldo generado no pasó la verificación de integridad. " +
+                    verificacion.Mensaje);
+
+                return new Resultado<string>(
+                    false,
+                    "El respaldo no pasó la verificación de integridad y no se " +
+                    "guardó. " + verificacion.Mensaje,
+                    null);
+            }
+
             File.Move(rutaTemporal, rutaDestino);
+
+            // La validación abre el temporal como SQLite y puede dejar sus
+            // archivos auxiliares; se limpian antes de darlo por terminado.
+            EliminarTemporal(rutaTemporal);
             rutaTemporal = null;
 
             return new Resultado<string>(true, "Respaldo creado.", rutaDestino);
@@ -217,6 +247,14 @@ public class RespaldoService
                 false, "No se pudo leer el archivo seleccionado.", null);
         }
     }
+
+    /// <summary>
+    /// Verificación aplicada al archivo que se acaba de generar. Es virtual
+    /// para poder simular un respaldo inválido en las pruebas.
+    /// </summary>
+    protected virtual Task<Resultado<RespaldoInfo>> ValidarRespaldoGeneradoAsync(
+        string ruta)
+        => ValidarRespaldoAsync(ruta);
 
     /// <summary>
     /// Valida el respaldo, guarda una copia de seguridad de la base actual y
@@ -411,7 +449,13 @@ public class RespaldoService
         return Convert.ToInt32(await comando.ExecuteScalarAsync());
     }
 
-    private static void EliminarTemporal(string ruta) => EliminarArchivo(ruta);
+    private static void EliminarTemporal(string ruta)
+    {
+        EliminarArchivo(ruta);
+        EliminarArchivo(ruta + "-wal");
+        EliminarArchivo(ruta + "-shm");
+        EliminarArchivo(ruta + "-journal");
+    }
 
     private static void EliminarArchivo(string ruta)
     {

@@ -6,16 +6,23 @@ namespace PosInventario.ViewModels;
 
 public partial class ConfiguracionViewModel : OperacionViewModel
 {
+    private static readonly int[] DiasRetencionSugeridos = [1, 2, 7, 15, 30];
+
     private readonly RespaldoService? _respaldoService;
     private readonly SesionActual? _sesion;
+    private readonly ConfiguracionAppService? _configuracionApp;
 
     public ConfiguracionViewModel() { }
 
     public ConfiguracionViewModel(
-        RespaldoService respaldoService, string rutaBaseDatos, SesionActual sesion)
+        RespaldoService respaldoService,
+        string rutaBaseDatos,
+        SesionActual sesion,
+        ConfiguracionAppService? configuracionApp = null)
     {
         _respaldoService = respaldoService;
         _sesion = sesion;
+        _configuracionApp = configuracionApp;
         RutaBaseDatos = rutaBaseDatos;
 
         var carpeta = Path.GetDirectoryName(rutaBaseDatos);
@@ -23,11 +30,37 @@ public partial class ConfiguracionViewModel : OperacionViewModel
         CarpetaSugerida = string.IsNullOrWhiteSpace(carpeta)
             ? Path.Combine(AppContext.BaseDirectory, "Respaldos")
             : Path.Combine(carpeta, "Respaldos");
+
+        CarpetaDestinoRespaldo = CarpetaSugerida;
+
+        if (_configuracionApp is null)
+            return;
+
+        RespaldosAutomaticos = _configuracionApp.Actual.RespaldosAutomaticos;
+
+        var dias = _configuracionApp.Actual.RetencionDias;
+        var opciones = DiasRetencionSugeridos.ToList();
+
+        if (!opciones.Contains(dias))
+        {
+            opciones.Add(dias);
+            opciones.Sort();
+        }
+
+        OpcionesRetencionDias = opciones;
+        RetencionDiasSeleccionados = dias;
     }
 
     [ObservableProperty] private string rutaBaseDatos = "—";
     [ObservableProperty] private string carpetaSugerida = "—";
+    [ObservableProperty] private string carpetaDestinoRespaldo = "—";
     [ObservableProperty] private string ultimoRespaldoTexto = string.Empty;
+    [ObservableProperty] private bool respaldosAutomaticos = true;
+    [ObservableProperty] private int retencionDiasSeleccionados =
+        ConfiguracionAppService.RetencionDiasPredeterminada;
+
+    public IReadOnlyList<int> OpcionesRetencionDias { get; private set; } =
+        DiasRetencionSugeridos;
 
     public bool HayUltimoRespaldo => !string.IsNullOrEmpty(UltimoRespaldoTexto);
 
@@ -46,9 +79,31 @@ public partial class ConfiguracionViewModel : OperacionViewModel
     partial void OnUltimoRespaldoTextoChanged(string value)
         => OnPropertyChanged(nameof(HayUltimoRespaldo));
 
+    /// <summary>
+    /// Solo cambia la carpeta de destino. La creación del respaldo queda en
+    /// manos del botón "Crear respaldo" para no generar archivos sin querer.
+    /// </summary>
+    public void SeleccionarCarpetaRespaldo(string carpeta)
+    {
+        if (string.IsNullOrWhiteSpace(carpeta))
+            return;
+
+        try
+        {
+            CarpetaDestinoRespaldo = Path.GetFullPath(carpeta.Trim());
+            MensajeOperacion = string.Empty;
+        }
+        catch (Exception ex) when (
+            ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            MensajeOperacion = Notificar(
+                "La carpeta seleccionada no es válida.");
+        }
+    }
+
     [RelayCommand]
-    private Task CrearRespaldoSugeridoAsync()
-        => CrearRespaldoAsync(CarpetaSugerida);
+    private Task CrearRespaldoEnDestinoAsync()
+        => CrearRespaldoAsync(CarpetaDestinoRespaldo);
 
     public Task CrearRespaldoAsync(string carpetaDestino) => EjecutarSeguroAsync(async () =>
     {
@@ -68,11 +123,31 @@ public partial class ConfiguracionViewModel : OperacionViewModel
 
         var resultado = await _respaldoService.CrearRespaldoAsync(carpetaDestino);
 
-        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
+        MensajeOperacion = resultado.Correcta
+            ? resultado.Mensaje
+            : Notificar(resultado.Mensaje);
 
         if (resultado.Correcta && resultado.Valor is not null)
             UltimoRespaldoTexto = resultado.Valor;
     });
+
+    [RelayCommand]
+    private void GuardarConfiguracion()
+    {
+        if (_configuracionApp is null) return;
+
+        if (!EsAdministrador())
+        {
+            MensajeOperacion = Notificar(
+                "Solo un administrador puede cambiar los respaldos automáticos.");
+            return;
+        }
+
+        var resultado = _configuracionApp.Guardar(
+            RespaldosAutomaticos, RetencionDiasSeleccionados);
+
+        MensajeOperacion = Notificar(resultado.Mensaje, resultado.Correcta);
+    }
 
     /// <summary>
     /// Valida el archivo antes de pedir confirmación. Devuelve null cuando el

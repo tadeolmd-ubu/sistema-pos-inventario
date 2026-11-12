@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 139 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 147 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -31,7 +31,8 @@
 - [x] Desglose por método de pago en cierre e historial de caja.
 - [x] Devoluciones totales y parciales de ventas, con reembolso en efectivo
   desde la caja abierta y sin recalcular cajas cerradas.
-- [x] Respaldos manuales con `BackupDatabase` y restauración desde la app.
+- [x] Respaldos manuales y automáticos, con verificación de integridad,
+  retención configurable y restauración desde la app.
 - [x] Manejo global de errores y logs en archivo.
 - [x] Instancia única con bloqueo de archivo.
 - [x] Textos en español de México.
@@ -191,12 +192,17 @@
     `RestaurarRespaldoAsync`, confirmación y reinicio en Configuración, y
     pruebas `RespaldoServiceTests`.
 
-- [ ] **2.2 Respaldo automático**
+- [x] **2.2 Respaldo automático**
   - **Qué:** respaldar al cerrar caja y/o una vez por día, con retención
     configurable y aviso si falla.
   - **Criterio:** existe al menos un respaldo reciente sin intervención del
     usuario.
   - **Tamaño:** M.
+  - **Implementado:** `RespaldoAutomaticoService` crea un respaldo diario al
+    iniciar sesión y otro al cerrar la caja; `ConfiguracionAppService` guarda
+    la activación y la retención en días en un JSON local. La retención solo
+    borra `respaldo_auto_*`. Las pruebas están en
+    `RespaldoAutomaticoServiceTests` y `ConfiguracionAppServiceTests`.
 
 - [ ] **2.3 Tests críticos faltantes**
   - **Qué:** cierre de caja con diferencia, permisos de anulación de venta
@@ -209,11 +215,16 @@
   - **Criterio:** el usuario puede enviar el log sin buscar rutas a mano.
   - **Tamaño:** S.
 
-- [ ] **2.5 Verificación de integridad del respaldo**
+- [x] **2.5 Verificación de integridad del respaldo**
   - **Qué:** comprobar que el archivo generado abre y tiene las tablas
     esperadas antes de darlo por bueno.
   - **Criterio:** un respaldo corrupto se detecta al crearlo.
   - **Tamaño:** S.
+  - **Implementado:** `RespaldoService` valida el archivo temporal con
+    `ValidarRespaldoAsync` antes de moverlo a su nombre definitivo. Si no pasa
+    `integrity_check` o no tiene el esquema mínimo, se descarta. La prueba
+    `RespaldoQueNoPasaLaVerificacionNoSeGuarda` cubre el rechazo y
+    `ArchivoCorruptoNoSeRestaura` cubre la detección de corrupción.
 
 - [ ] **2.6 Actualizaciones de la app**
   - **Qué:** avisar cuando hay una versión nueva y descargarla/instalarla de

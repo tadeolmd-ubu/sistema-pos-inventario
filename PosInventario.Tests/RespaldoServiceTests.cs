@@ -83,6 +83,16 @@ public class RespaldoServiceTests
         }
     }
 
+    private sealed class RespaldoServiceConVerificacionFallida : RespaldoService
+    {
+        public RespaldoServiceConVerificacionFallida(AppDbContext db) : base(db) { }
+
+        protected override Task<Resultado<RespaldoInfo>>
+            ValidarRespaldoGeneradoAsync(string ruta)
+            => Task.FromResult(new Resultado<RespaldoInfo>(
+                false, "La verificación simulada falló.", null));
+    }
+
     [Fact]
     public async Task RespaldoValidoSePuedeRestaurar()
     {
@@ -102,6 +112,22 @@ public class RespaldoServiceTests
         Assert.Equal(respaldo.Valor, validacion.Valor.Ruta);
         Assert.True(validacion.Valor.TamanoBytes > 0);
         Assert.True(validacion.Valor.CantidadMigraciones > 0);
+        Assert.Empty(Directory.GetFiles(
+            entorno.CarpetaRespaldos, ".respaldo_*"));
+    }
+
+    [Fact]
+    public async Task RespaldoQueNoPasaLaVerificacionNoSeGuarda()
+    {
+        await using var entorno = await Entorno.CrearAsync();
+        var servicio = new RespaldoServiceConVerificacionFallida(entorno.Db);
+
+        var resultado = await servicio.CrearRespaldoAsync(
+            entorno.CarpetaRespaldos);
+
+        Assert.False(resultado.Correcta);
+        Assert.Contains("verificación", resultado.Mensaje);
+        Assert.Empty(Directory.GetFiles(entorno.CarpetaRespaldos));
     }
 
     [Fact]

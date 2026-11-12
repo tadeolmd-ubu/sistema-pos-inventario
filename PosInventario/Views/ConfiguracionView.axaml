@@ -33,23 +33,52 @@
 
                 <Border Classes="cardFlat" Padding="22">
                     <StackPanel Spacing="12">
+                        <TextBlock Text="Respaldos automáticos" Classes="subsection"/>
+                        <TextBlock Text="Se crea un respaldo al iniciar sesión una vez al día y otro al cerrar la caja. La retención solo elimina los respaldos automáticos fuera del período configurado; los manuales no se tocan."
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                        <CheckBox Content="Crear respaldos automáticos"
+                                  IsChecked="{Binding RespaldosAutomaticos}"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Conservar respaldos de los últimos"
+                                       Classes="fieldLabel"
+                                       VerticalAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding OpcionesRetencionDias}"
+                                      SelectedItem="{Binding RetencionDiasSeleccionados}"
+                                      Width="80"
+                                      HorizontalAlignment="Left"/>
+                            <TextBlock Text="días"
+                                       Classes="fieldLabel"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Button Content="Guardar configuración"
+                                Classes="secondary"
+                                Command="{Binding GuardarConfiguracionCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="12">
                         <TextBlock Text="Respaldos" Classes="subsection"/>
-                        <TextBlock Text="Crea una copia de seguridad completa del archivo SQLite. El respaldo no modifica la base actual."
+                        <TextBlock Text="Elige la carpeta de destino y después crea el respaldo. El respaldo no modifica la base actual."
                                    Classes="caption"
                                    TextWrapping="Wrap"/>
 
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Carpeta sugerida" Classes="fieldLabel"/>
-                            <TextBlock Text="{Binding CarpetaSugerida}"
+                            <TextBlock Text="Carpeta de destino" Classes="fieldLabel"/>
+                            <TextBlock Text="{Binding CarpetaDestinoRespaldo}"
                                        Classes="caption"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Button Content="Crear respaldo aquí"
+                            <Button Content="Crear respaldo"
                                     Classes="primary"
-                                    Command="{Binding CrearRespaldoSugeridoCommand}"/>
-                            <Button Content="Elegir otra carpeta..."
+                                    Command="{Binding CrearRespaldoEnDestinoCommand}"/>
+                            <Button Content="Elegir carpeta..."
                                     Classes="secondary"
                                     Click="ElegirCarpeta_Click"/>
                         </StackPanel>
