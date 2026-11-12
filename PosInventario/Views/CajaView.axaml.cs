@@ -127,7 +127,10 @@ public partial class CajaView : UserControl
             .ShowDialog<bool>(ventana);
 
         if (cerrada && _viewModel is not null)
+        {
             await _viewModel.CargarAsync();
+            await _viewModel.EjecutarRespaldoAlCerrarCajaAsync();
+        }
 
         EnfocarBusqueda();
     }

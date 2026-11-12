@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Avalonia;
 using PosInventario.Service;
@@ -43,6 +44,44 @@ class Program
         finally
         {
             instancia.Dispose();
+        }
+
+        if (App.ReiniciarSolicitado)
+            ReiniciarAplicacion(args);
+    }
+
+    /// <summary>
+    /// Vuelve a abrir la aplicación después de restaurar la base. Se ejecuta
+    /// cuando la instancia anterior ya liberó el bloqueo de instancia única.
+    /// </summary>
+    private static void ReiniciarAplicacion(string[] args)
+    {
+        var ejecutable = Environment.ProcessPath;
+
+        if (string.IsNullOrWhiteSpace(ejecutable))
+        {
+            RegistroApp.Escribir(
+                "No se pudo reiniciar la aplicación: no se encontró el ejecutable.");
+            return;
+        }
+
+        try
+        {
+            var inicio = new ProcessStartInfo
+            {
+                FileName = ejecutable,
+                UseShellExecute = false,
+                WorkingDirectory = Directory.GetCurrentDirectory()
+            };
+
+            foreach (var arg in args)
+                inicio.ArgumentList.Add(arg);
+
+            Process.Start(inicio);
+        }
+        catch (Exception ex)
+        {
+            RegistroApp.Escribir("No se pudo reiniciar la aplicación.", ex);
         }
     }
 

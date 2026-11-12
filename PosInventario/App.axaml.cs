@@ -18,6 +18,12 @@ public partial class App : Application
 {
     private static bool _errorGlobalMostrado;
 
+    /// <summary>
+    /// Lo consulta Program después de cerrar la aplicación para volver a
+    /// iniciarla cuando se restauró un respaldo.
+    /// </summary>
+    public static bool ReiniciarSolicitado { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -86,7 +92,12 @@ public partial class App : Application
             var dbContext = new AppDbContext(opciones);
 
             var sesion = new SesionActual();
-            var respaldoService = new RespaldoService(dbContext);
+            var respaldoService = new RespaldoService(dbContext, sesion);
+            var configuracionAppService = new ConfiguracionAppService();
+            var carpetaRespaldos = Path.Combine(
+                Path.GetDirectoryName(rutaBaseDatos)!, "Respaldos");
+            var respaldoAutomaticoService = new RespaldoAutomaticoService(
+                respaldoService, configuracionAppService, carpetaRespaldos);
             var usuarioService = new UsuarioService(dbContext, sesion);
             var productoService = new ProductoService(dbContext, sesion);
             var proveedorService = new ProveedorService(dbContext, sesion);
@@ -99,7 +110,8 @@ public partial class App : Application
             var inicioViewModel = new InicioViewModel(
                 ventaService, productoService, cajaService, compraService, sesion);
             var cajaViewModel = new CajaViewModel(
-                cajaService, ventaService, productoService, sesion);
+                cajaService, ventaService, productoService, sesion,
+                respaldoAutomaticoService);
             var productosViewModel = new ProductosViewModel(productoService);
             var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
@@ -108,15 +120,21 @@ public partial class App : Application
             var ventasViewModel = new VentasViewModel(ventaService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
             var configuracionViewModel = new ConfiguracionViewModel(
-                respaldoService, rutaBaseDatos, sesion);
+                respaldoService, rutaBaseDatos, sesion, configuracionAppService);
 
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
                 ventasViewModel, usuariosViewModel, configuracionViewModel,
-                versionService, sesion);
+                versionService, sesion, respaldoAutomaticoService);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
+
+            configuracionViewModel.ReinicioSolicitado += () =>
+            {
+                ReiniciarSolicitado = true;
+                desktop.Shutdown();
+            };
 
             mainWindow.IsEnabled = false;
             mainWindow.Opened += async (_, _) =>
@@ -127,7 +145,7 @@ public partial class App : Application
                         (await dbContext.Database.GetPendingMigrationsAsync()).Any())
                     {
                         var respaldo = await respaldoService.CrearRespaldoAsync(
-                            Path.Combine(Path.GetDirectoryName(rutaBaseDatos)!, "Respaldos"));
+                            carpetaRespaldos);
 
                         if (!respaldo.Correcta)
                             throw new IOException("No se pudo crear el respaldo previo a la migración.");
@@ -212,6 +230,8 @@ public partial class App : Application
         mainViewModel.AplicarSesion();
         await mainViewModel.InicializarAsync();
         ventana.IsEnabled = true;
+
+        await mainViewModel.EjecutarRespaldoDiarioAsync();
 
         _ = mainViewModel.ActualizarVersionAsync();
 

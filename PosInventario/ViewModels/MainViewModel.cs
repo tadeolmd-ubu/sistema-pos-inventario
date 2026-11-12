@@ -18,6 +18,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly ConfiguracionViewModel _configuracionViewModel;
     private readonly VersionService _versionService;
     private readonly SesionActual _sesion;
+    private readonly RespaldoAutomaticoService? _respaldoAutomatico;
 
     public MainViewModel(
         InicioViewModel inicioViewModel,
@@ -30,7 +31,8 @@ public partial class MainViewModel : OperacionViewModel
         UsuariosViewModel usuariosViewModel,
         ConfiguracionViewModel configuracionViewModel,
         VersionService versionService,
-        SesionActual sesion)
+        SesionActual sesion,
+        RespaldoAutomaticoService? respaldoAutomatico = null)
     {
         _inicioViewModel = inicioViewModel;
         _cajaViewModel = cajaViewModel;
@@ -43,6 +45,7 @@ public partial class MainViewModel : OperacionViewModel
         _configuracionViewModel = configuracionViewModel;
         _versionService = versionService;
         _sesion = sesion;
+        _respaldoAutomatico = respaldoAutomatico;
 
         _inicioViewModel.MensajeSolicitado += SolicitarMensaje;
         _cajaViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -94,6 +97,23 @@ public partial class MainViewModel : OperacionViewModel
     {
         var version = await _versionService.ObtenerVersionAsync();
         TextoVersionMenu = $"v{version} · Sistema de inventario";
+    }
+
+    /// <summary>
+    /// Crea el respaldo diario al iniciar sesión. Si falla, avisa al usuario;
+    /// si ya existe un respaldo de hoy, no hace nada.
+    /// </summary>
+    public async Task EjecutarRespaldoDiarioAsync()
+    {
+        if (_respaldoAutomatico is null) return;
+
+        await EjecutarSeguroAsync(async () =>
+        {
+            var resultado = await _respaldoAutomatico.CrearDiarioAsync();
+
+            if (!resultado.Correcta)
+                MensajeOperacion = Notificar(resultado.Mensaje);
+        });
     }
 
     private void CambiarVista(OperacionViewModel vista, string titulo)
