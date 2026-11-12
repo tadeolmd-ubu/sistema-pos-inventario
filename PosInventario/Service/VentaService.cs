@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
 using PosInventario.Models;
@@ -88,6 +89,94 @@ public class VentaService
             .ThenByDescending(v => v.Id)
             .Take(limite)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Historial paginado entre dos fechas (inclusive). La búsqueda se aplica
+    /// en la base: acepta el número de ticket (con o sin prefijo "V-") o el
+    /// nombre del cajero. Devuelve solo las filas de la página y el total de
+    /// coincidencias para calcular la navegación.
+    /// </summary>
+    public async Task<PaginaResultado<Venta>> ObtenerHistorialPaginadoAsync(
+        DateTime desde,
+        DateTime hasta,
+        string? busqueda,
+        bool incluirAnuladas,
+        int pagina,
+        int tamanoPagina)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Ventas
+            .AsNoTracking()
+            .Where(v => v.Fecha >= inicio && v.Fecha < fin);
+
+        if (!incluirAnuladas)
+            query = query.Where(v => v.Estado == EstadoVenta.Completada);
+
+        query = AplicarBusqueda(query, busqueda);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var totalVendido = await query
+            .Where(v => v.Estado == EstadoVenta.Completada)
+            .SumAsync(v => (decimal?)(v.Total - v.TotalDevuelto)) ?? 0m;
+
+        var items = await query
+            .Include(v => v.Usuario)
+            .Include(v => v.Pagos)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Venta>(
+            items, totalRegistros, totalVendido);
+    }
+
+    private static IQueryable<Venta> AplicarBusqueda(
+        IQueryable<Venta> query, string? busqueda)
+    {
+        var texto = (busqueda ?? string.Empty).Trim();
+
+        if (texto.Length == 0)
+            return query;
+
+        var numero = texto.StartsWith("V-", StringComparison.OrdinalIgnoreCase)
+            ? texto[2..]
+            : texto;
+
+        if (int.TryParse(
+                numero, NumberStyles.None, CultureInfo.InvariantCulture,
+                out var id))
+        {
+            return query.Where(v =>
+                v.Id == id ||
+                v.Usuario.Nombre.Contains(texto) ||
+                v.Usuario.NombreUsuario.Contains(texto));
+        }
+
+        return query.Where(v =>
+            v.Usuario.Nombre.Contains(texto) ||
+            v.Usuario.NombreUsuario.Contains(texto));
     }
 
     public async Task<Resultado<Venta>> RegistrarAsync(

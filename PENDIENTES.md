@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 166 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 178 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -255,20 +255,29 @@
   - **Hecho en:** rama `feat/exportar-csv` (300f36f): botón "Exportar CSV" en
     cada módulo, con rango de fechas en Inventario y Compras. Exporta las filas
     visibles, con UTF-8 con BOM, coma decimal y escape de comas, comillas y
-    fórmulas; las pruebas están en 7174b3b.
+    fórmulas; las pruebas están en 7174b3b. Con la paginación del ítem 3.3,
+    exporta exactamente la página visible.
   - **Tamaño:** M.
 
-- [ ] **3.3 Reportes de administración**
+- [x] **3.3 Paginación reutilizable en los historiales**
+  - **Qué:** consultar Ventas, Inventario, Compras y el selector de productos
+    de Caja por páginas en la base en lugar de cargar todos los registros en
+    memoria.
+  - **Criterio:** selector de 10/25/50 registros (inicio en 10), navegación
+    Primera/Anterior/Siguiente/Última, total de registros visible y filtros
+    aplicados en la consulta. La exportación CSV incluye solo la página
+    seleccionada y el selector de Caja conserva la búsqueda por SKU/nombre.
+  - **Hecho en:** rama `feat/paginacion-listados` (fd725e9 y c110e0e): control
+    reutilizable `Paginador` + `PaginacionViewModel`, métodos paginados con
+    `Skip`/`Take` y `Count` en los servicios, selector de productos de Caja
+    paginado y exportación de la página actual.
+  - **Tamaño:** M.
+
+- [ ] **3.4 Reportes de administración**
   - **Qué:** ventas por período, por método, productos más vendidos y utilidad
     (precio de venta menos costo).
   - **Criterio:** el dueño puede ver sus números sin exportar a otro sistema.
   - **Tamaño:** L.
-
-- [ ] **3.4 Paginación o carga progresiva del historial de ventas**
-  - **Qué:** hoy hay un límite de 500 ventas por consulta; agregar páginas o
-    “cargar más”.
-  - **Criterio:** se puede consultar un año completo sin truncar datos.
-  - **Tamaño:** S/M.
 
 - [ ] **3.5 Persistencia de tamaño y posición de la ventana**
   - **Criterio:** la app abre donde y como se cerró.

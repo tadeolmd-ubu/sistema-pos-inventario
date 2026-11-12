@@ -94,7 +94,8 @@ public partial class VentasView : UserControl
                 return;
 
             viewModel.NotificarExportacion(
-                $"Se exportaron {viewModel.CantidadExportable} ventas a:\n{ruta}");
+                $"Se exportaron {viewModel.CantidadExportable} ventas de la " +
+                $"página {viewModel.Paginacion.PaginaActual} a:\n{ruta}");
         }
         catch (Exception ex)
         {

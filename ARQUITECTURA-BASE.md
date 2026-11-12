@@ -38,7 +38,8 @@ PosInventario.sln
 PosInventario/
 ├── .config/dotnet-tools.json
 ├── Assets/
-├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane
+├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane,
+│                              Paginador (navegación de páginas)
 ├── Data/                      AppDbContext, AppDbContextFactory
 ├── Migrations/                generadas con dotnet-ef (InitialCreate)
 ├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
@@ -48,15 +49,16 @@ PosInventario/
 │                              VersionService, Usuario/Producto/Proveedor/
 │                              Inventario/Compra/Caja/VentaService, Linea*,
 │                              ResumenPagosCaja, GeneradorTicketTexto,
-│                              GeneradorCorteCajaTexto, ExportadorCsv
+│                              GeneradorCorteCajaTexto, ExportadorCsv,
+│                              PaginaResultado<T>
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
 │                              Ventas, Usuarios, Configuración, Login, Setup,
 │                              Ticket, CorteCaja, CancelarVenta, CerrarCaja,
 │                              CajaHistorial, MovimientoCaja,
-│                              RestablecerContrasena, SeleccionarProducto) e
-│                              ítems de líneas
+│                              RestablecerContrasena, SeleccionarProducto,
+│                              PaginacionViewModel) e ítems de líneas
 ├── Views/                     vistas por módulo + SidebarView, LoginWindow,
 │                              SetupWindow, TicketWindow, CorteCajaWindow,
 │                              CancelarVentaWindow, CerrarCajaWindow,
@@ -69,7 +71,7 @@ PosInventario/
 ├── Program.cs
 └── app.manifest
 PosInventario.Tests/           pruebas de servicios, respaldo, instancia,
-                               registro, ViewModels de caja/inicio y despliegue
+                               registro, ViewModels, paginación y despliegue
 ```
 
 ## Dependencias entre capas
@@ -194,7 +196,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 166 pruebas pasan. El trabajo pendiente (reportes,
+La base está estable y sus 178 pruebas pasan. El trabajo pendiente (reportes,
 instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
@@ -239,12 +241,21 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
   de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
   el botón "Ver ticket" o doble clic, incluidas las canceladas.
-- Exportación CSV: `ExportadorCsv` convierte las filas ya cargadas en Ventas,
-  Inventario y Compras (con su rango de fechas y filtros aplicados) a CSV con
-  coma, punto decimal, fin de línea `\r\n` y UTF-8 con BOM. Escapa comas,
-  comillas y saltos de línea, y neutraliza textos que Excel podría interpretar
-  como fórmulas. Las vistas abren el selector de archivos y escriben el
-  contenido; la generación queda fuera de la UI para poder probarla.
+- Paginación: `PaginacionViewModel` concentra página actual, tamaño
+  (10/25/50, inicio en 10), total y comandos de navegación; `Paginador` es el
+  control XAML reutilizable. Los servicios `VentaService`,
+  `InventarioService`, `CompraService` y `ProductoService` (selector de Caja)
+  exponen consultas paginadas que aplican filtros en la base, hacen `Count` y
+  devuelven un `PaginaResultado<T>` con solo las filas de la página
+  (`Skip`/`Take`). El selector de productos busca por SKU o nombre con un
+  pequeño retardo para no consultar en cada tecla.
+- Exportación CSV: `ExportadorCsv` convierte las filas de la página visible en
+  Ventas, Inventario y Compras (con su rango de fechas y filtros aplicados) a
+  CSV con coma, punto decimal, fin de línea `\r\n` y UTF-8 con BOM. Escapa
+  comas, comillas y saltos de línea, y neutraliza textos que Excel podría
+  interpretar como fórmulas. Las vistas abren el selector de archivos y
+  escriben el contenido; la generación queda fuera de la UI para poder
+  probarla. Desde la página 2 el nombre del archivo incluye `_paginaN`.
 - Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
   (80 mm); `GeneradorCorteCajaTexto` arma el corte de caja con el mismo formato.
   `ImpresoraSistema` los envía a la impresora predeterminada (API de Windows con

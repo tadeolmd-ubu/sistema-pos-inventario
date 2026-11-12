@@ -16,12 +16,16 @@ public partial class ComprasViewModel : OperacionViewModel
     private readonly ProveedorService? _proveedorService;
     private readonly ProductoService? _productoService;
 
-    public ComprasViewModel() { }
+    public ComprasViewModel()
+    {
+        Paginacion.CambioSolicitado += CargarPaginaActual;
+    }
 
     public ComprasViewModel(
         CompraService compraService,
         ProveedorService proveedorService,
         ProductoService productoService)
+        : this()
     {
         _compraService = compraService;
         _proveedorService = proveedorService;
@@ -29,6 +33,8 @@ public partial class ComprasViewModel : OperacionViewModel
     }
 
     public ObservableCollection<Compra> ComprasItems { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
     public ObservableCollection<Proveedor> ProveedoresItems { get; } = [];
     public ObservableCollection<Producto> ProductosItems { get; } = [];
     public ObservableCollection<LineaCompraItem> LineasItems { get; } = [];
@@ -59,7 +65,8 @@ public partial class ComprasViewModel : OperacionViewModel
     public int CantidadExportable => ComprasItems.Count;
 
     public string NombreArchivoExportacion =>
-        ExportadorCsv.NombreArchivo("compras", DesdeFecha, HastaFecha);
+        ExportadorCsv.NombreArchivo(
+            "compras", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
 
     public string GenerarCsv() => ExportadorCsv.Compras(ComprasItems);
 
@@ -70,9 +77,14 @@ public partial class ComprasViewModel : OperacionViewModel
         (Hasta ?? DateTimeOffset.Now).Date;
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+    public Task CargarAsync() => EjecutarSeguroAsync(
+        () => CargarDatosAsync(reiniciarPagina: true));
 
-    private async Task CargarDatosAsync()
+    private void CargarPaginaActual()
+        => _ = EjecutarSeguroAsync(
+            () => CargarComprasAsync(reiniciarPagina: false));
+
+    private async Task CargarDatosAsync(bool reiniciarPagina = true)
     {
         if (_compraService is null || _proveedorService is null || _productoService is null)
             return;
@@ -87,21 +99,51 @@ public partial class ComprasViewModel : OperacionViewModel
             return;
         }
 
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
         var idProveedor = SelectedProveedor?.Id;
         var idProducto = SelectedProducto?.Id;
-        var idCompra = SelectedCompra?.Id;
 
         var proveedores = await _proveedorService.ObtenerActivosAsync();
         var productos = await _productoService.ObtenerTodosAsync();
-        var compras = await _compraService.ObtenerPorRangoAsync(
-            desdeFecha, hastaFecha);
 
         ReemplazarItems(ProveedoresItems, proveedores);
         ReemplazarItems(ProductosItems, productos);
-        ReemplazarItems(ComprasItems, compras);
 
         SelectedProveedor = ProveedoresItems.FirstOrDefault(p => p.Id == idProveedor);
         SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == idProducto);
+
+        await CargarComprasAsync(reiniciarPagina: false);
+    }
+
+    private async Task CargarComprasAsync(bool reiniciarPagina = true)
+    {
+        if (_compraService is null) return;
+
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion = Notificar(
+                "La fecha hasta no puede ser anterior a la fecha desde.");
+            return;
+        }
+
+        var idCompra = SelectedCompra?.Id;
+
+        var pagina = await _compraService.ObtenerPorRangoPaginadoAsync(
+            desdeFecha,
+            hastaFecha,
+            Paginacion.PaginaActual,
+            Paginacion.TamanoPagina);
+
+        ReemplazarItems(ComprasItems, pagina.Items);
+        Paginacion.EstablecerTotal(pagina.TotalRegistros);
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == idCompra);
     }
 
@@ -233,6 +275,7 @@ public partial class ComprasViewModel : OperacionViewModel
         ComprasItems.Clear();
         ProveedoresItems.Clear();
         ProductosItems.Clear();
+        Paginacion.Reiniciar();
         Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
         Hasta = new DateTimeOffset(DateTime.Today);
         LimpiarFormulario();

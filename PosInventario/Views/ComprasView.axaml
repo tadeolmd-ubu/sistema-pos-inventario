@@ -45,34 +45,39 @@
                                     Command="{Binding CargarCommand}"/>
                             <Button Content="Exportar CSV"
                                     Classes="secondary"
+                                    ToolTip.Tip="Exporta solo la página visible"
                                     Click="Exportar_Click"/>
                         </StackPanel>
                     </StackPanel>
 
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding ComprasItems}"
-                             SelectedItem="{Binding SelectedCompra}"
-                             Classes="entityList">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:Compra">
-                                <StackPanel Spacing="2">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{Binding Proveedor.Nombre}" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Total, StringFormat='{}{0:0.00}'}"
-                                                   FontWeight="SemiBold"/>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding Id, StringFormat='C-{0:000000}'}" Classes="caption"/>
-                                        <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Classes="caption"/>
-                                        <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Estado}" Classes="caption"/>
+                    <Grid Grid.Row="1" RowDefinitions="*,Auto" RowSpacing="8">
+                        <ListBox ItemsSource="{Binding ComprasItems}"
+                                 SelectedItem="{Binding SelectedCompra}"
+                                 Classes="entityList">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:Compra">
+                                    <StackPanel Spacing="2">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Proveedor.Nombre}" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Total, StringFormat='{}{0:0.00}'}"
+                                                       FontWeight="SemiBold"/>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Id, StringFormat='C-{0:000000}'}" Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding Fecha, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding Estado}" Classes="caption"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <controls:Paginador Grid.Row="1"
+                                           DataContext="{Binding Paginacion}"/>
+                    </Grid>
 
                     <StackPanel Grid.Row="2" Spacing="8">
                         <TextBlock Text="Detalle de la compra" Classes="fieldLabel"/>

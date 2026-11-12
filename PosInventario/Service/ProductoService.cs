@@ -48,6 +48,58 @@ public class ProductoService
             .ThenBy(p => p.Nombre)
             .ToListAsync();
 
+    /// <summary>
+    /// Productos vigentes con stock disponible, paginados y filtrados en la
+    /// base. Lo usa el selector de productos de Caja para no cargar todo el
+    /// catálogo cuando hay muchos artículos.
+    /// </summary>
+    public async Task<PaginaResultado<Producto>> ObtenerConStockPaginadoAsync(
+        string? busqueda, int pagina, int tamanoPagina)
+    {
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Productos
+            .AsNoTracking()
+            .Where(p => p.FechaArchivado == null && p.Stock > 0);
+
+        var texto = (busqueda ?? string.Empty).Trim();
+
+        if (texto.Length > 0)
+        {
+            var patron = $"%{EscaparLike(texto)}%";
+
+            query = query.Where(p =>
+                EF.Functions.Like(p.Sku, patron, "\\") ||
+                EF.Functions.Like(p.Nombre, patron, "\\"));
+        }
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var items = await query
+            .OrderBy(p => p.Nombre)
+            .ThenBy(p => p.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Producto>(items, totalRegistros);
+    }
+
+    private static string EscaparLike(string texto)
+        => texto
+            .Replace("\\", "\\\\")
+            .Replace("%", "\\%")
+            .Replace("_", "\\_");
+
     public async Task<Producto?> ObtenerPorIdAsync(int id)
         => await _db.Productos
             .AsNoTracking()

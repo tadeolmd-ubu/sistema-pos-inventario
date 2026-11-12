@@ -337,6 +337,8 @@ public sealed class InventarioDesignTime : InventarioViewModel
             Referencia = "Carga inicial",
             Fecha = DateTime.Now
         });
+
+        Paginacion.EstablecerTotal(MovimientosItems.Count);
     }
 }
 
@@ -410,6 +412,7 @@ public sealed class ComprasDesignTime : ComprasViewModel
         SelectedCompra = compra;
 
         LineasItems.Add(new LineaCompraItem(producto, 2, 900.00m));
+        Paginacion.EstablecerTotal(ComprasItems.Count);
     }
 }
 
@@ -488,5 +491,6 @@ public sealed class VentasDesignTime : VentasViewModel
         });
 
         SelectedVenta = VentasItems[0];
+        Paginacion.EstablecerTotal(VentasItems.Count);
     }
 }

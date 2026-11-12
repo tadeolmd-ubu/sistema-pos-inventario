@@ -73,6 +73,58 @@ public class InventarioService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Movimientos paginados entre dos fechas (inclusive), opcionalmente de un
+    /// producto. Devuelve solo las filas de la página y el total de
+    /// coincidencias.
+    /// </summary>
+    public async Task<PaginaResultado<MovimientoInventario>>
+        ObtenerMovimientosPorRangoPaginadosAsync(
+            DateTime desde,
+            DateTime hasta,
+            int? idProducto,
+            int pagina,
+            int tamanoPagina)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.MovimientosInventario
+            .AsNoTracking()
+            .Where(m => m.Fecha >= inicio && m.Fecha < fin);
+
+        if (idProducto is not null)
+            query = query.Where(m => m.IdProducto == idProducto);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var items = await query
+            .Include(m => m.Producto)
+            .Include(m => m.Usuario)
+            .OrderByDescending(m => m.Fecha)
+            .ThenByDescending(m => m.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<MovimientoInventario>(
+            items, totalRegistros);
+    }
+
     public Task<Resultado<MovimientoInventario>> RegistrarEntradaAsync(
         int idProducto, int cantidad, string referencia)
         => RegistrarManualAsync(

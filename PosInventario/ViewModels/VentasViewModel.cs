@@ -17,14 +17,20 @@ public partial class VentasViewModel : OperacionViewModel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private readonly VentaService? _ventaService;
-    private readonly List<Venta> _cargadas = [];
+    private decimal _totalVendido;
 
-    public VentasViewModel() { }
+    public VentasViewModel()
+    {
+        Paginacion.CambioSolicitado += CargarPaginaActual;
+    }
 
     public VentasViewModel(VentaService ventaService)
+        : this()
         => _ventaService = ventaService;
 
     public ObservableCollection<Venta> VentasItems { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
 
     [ObservableProperty] private DateTimeOffset? desde =
         new(DateTime.Today.AddDays(-7));
@@ -40,20 +46,17 @@ public partial class VentasViewModel : OperacionViewModel
 
     public bool SinVentas => !HayVentas;
 
-    public int CantidadVentas => VentasItems.Count;
+    public int CantidadVentas => Paginacion.TotalRegistros;
 
-    public string TotalVendidoTexto =>
-        VentasItems
-            .Where(v => v.Estado == EstadoVenta.Completada)
-            .Sum(v => v.TotalNeto)
-            .ToString("0.00", Cultura);
+    public string TotalVendidoTexto => _totalVendido.ToString("0.00", Cultura);
 
     public bool PuedeVerTicket => SelectedVenta is not null;
 
     public int CantidadExportable => VentasItems.Count;
 
     public string NombreArchivoExportacion =>
-        ExportadorCsv.NombreArchivo("ventas", DesdeFecha, HastaFecha);
+        ExportadorCsv.NombreArchivo(
+            "ventas", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
 
     public string GenerarCsv() => ExportadorCsv.Ventas(VentasItems);
 
@@ -88,7 +91,13 @@ public partial class VentasViewModel : OperacionViewModel
             : new DevolverVentaViewModel(_ventaService, venta);
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync() => EjecutarSeguroAsync(
+        () => CargarPaginaAsync(reiniciarPagina: true));
+
+    private void CargarPaginaActual()
+        => _ = EjecutarSeguroAsync(() => CargarPaginaAsync(reiniciarPagina: false));
+
+    private async Task CargarPaginaAsync(bool reiniciarPagina)
     {
         if (_ventaService is null) return;
 
@@ -102,12 +111,26 @@ public partial class VentasViewModel : OperacionViewModel
             return;
         }
 
-        _cargadas.Clear();
-        _cargadas.AddRange(
-            await _ventaService.ObtenerHistorialAsync(desdeFecha, hastaFecha));
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
 
-        Filtrar();
-    });
+        var pagina = await _ventaService.ObtenerHistorialPaginadoAsync(
+            desdeFecha,
+            hastaFecha,
+            Busqueda,
+            VerAnuladas,
+            Paginacion.PaginaActual,
+            Paginacion.TamanoPagina);
+
+        ReemplazarItems(VentasItems, pagina.Items);
+        _totalVendido = pagina.Total;
+        Paginacion.EstablecerTotal(pagina.TotalRegistros);
+
+        if (SelectedVenta is not null && !VentasItems.Contains(SelectedVenta))
+            SelectedVenta = null;
+
+        NotificarResumen();
+    }
 
     [RelayCommand(CanExecute = nameof(PuedeVerTicket))]
     private void VerTicket()
@@ -123,10 +146,6 @@ public partial class VentasViewModel : OperacionViewModel
             DevolucionSolicitada?.Invoke(SelectedVenta);
     }
 
-    partial void OnBusquedaChanged(string value) => Filtrar();
-
-    partial void OnVerAnuladasChanged(bool value) => Filtrar();
-
     partial void OnSelectedVentaChanged(Venta? value)
     {
         OnPropertyChanged(nameof(PuedeVerTicket));
@@ -139,46 +158,25 @@ public partial class VentasViewModel : OperacionViewModel
     {
         base.LimpiarPantalla();
 
-        _cargadas.Clear();
+        Paginacion.Reiniciar();
         VentasItems.Clear();
         Busqueda = string.Empty;
         VerAnuladas = false;
         SelectedVenta = null;
         Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
         Hasta = new DateTimeOffset(DateTime.Today);
+        _totalVendido = 0m;
 
         NotificarResumen();
     }
 
-    private void Filtrar()
+    private static void ReemplazarItems<T>(
+        ObservableCollection<T> destino, IEnumerable<T> origen)
     {
-        var texto = (Busqueda ?? string.Empty).Trim();
+        destino.Clear();
 
-        IEnumerable<Venta> filtradas = _cargadas;
-
-        if (!VerAnuladas)
-            filtradas = filtradas.Where(v => v.Estado == EstadoVenta.Completada);
-
-        if (texto.Length > 0)
-        {
-            filtradas = filtradas.Where(v =>
-                v.Id.ToString().Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                $"V-{v.Id:000000}".Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                (v.Usuario?.Nombre ?? string.Empty)
-                    .Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                (v.Usuario?.NombreUsuario ?? string.Empty)
-                    .Contains(texto, StringComparison.OrdinalIgnoreCase));
-        }
-
-        VentasItems.Clear();
-
-        foreach (var venta in filtradas)
-            VentasItems.Add(venta);
-
-        if (SelectedVenta is not null && !VentasItems.Contains(SelectedVenta))
-            SelectedVenta = null;
-
-        NotificarResumen();
+        foreach (var item in origen)
+            destino.Add(item);
     }
 
     private void NotificarResumen()

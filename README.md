@@ -27,16 +27,16 @@ registro de errores.
   en Productos y presionar Enter se cargan los datos del producto si existe,
   o se prepara el alta con ese SKU si es nuevo.
 - **Inventario:** entradas/salidas con motivo, ajuste de stock e historial de
-  movimientos por rango de fechas, exportable a CSV.
+  movimientos por rango de fechas, paginado y exportable a CSV.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock;
-  historial por rango de fechas exportable a CSV.
+  historial por rango de fechas paginado y exportable a CSV.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
-  método de pago, reimpresión de ticket desde el historial o el detalle de una
-  caja cerrada, botón de devolución (checklist por producto o unidad, con
-  reembolso estimado) y exportación a CSV de las ventas filtradas. Cada venta
-  muestra su total neto y, si aplica, cuánto se le ha devuelto. El ticket se
-  puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la venta ya
-  quedó registrada y solo se muestra un aviso.
+  método de pago, paginación, reimpresión de ticket desde el historial o el
+  detalle de una caja cerrada, botón de devolución (checklist por producto o
+  unidad, con reembolso estimado) y exportación a CSV de las ventas filtradas.
+  Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
+  ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
+  venta ya quedó registrada y solo se muestra un aviso.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
@@ -47,7 +47,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 166 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 178 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -131,13 +131,16 @@ listado completo.
 | **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
 | **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
 | **↑/↓ + Enter** (selector de productos) | Navegar y agregar | Elegir un producto sin mouse |
+| **←/→** (selector de productos) | Cambiar de página | Recorrer el catálogo sin mouse |
 | **Ctrl+P** (ticket o corte) | Imprimir | Imprimir o reimprimir el documento |
 | **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
 
 Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
 campo; si está vacío, limpia la venta (con confirmación cuando hay productos).
 En el selector de productos, el primer resultado queda seleccionado al filtrar
-y **Enter** lo agrega.
+y **Enter** lo agrega. Las flechas **←/→** cambian de página cuando la lista
+tiene el foco o el buscador está vacío; los botones **◀/▶** están arriba a la
+derecha de la lista.
 
 ## Impresión de tickets y corte de caja
 
@@ -153,10 +156,25 @@ diferencia). El corte se puede reimprimir desde el detalle de una caja cerrada
 en el historial. La impresión ESC/POS directa y la apertura del cajón quedan
 para una etapa posterior.
 
+## Paginación
+
+Ventas, Inventario, Compras y el selector de productos de Caja consultan la
+base por páginas: no cargan todo el historial en memoria. El control
+reutilizable `Paginador` muestra el rango visible, permite elegir **10, 25 o
+50** registros por página (inicia en 10) y navega con
+Primera/Anterior/Siguiente/Última. La consulta usa `Skip`/`Take` y un `Count`
+para conocer el total; los filtros de fecha, búsqueda, producto y estado se
+aplican en la misma consulta. El estado compartido vive en
+`PaginacionViewModel`, de modo que otros listados pueden reutilizarlo.
+
+El selector de productos de Caja usa la misma paginación, busca por SKU o
+nombre directamente en la base y espera 200 ms tras la última tecla para no
+lanzar una consulta por cada pulsación.
+
 ## Exportación a CSV
 
 Ventas, Inventario y Compras tienen un botón **Exportar CSV** que guarda
-exactamente las filas que se están mostrando en ese momento:
+exactamente las filas de la **página visible** en ese momento:
 
 - **Ventas:** respeta el rango de fechas, la búsqueda y la casilla "Ver
   anuladas". Incluye ticket, fecha, cajero, método, estado, subtotal,
@@ -166,6 +184,10 @@ exactamente las filas que se están mostrando en ese momento:
   anterior/resultante, referencia, fecha y usuario.
 - **Compras:** respeta el rango de fechas. Incluye compra, fecha, proveedor,
   comprobante, estado, artículos, total y usuario.
+
+El resumen del módulo cuenta todos los registros del filtro, mientras que el
+CSV contiene solo la página actual. Desde la segunda página el nombre del
+archivo agrega `_paginaN` para no sobrescribir exportaciones anteriores.
 
 Los archivos se guardan en UTF-8 con BOM y usan coma como separador y punto
 decimal, de modo que Excel los abre con acentos y columnas correctas. Los

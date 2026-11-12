@@ -148,6 +148,7 @@
                                             Command="{Binding BuscarMovimientosCommand}"/>
                                     <Button Content="Exportar CSV"
                                             Classes="secondary"
+                                            ToolTip.Tip="Exporta solo la página visible"
                                             Click="Exportar_Click"/>
                                 </StackPanel>
                             </Grid>
@@ -186,6 +187,8 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
+
+                            <controls:Paginador DataContext="{Binding Paginacion}"/>
 
                         </StackPanel>
                     </Border>

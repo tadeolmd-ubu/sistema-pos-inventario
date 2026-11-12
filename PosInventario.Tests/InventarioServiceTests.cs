@@ -358,6 +358,47 @@ public class InventarioServiceTests
     }
 
     [Fact]
+    public async Task MovimientosPaginadosFiltranFechasProductoYDevuelvenTotal()
+    {
+        await using var prueba = await PruebaInventario.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var productoA = await prueba.CrearProductoAsync("PAG-001", "Producto A");
+        var productoB = await prueba.CrearProductoAsync("PAG-002", "Producto B");
+
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoA.Id, 10, MotivoEntrada);
+        await prueba.InventarioService.RegistrarSalidaAsync(
+            productoA.Id, 2, MotivoSalida);
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoB.Id, 8, MotivoEntrada);
+
+        var paginaUno = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: null, pagina: 1, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaUno.TotalRegistros);
+        Assert.Equal(2, paginaUno.Items.Count);
+        Assert.NotNull(paginaUno.Items[0].Producto);
+        Assert.NotNull(paginaUno.Items[0].Usuario);
+
+        var paginaDos = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: null, pagina: 2, tamanoPagina: 2);
+
+        Assert.Single(paginaDos.Items);
+
+        var soloA = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: productoA.Id, pagina: 1, tamanoPagina: 10);
+
+        Assert.Equal(2, soloA.TotalRegistros);
+        Assert.All(soloA.Items, m => Assert.Equal(productoA.Id, m.IdProducto));
+    }
+
+    [Fact]
     public async Task RegistroFallidoNoCambiaStockNiCreaMovimiento()
     {
         await using var prueba = await PruebaInventario.CrearAsync();

@@ -289,6 +289,7 @@ public class VentaServiceTests
         Assert.DoesNotContain($"V-{primera.Id:000000}", csvSinAnuladas);
 
         vm.VerAnuladas = true;
+        await vm.CargarAsync();
 
         Assert.Equal(2, vm.VentasItems.Count);
         Assert.Equal(2, vm.CantidadVentas);
@@ -1067,6 +1068,78 @@ public class VentaServiceTests
     }
 
     [Fact]
+    public async Task HistorialPaginadoDevuelveSoloLaPaginaYElTotal()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("PAG-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var primera = await prueba.VenderAsync(producto);
+        var segunda = await prueba.VenderAsync(producto);
+        var tercera = await prueba.VenderAsync(producto);
+
+        var paginaUno = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: false, pagina: 1, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaUno.TotalRegistros);
+        Assert.Equal(2, paginaUno.Items.Count);
+        Assert.Equal(tercera.Id, paginaUno.Items[0].Id);
+        Assert.Equal(segunda.Id, paginaUno.Items[1].Id);
+        Assert.Equal(300m, paginaUno.Total);
+
+        var paginaDos = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: false, pagina: 2, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaDos.TotalRegistros);
+        Assert.Single(paginaDos.Items);
+        Assert.Equal(primera.Id, paginaDos.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task HistorialPaginadoBuscaPorTicketOCajeroYRespetaAnuladas()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("PAG-002");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var primera = await prueba.VenderAsync(producto);
+        var segunda = await prueba.VenderAsync(producto);
+
+        var anulacion = await prueba.VentaService.AnularAsync(primera.Id);
+        Assert.True(anulacion.Correcta, anulacion.Mensaje);
+
+        var porTicket = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            $"V-{segunda.Id:000000}", incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10);
+
+        Assert.Single(porTicket.Items);
+        Assert.Equal(segunda.Id, porTicket.Items[0].Id);
+
+        var porCajero = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            "Administrador", incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10);
+
+        Assert.Single(porCajero.Items);
+
+        var conAnuladas = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: true, pagina: 1, tamanoPagina: 10);
+
+        Assert.Equal(2, conAnuladas.TotalRegistros);
+        Assert.Contains(conAnuladas.Items, v => v.Id == primera.Id);
+    }
+
+    [Fact]
     public async Task SelectorDeProductosSeleccionaElPrimeroAlFiltrar()
     {
         await using var prueba = await PruebaVentas.CrearAsync();
@@ -1082,6 +1155,7 @@ public class VentaServiceTests
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
 
         vm.Busqueda = "SEL-001";
+        await vm.CargarAsync();
 
         Assert.NotNull(vm.SelectedProducto);
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);

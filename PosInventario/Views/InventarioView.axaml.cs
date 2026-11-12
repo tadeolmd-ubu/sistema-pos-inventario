@@ -36,7 +36,8 @@ public partial class InventarioView : UserControl
                 return;
 
             viewModel.NotificarExportacion(
-                $"Se exportaron {viewModel.CantidadExportable} movimientos a:\n{ruta}");
+                $"Se exportaron {viewModel.CantidadExportable} movimientos de la " +
+                $"página {viewModel.Paginacion.PaginaActual} a:\n{ruta}");
         }
         catch (Exception ex)
         {

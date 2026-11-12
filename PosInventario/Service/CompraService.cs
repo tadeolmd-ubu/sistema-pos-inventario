@@ -61,6 +61,52 @@ public class CompraService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Compras paginadas entre dos fechas (inclusive). Devuelve solo las filas
+    /// de la página solicitada y el total de coincidencias.
+    /// </summary>
+    public async Task<PaginaResultado<Compra>> ObtenerPorRangoPaginadoAsync(
+        DateTime desde, DateTime hasta, int pagina, int tamanoPagina)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Compras
+            .AsNoTracking()
+            .Where(c => c.Fecha >= inicio && c.Fecha < fin);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var total = await query.SumAsync(c => (decimal?)c.Total) ?? 0m;
+
+        var items = await query
+            .Include(c => c.Proveedor)
+            .Include(c => c.Usuario)
+            .Include(c => c.Detalles)
+                .ThenInclude(d => d.Producto)
+            .OrderByDescending(c => c.Fecha)
+            .ThenByDescending(c => c.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Compra>(items, totalRegistros, total);
+    }
+
     public async Task<Compra?> ObtenerPorIdAsync(int id)
         => await _db.Compras
             .AsNoTracking()

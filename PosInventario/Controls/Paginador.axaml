@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PosInventario.ViewModels"
+             x:DataType="vm:PaginacionViewModel"
+             x:Class="PosInventario.Controls.Paginador">
+
+    <WrapPanel HorizontalAlignment="Right"
+               IsVisible="{Binding HayRegistros}">
+
+        <TextBlock Text="{Binding Resumen}"
+                   Classes="caption"
+                   Margin="0,0,12,6"
+                   VerticalAlignment="Center"/>
+
+        <TextBlock Text="Por página"
+                   Classes="caption"
+                   Margin="0,0,6,6"
+                   VerticalAlignment="Center"/>
+
+        <ComboBox ItemsSource="{Binding TamanosDisponibles}"
+                  SelectedItem="{Binding TamanoPagina}"
+                  MinWidth="72"
+                  Margin="0,0,12,6"/>
+
+        <Button Content="Primera"
+                Classes="secondary small"
+                Command="{Binding IrPrimeraCommand}"
+                Margin="0,0,6,6"/>
+
+        <Button Content="Anterior"
+                Classes="secondary small"
+                Command="{Binding IrAnteriorCommand}"
+                Margin="0,0,6,6"/>
+
+        <Button Content="Siguiente"
+                Classes="secondary small"
+                Command="{Binding IrSiguienteCommand}"
+                Margin="0,0,6,6"/>
+
+        <Button Content="Última"
+                Classes="secondary small"
+                Command="{Binding IrUltimaCommand}"
+                Margin="0,0,12,6"/>
+
+        <TextBlock Text="{Binding PaginaTexto}"
+                   Classes="caption"
+                   Margin="0,0,0,6"
+                   VerticalAlignment="Center"/>
+
+    </WrapPanel>
+</UserControl>

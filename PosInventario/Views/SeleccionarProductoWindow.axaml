@@ -26,8 +26,42 @@
                      Classes="search"/>
 
             <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="6">
-                <TextBlock Text="Escribe para buscar; usa ↑/↓ para navegar y Enter para agregar."
-                           Classes="caption"/>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <TextBlock Text="Escribe para buscar; ↑/↓ navega, ←/→ cambia de página y Enter agrega."
+                               Classes="caption"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"/>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Paginacion.Resumen}"
+                                   Classes="caption"
+                                   VerticalAlignment="Center"/>
+
+                        <ComboBox ItemsSource="{Binding Paginacion.TamanosDisponibles}"
+                                  SelectedItem="{Binding Paginacion.TamanoPagina}"
+                                  MinWidth="64"
+                                  ToolTip.Tip="Registros por página"/>
+
+                        <Button Content="◀"
+                                Classes="secondary small"
+                                Width="34"
+                                Command="{Binding Paginacion.IrAnteriorCommand}"
+                                ToolTip.Tip="Página anterior"/>
+
+                        <TextBlock Text="{Binding Paginacion.PaginaTexto}"
+                                   Classes="caption"
+                                   VerticalAlignment="Center"/>
+
+                        <Button Content="▶"
+                                Classes="secondary small"
+                                Width="34"
+                                Command="{Binding Paginacion.IrSiguienteCommand}"
+                                ToolTip.Tip="Página siguiente"/>
+                    </StackPanel>
+                </Grid>
 
                 <ListBox x:Name="ProductosLista"
                          Grid.Row="1"
