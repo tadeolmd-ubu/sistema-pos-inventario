@@ -281,6 +281,12 @@ public class VentaServiceTests
 
         Assert.Single(vm.VentasItems);
         Assert.Equal("100.00", vm.TotalVendidoTexto);
+        Assert.Equal(1, vm.CantidadExportable);
+
+        var csvSinAnuladas = vm.GenerarCsv();
+        Assert.Single(
+            csvSinAnuladas.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Skip(1));
+        Assert.DoesNotContain($"V-{primera.Id:000000}", csvSinAnuladas);
 
         vm.VerAnuladas = true;
 
@@ -288,6 +294,7 @@ public class VentaServiceTests
         Assert.Equal(2, vm.CantidadVentas);
         Assert.Equal("100.00", vm.TotalVendidoTexto);
         Assert.Contains(vm.VentasItems, v => v.Estado == EstadoVenta.Anulada);
+        Assert.Contains($"V-{primera.Id:000000}", vm.GenerarCsv());
     }
 
     [Fact]
