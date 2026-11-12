@@ -144,4 +144,14 @@ public class ExportadorCsvTests
             ExportadorCsv.NombreArchivo(
                 "ventas", new DateTime(2026, 11, 1), new DateTime(2026, 11, 12)));
     }
+
+    [Fact]
+    public void NombreArchivoNumeraLasPaginasSiguientes()
+    {
+        Assert.Equal(
+            "compras_2026-11-01_2026-11-12_pagina3.csv",
+            ExportadorCsv.NombreArchivo(
+                "compras", new DateTime(2026, 11, 1),
+                new DateTime(2026, 11, 12), pagina: 3));
+    }
 }
