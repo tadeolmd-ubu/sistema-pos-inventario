@@ -47,18 +47,21 @@ PosInventario/
 │                              RegistroApp, InstanciaUnica, SesionActual,
 │                              VersionService, Usuario/Producto/Proveedor/
 │                              Inventario/Compra/Caja/VentaService, Linea*,
-│                              ResumenPagosCaja
+│                              ResumenPagosCaja, GeneradorTicketTexto,
+│                              GeneradorCorteCajaTexto
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
 │                              Ventas, Usuarios, Configuración, Login, Setup,
-│                              Ticket, CancelarVenta, CerrarCaja, CajaHistorial,
-│                              MovimientoCaja, RestablecerContrasena,
-│                              SeleccionarProducto) e ítems de líneas
+│                              Ticket, CorteCaja, CancelarVenta, CerrarCaja,
+│                              CajaHistorial, MovimientoCaja,
+│                              RestablecerContrasena, SeleccionarProducto) e
+│                              ítems de líneas
 ├── Views/                     vistas por módulo + SidebarView, LoginWindow,
-│                              SetupWindow, TicketWindow, CancelarVentaWindow,
-│                              CerrarCajaWindow, CajaHistorialWindow,
-│                              MovimientoCajaWindow, RegistrarMovimientoCajaWindow,
+│                              SetupWindow, TicketWindow, CorteCajaWindow,
+│                              CancelarVentaWindow, CerrarCajaWindow,
+│                              CajaHistorialWindow, MovimientoCajaWindow,
+│                              RegistrarMovimientoCajaWindow,
 │                              RestablecerContrasenaWindow, SeleccionarProductoWindow,
 │                              ConfirmacionWindow, MensajeWindow, DesignTime/
 ├── App.axaml(.cs)
@@ -191,7 +194,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 147 pruebas pasan. El trabajo pendiente (reportes,
+La base está estable y sus 157 pruebas pasan. El trabajo pendiente (reportes,
 instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
@@ -237,10 +240,13 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
   el botón "Ver ticket" o doble clic, incluidas las canceladas.
 - Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
-  (80 mm); `ImpresoraSistema` lo envía a la impresora predeterminada (API de
-  Windows con tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como
-  `Resultado` y se avisa en la ventana del ticket; la venta ya registrada no se
-  pierde y la aplicación no se bloquea.
+  (80 mm); `GeneradorCorteCajaTexto` arma el corte de caja con el mismo formato.
+  `ImpresoraSistema` los envía a la impresora predeterminada (API de Windows con
+  tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como `Resultado`
+  y se avisa en la ventana correspondiente; la venta o el cierre ya registrados
+  no se pierden y la aplicación no se bloquea. Al cerrar la caja se abre
+  `CorteCajaWindow` para imprimir el corte; también se puede reimprimir desde el
+  detalle de una caja cerrada en el historial.
 - Atajos y foco: `CajaView` captura F1–F10, Esc, Ctrl+Enter, Delete y +/-;
   al entrar a Caja enfoca la búsqueda y la restaura al cerrar diálogos. F2/F4
   se capturan en fase Tunnel para que ComboBox/DataGrid no los consuman; Esc

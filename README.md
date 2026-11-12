@@ -20,7 +20,8 @@ registro de errores.
   abierta; en ventas mixtas el reembolso se reparte entre los métodos
   originales) y movimientos de entrada/salida de efectivo. Al cerrar, si el
   monto contado difiere del esperado, muestra el faltante o sobrante y pide
-  confirmación antes de cerrar.
+  confirmación antes de cerrar; después abre el **corte de caja imprimible**
+  con las ventas, el desglose por método y la comparación de efectivo.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
@@ -43,7 +44,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 147 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 157 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -127,7 +128,7 @@ listado completo.
 | **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
 | **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
 | **↑/↓ + Enter** (selector de productos) | Navegar y agregar | Elegir un producto sin mouse |
-| **Ctrl+P** (ticket) | Imprimir | Imprimir o reimprimir el ticket |
+| **Ctrl+P** (ticket o corte) | Imprimir | Imprimir o reimprimir el documento |
 | **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
 
 Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
@@ -135,14 +136,19 @@ campo; si está vacío, limpia la venta (con confirmación cuando hay productos)
 En el selector de productos, el primer resultado queda seleccionado al filtrar
 y **Enter** lo agrega.
 
-## Impresión de tickets
+## Impresión de tickets y corte de caja
 
-El ticket tiene un selector de 58 u 80 mm y un botón **Imprimir**. En Windows
-se usa la impresora predeterminada y la app fija el tamaño del papel; en
-Linux/macOS se envía a CUPS con `lp` o `lpr`. Si no hay impresora o falla, la
-venta queda registrada y el ticket solo muestra un aviso, sin bloquear la
-aplicación. La impresión ESC/POS directa y la apertura del cajón quedan para
-una etapa posterior.
+El ticket y el corte de caja tienen un selector de 58 u 80 mm y un botón
+**Imprimir**. En Windows se usa la impresora predeterminada y la app fija el
+tamaño del papel; en Linux/macOS se envía a CUPS con `lp` o `lpr`. Si no hay
+impresora o falla, la operación ya quedó registrada y solo se muestra un aviso,
+sin bloquear la aplicación.
+
+Al cerrar una caja se abre el corte con las ventas, el desglose por método de
+pago, el efectivo esperado y contado y la diferencia (faltante, sobrante o sin
+diferencia). El corte se puede reimprimir desde el detalle de una caja cerrada
+en el historial. La impresión ESC/POS directa y la apertura del cajón quedan
+para una etapa posterior.
 
 ## Publicación
 
