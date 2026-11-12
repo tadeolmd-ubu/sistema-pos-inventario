@@ -48,7 +48,7 @@ PosInventario/
 │                              VersionService, Usuario/Producto/Proveedor/
 │                              Inventario/Compra/Caja/VentaService, Linea*,
 │                              ResumenPagosCaja, GeneradorTicketTexto,
-│                              GeneradorCorteCajaTexto
+│                              GeneradorCorteCajaTexto, ExportadorCsv
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
@@ -194,7 +194,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 157 pruebas pasan. El trabajo pendiente (reportes,
+La base está estable y sus 166 pruebas pasan. El trabajo pendiente (reportes,
 instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
@@ -239,6 +239,12 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
   de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
   el botón "Ver ticket" o doble clic, incluidas las canceladas.
+- Exportación CSV: `ExportadorCsv` convierte las filas ya cargadas en Ventas,
+  Inventario y Compras (con su rango de fechas y filtros aplicados) a CSV con
+  coma, punto decimal, fin de línea `\r\n` y UTF-8 con BOM. Escapa comas,
+  comillas y saltos de línea, y neutraliza textos que Excel podría interpretar
+  como fórmulas. Las vistas abren el selector de archivos y escriben el
+  contenido; la generación queda fuera de la UI para poder probarla.
 - Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
   (80 mm); `GeneradorCorteCajaTexto` arma el corte de caja con el mismo formato.
   `ImpresoraSistema` los envía a la impresora predeterminada (API de Windows con

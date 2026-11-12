@@ -26,14 +26,17 @@ registro de errores.
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
   o se prepara el alta con ese SKU si es nuevo.
-- **Inventario:** entradas/salidas con motivo y ajuste de stock.
-- **Compras:** registro con proveedor, líneas y actualización de costo/stock.
+- **Inventario:** entradas/salidas con motivo, ajuste de stock e historial de
+  movimientos por rango de fechas, exportable a CSV.
+- **Compras:** registro con proveedor, líneas y actualización de costo/stock;
+  historial por rango de fechas exportable a CSV.
 - **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
   método de pago, reimpresión de ticket desde el historial o el detalle de una
-  caja cerrada y botón de devolución (checklist por producto o unidad, con
-  reembolso estimado). Cada venta muestra su total neto y, si aplica, cuánto se
-  le ha devuelto. El ticket se puede imprimir en papel de 58 mm u 80 mm; si no
-  hay impresora, la venta ya quedó registrada y solo se muestra un aviso.
+  caja cerrada, botón de devolución (checklist por producto o unidad, con
+  reembolso estimado) y exportación a CSV de las ventas filtradas. Cada venta
+  muestra su total neto y, si aplica, cuánto se le ha devuelto. El ticket se
+  puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la venta ya
+  quedó registrada y solo se muestra un aviso.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
@@ -44,7 +47,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 157 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 166 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -149,6 +152,26 @@ pago, el efectivo esperado y contado y la diferencia (faltante, sobrante o sin
 diferencia). El corte se puede reimprimir desde el detalle de una caja cerrada
 en el historial. La impresión ESC/POS directa y la apertura del cajón quedan
 para una etapa posterior.
+
+## Exportación a CSV
+
+Ventas, Inventario y Compras tienen un botón **Exportar CSV** que guarda
+exactamente las filas que se están mostrando en ese momento:
+
+- **Ventas:** respeta el rango de fechas, la búsqueda y la casilla "Ver
+  anuladas". Incluye ticket, fecha, cajero, método, estado, subtotal,
+  descuento, total, devuelto y neto.
+- **Inventario:** respeta el rango de fechas y, si hay un producto
+  seleccionado, sus movimientos. Incluye producto, SKU, tipo, cantidad, stock
+  anterior/resultante, referencia, fecha y usuario.
+- **Compras:** respeta el rango de fechas. Incluye compra, fecha, proveedor,
+  comprobante, estado, artículos, total y usuario.
+
+Los archivos se guardan en UTF-8 con BOM y usan coma como separador y punto
+decimal, de modo que Excel los abre con acentos y columnas correctas. Los
+campos con comas, comillas o saltos de línea se escapan, y los textos que
+empiezan con `=`, `+`, `-` o `@` se neutralizan para evitar fórmulas. Si no hay
+filas en el rango, el archivo solo contiene el encabezado.
 
 ## Publicación
 
