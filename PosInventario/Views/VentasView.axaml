@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
              xmlns:dt="using:PosInventario.Views.DesignTime"
              xmlns:models="using:PosInventario.Models"
              xmlns:vm="using:PosInventario.ViewModels"
@@ -103,6 +104,8 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
+                    <controls:Paginador DataContext="{Binding Paginacion}"/>
+
                     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
                         <Button Content="Ver ticket"
                                 Classes="secondary"
@@ -112,6 +115,7 @@
                                 Command="{Binding DevolverCommand}"/>
                         <Button Content="Exportar CSV"
                                 Classes="secondary"
+                                ToolTip.Tip="Exporta solo la página visible"
                                 Click="Exportar_Click"/>
                     </StackPanel>
 

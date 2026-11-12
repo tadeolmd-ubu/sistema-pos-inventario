@@ -89,8 +89,18 @@ public static class ExportadorCsv
         return contenido.ToString();
     }
 
-    public static string NombreArchivo(string prefijo, DateTime desde, DateTime hasta)
-        => $"{prefijo}_{desde:yyyy-MM-dd}_{hasta:yyyy-MM-dd}.csv";
+    public static string NombreArchivo(
+        string prefijo, DateTime desde, DateTime hasta, int pagina = 1)
+    {
+        var nombre = $"{prefijo}_{desde:yyyy-MM-dd}_{hasta:yyyy-MM-dd}";
+
+        // La exportación incluye solo la página visible. Numerar las páginas
+        // evita que una exportación sobrescriba a la anterior.
+        if (pagina > 1)
+            nombre += $"_pagina{pagina}";
+
+        return nombre + ".csv";
+    }
 
     /// <summary>
     /// Escribe el contenido con UTF-8 y BOM, que es lo que Excel usa para

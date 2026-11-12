@@ -53,7 +53,8 @@ public partial class ComprasView : UserControl
                 return;
 
             viewModel.NotificarExportacion(
-                $"Se exportaron {viewModel.CantidadExportable} compras a:\n{ruta}");
+                $"Se exportaron {viewModel.CantidadExportable} compras de la " +
+                $"página {viewModel.Paginacion.PaginaActual} a:\n{ruta}");
         }
         catch (Exception ex)
         {

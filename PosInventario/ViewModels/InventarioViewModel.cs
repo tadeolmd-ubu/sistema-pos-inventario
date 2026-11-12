@@ -21,6 +21,7 @@ public partial class InventarioViewModel : OperacionViewModel
     public InventarioViewModel()
     {
         MotivoSeleccionado = MotivosInventario.Entrada[0];
+        Paginacion.CambioSolicitado += CargarPaginaActual;
     }
 
     public InventarioViewModel(
@@ -33,6 +34,8 @@ public partial class InventarioViewModel : OperacionViewModel
 
     public ObservableCollection<Producto> ProductosItems { get; } = [];
     public ObservableCollection<MovimientoInventario> MovimientosItems { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
 
     public IReadOnlyList<TipoMovimiento> Tipos { get; } =
         [TipoMovimiento.Entrada, TipoMovimiento.Salida, TipoMovimiento.Ajuste];
@@ -65,12 +68,13 @@ public partial class InventarioViewModel : OperacionViewModel
             ? "Últimos movimientos"
             : $"Movimientos de {SelectedProducto.Nombre}";
 
-    public bool SinMovimientos => MovimientosItems.Count == 0;
+    public bool SinMovimientos => Paginacion.TotalRegistros == 0;
 
     public int CantidadExportable => MovimientosItems.Count;
 
     public string NombreArchivoExportacion =>
-        ExportadorCsv.NombreArchivo("inventario", DesdeFecha, HastaFecha);
+        ExportadorCsv.NombreArchivo(
+            "inventario", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
 
     public string GenerarCsv() => ExportadorCsv.Inventario(MovimientosItems);
 
@@ -85,6 +89,9 @@ public partial class InventarioViewModel : OperacionViewModel
 
     [RelayCommand]
     private Task BuscarMovimientosAsync() => CargarMovimientosAsync();
+
+    private void CargarPaginaActual()
+        => _ = CargarMovimientosAsync(reiniciarPagina: false);
 
     private async Task CargarDatosAsync()
     {
@@ -208,6 +215,7 @@ public partial class InventarioViewModel : OperacionViewModel
         _cargados.Clear();
         ProductosItems.Clear();
         MovimientosItems.Clear();
+        Paginacion.Reiniciar();
         OnPropertyChanged(nameof(SinMovimientos));
         OnPropertyChanged(nameof(CantidadExportable));
         Busqueda = string.Empty;
@@ -217,7 +225,7 @@ public partial class InventarioViewModel : OperacionViewModel
         _limpiando = false;
     }
 
-    private async Task CargarMovimientosAsync()
+    private async Task CargarMovimientosAsync(bool reiniciarPagina = true)
     {
         if (_inventarioService is null) return;
 
@@ -231,14 +239,24 @@ public partial class InventarioViewModel : OperacionViewModel
             return;
         }
 
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
         try
         {
             var idProducto = VerTodosLosMovimientos ? null : SelectedProducto?.Id;
 
-            var movimientos = await _inventarioService.ObtenerMovimientosPorRangoAsync(
-                desdeFecha, hastaFecha, idProducto);
+            var pagina = await _inventarioService
+                .ObtenerMovimientosPorRangoPaginadosAsync(
+                    desdeFecha,
+                    hastaFecha,
+                    idProducto,
+                    Paginacion.PaginaActual,
+                    Paginacion.TamanoPagina);
 
-            ReemplazarItems(MovimientosItems, movimientos);
+            ReemplazarItems(MovimientosItems, pagina.Items);
+            Paginacion.EstablecerTotal(pagina.TotalRegistros);
+
             OnPropertyChanged(nameof(SinMovimientos));
             OnPropertyChanged(nameof(CantidadExportable));
         }
