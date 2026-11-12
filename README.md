@@ -47,7 +47,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 177 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 178 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -155,13 +155,18 @@ para una etapa posterior.
 
 ## Paginación
 
-Ventas, Inventario y Compras consultan la base por páginas: no cargan todo el
-historial en memoria. El control reutilizable `Paginador` muestra el rango
-visible, permite elegir **10, 25 o 50** registros por página (inicia en 10) y
-navega con Primera/Anterior/Siguiente/Última. La consulta usa `Skip`/`Take` y
-un `Count` para conocer el total; los filtros de fecha, búsqueda, producto y
-estado se aplican en la misma consulta. El estado compartido vive en
+Ventas, Inventario, Compras y el selector de productos de Caja consultan la
+base por páginas: no cargan todo el historial en memoria. El control
+reutilizable `Paginador` muestra el rango visible, permite elegir **10, 25 o
+50** registros por página (inicia en 10) y navega con
+Primera/Anterior/Siguiente/Última. La consulta usa `Skip`/`Take` y un `Count`
+para conocer el total; los filtros de fecha, búsqueda, producto y estado se
+aplican en la misma consulta. El estado compartido vive en
 `PaginacionViewModel`, de modo que otros listados pueden reutilizarlo.
+
+El selector de productos de Caja usa la misma paginación, busca por SKU o
+nombre directamente en la base y espera 200 ms tras la última tecla para no
+lanzar una consulta por cada pulsación.
 
 ## Exportación a CSV
 

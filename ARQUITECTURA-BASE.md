@@ -196,7 +196,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 177 pruebas pasan. El trabajo pendiente (reportes,
+La base está estable y sus 178 pruebas pasan. El trabajo pendiente (reportes,
 instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
@@ -244,9 +244,11 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 - Paginación: `PaginacionViewModel` concentra página actual, tamaño
   (10/25/50, inicio en 10), total y comandos de navegación; `Paginador` es el
   control XAML reutilizable. Los servicios `VentaService`,
-  `InventarioService` y `CompraService` exponen consultas paginadas que
-  aplican filtros en la base, hacen `Count` y devuelven un
-  `PaginaResultado<T>` con solo las filas de la página (`Skip`/`Take`).
+  `InventarioService`, `CompraService` y `ProductoService` (selector de Caja)
+  exponen consultas paginadas que aplican filtros en la base, hacen `Count` y
+  devuelven un `PaginaResultado<T>` con solo las filas de la página
+  (`Skip`/`Take`). El selector de productos busca por SKU o nombre con un
+  pequeño retardo para no consultar en cada tecla.
 - Exportación CSV: `ExportadorCsv` convierte las filas de la página visible en
   Ventas, Inventario y Compras (con su rango de fechas y filtros aplicados) a
   CSV con coma, punto decimal, fin de línea `\r\n` y UTF-8 con BOM. Escapa
