@@ -110,6 +110,9 @@
                         <Button Content="Devolver"
                                 Classes="secondary"
                                 Command="{Binding DevolverCommand}"/>
+                        <Button Content="Exportar CSV"
+                                Classes="secondary"
+                                Click="Exportar_Click"/>
                     </StackPanel>
 
                 </StackPanel>

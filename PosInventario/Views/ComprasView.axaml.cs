@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using PosInventario.Service;
 using PosInventario.ViewModels;
 using PosInventario.Views.DesignTime;
 
@@ -30,5 +31,37 @@ public partial class ComprasView : UserControl
 
         if (await confirmacion.ShowDialog<bool>(ventana))
             await viewModel.AnularSeleccionadaAsync();
+    }
+
+    private async void Exportar_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ComprasViewModel viewModel)
+            return;
+
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        try
+        {
+            var ruta = await ExportadorCsvArchivo.GuardarAsync(
+                ventana,
+                "Exportar compras a CSV",
+                viewModel.NombreArchivoExportacion,
+                viewModel.GenerarCsv());
+
+            if (ruta is null)
+                return;
+
+            viewModel.NotificarExportacion(
+                $"Se exportaron {viewModel.CantidadExportable} compras a:\n{ruta}");
+        }
+        catch (Exception ex)
+        {
+            RegistroApp.Escribir("No se pudieron exportar las compras.", ex);
+
+            viewModel.NotificarExportacion(
+                $"No se pudieron exportar las compras: {ex.Message}",
+                correcta: false);
+        }
     }
 }

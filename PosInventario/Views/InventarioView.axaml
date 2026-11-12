@@ -127,6 +127,35 @@
                                           IsChecked="{Binding VerTodosLosMovimientos}"/>
                             </Grid>
 
+                            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Desde" Classes="fieldLabel"/>
+                                    <DatePicker SelectedDate="{Binding Desde}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                                    <DatePicker SelectedDate="{Binding Hasta}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2"
+                                            Orientation="Horizontal"
+                                            Spacing="10"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom">
+                                    <Button Content="Buscar"
+                                            Classes="primary"
+                                            Command="{Binding BuscarMovimientosCommand}"/>
+                                    <Button Content="Exportar CSV"
+                                            Classes="secondary"
+                                            Click="Exportar_Click"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="No hay movimientos en el rango seleccionado."
+                                       Classes="caption"
+                                       IsVisible="{Binding SinMovimientos}"/>
+
                             <ListBox ItemsSource="{Binding MovimientosItems}"
                                      MaxHeight="320"
                                      Classes="entityList">
