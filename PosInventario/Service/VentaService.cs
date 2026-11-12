@@ -92,10 +92,31 @@ public class VentaService
     }
 
     /// <summary>
+    /// Usuarios que tienen al menos una venta registrada. Se usa para el
+    /// filtro por cajero del historial, sin listar usuarios que nunca vendieron.
+    /// </summary>
+    public async Task<List<Usuario>> ObtenerCajerosConVentasAsync()
+    {
+        var ids = await _db.Ventas
+            .AsNoTracking()
+            .Select(v => v.IdUsuario)
+            .Distinct()
+            .ToListAsync();
+
+        return await _db.Usuarios
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .OrderBy(u => u.Nombre)
+            .ThenBy(u => u.NombreUsuario)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Historial paginado entre dos fechas (inclusive). La búsqueda se aplica
     /// en la base: acepta el número de ticket (con o sin prefijo "V-") o el
-    /// nombre del cajero. Devuelve solo las filas de la página y el total de
-    /// coincidencias para calcular la navegación.
+    /// nombre del cajero. Los filtros de método y cajero se combinan con la
+    /// fecha, la búsqueda y las anuladas. Devuelve solo las filas de la página
+    /// y el total de coincidencias para calcular la navegación.
     /// </summary>
     public async Task<PaginaResultado<Venta>> ObtenerHistorialPaginadoAsync(
         DateTime desde,
@@ -103,7 +124,9 @@ public class VentaService
         string? busqueda,
         bool incluirAnuladas,
         int pagina,
-        int tamanoPagina)
+        int tamanoPagina,
+        MetodoPago? metodo = null,
+        int? idUsuario = null)
     {
         var inicio = desde.Date;
         var fin = hasta.Date.AddDays(1);
@@ -123,6 +146,12 @@ public class VentaService
 
         if (!incluirAnuladas)
             query = query.Where(v => v.Estado == EstadoVenta.Completada);
+
+        if (metodo is { } metodoFiltro)
+            query = query.Where(v => v.MetodoPago == metodoFiltro);
+
+        if (idUsuario is { } usuarioFiltro)
+            query = query.Where(v => v.IdUsuario == usuarioFiltro);
 
         query = AplicarBusqueda(query, busqueda);
 

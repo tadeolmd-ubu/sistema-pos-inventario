@@ -9,12 +9,20 @@ using PosInventario.Service;
 namespace PosInventario.ViewModels;
 
 /// <summary>
+/// Opción del filtro de cajero. <see cref="Id"/> nulo representa "todos".
+/// </summary>
+public sealed record OpcionCajero(int? Id, string Nombre);
+
+/// <summary>
 /// Historial global de ventas para administradores: permite buscar por rango
-/// de fechas, ticket o cajero, y abrir el ticket de cualquier venta.
+/// de fechas, ticket, cajero y método de pago, y abrir el ticket de cualquier
+/// venta.
 /// </summary>
 public partial class VentasViewModel : OperacionViewModel
 {
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
+    private static readonly OpcionCajero TodosLosCajeros =
+        new(null, "Todos los cajeros");
 
     private readonly VentaService? _ventaService;
     private decimal _totalVendido;
@@ -22,6 +30,8 @@ public partial class VentasViewModel : OperacionViewModel
     public VentasViewModel()
     {
         Paginacion.CambioSolicitado += CargarPaginaActual;
+        Cajeros.Add(TodosLosCajeros);
+        CajeroSeleccionado = TodosLosCajeros;
     }
 
     public VentasViewModel(VentaService ventaService)
@@ -29,8 +39,12 @@ public partial class VentasViewModel : OperacionViewModel
         => _ventaService = ventaService;
 
     public ObservableCollection<Venta> VentasItems { get; } = [];
+    public ObservableCollection<OpcionCajero> Cajeros { get; } = [];
 
     public PaginacionViewModel Paginacion { get; } = new();
+
+    public IReadOnlyList<string> OpcionesMetodo { get; } =
+        ["Todos", "Efectivo", "Tarjeta", "Transferencia", "Mixto"];
 
     [ObservableProperty] private DateTimeOffset? desde =
         new(DateTime.Today.AddDays(-7));
@@ -39,6 +53,8 @@ public partial class VentasViewModel : OperacionViewModel
         new(DateTime.Today);
 
     [ObservableProperty] private string busqueda = string.Empty;
+    [ObservableProperty] private string metodoSeleccionado = "Todos";
+    [ObservableProperty] private OpcionCajero? cajeroSeleccionado;
     [ObservableProperty] private bool verAnuladas;
     [ObservableProperty] private Venta? selectedVenta;
 
@@ -65,6 +81,15 @@ public partial class VentasViewModel : OperacionViewModel
 
     private DateTime HastaFecha =>
         (Hasta ?? DateTimeOffset.Now).Date;
+
+    private MetodoPago? MetodoFiltro => MetodoSeleccionado switch
+    {
+        "Efectivo" => MetodoPago.Efectivo,
+        "Tarjeta" => MetodoPago.Tarjeta,
+        "Transferencia" => MetodoPago.Transferencia,
+        "Mixto" => MetodoPago.Mixto,
+        _ => null
+    };
 
     /// <summary>
     /// Solo se puede devolver una venta completada con unidades pendientes.
@@ -112,7 +137,10 @@ public partial class VentasViewModel : OperacionViewModel
         }
 
         if (reiniciarPagina)
+        {
             Paginacion.Reiniciar();
+            await CargarCajerosAsync();
+        }
 
         var pagina = await _ventaService.ObtenerHistorialPaginadoAsync(
             desdeFecha,
@@ -120,7 +148,9 @@ public partial class VentasViewModel : OperacionViewModel
             Busqueda,
             VerAnuladas,
             Paginacion.PaginaActual,
-            Paginacion.TamanoPagina);
+            Paginacion.TamanoPagina,
+            MetodoFiltro,
+            CajeroSeleccionado?.Id);
 
         ReemplazarItems(VentasItems, pagina.Items);
         _totalVendido = pagina.Total;
@@ -130,6 +160,27 @@ public partial class VentasViewModel : OperacionViewModel
             SelectedVenta = null;
 
         NotificarResumen();
+    }
+
+    /// <summary>
+    /// Refresca la lista de cajeros con ventas y conserva la selección actual
+    /// cuando el usuario ya había elegido uno.
+    /// </summary>
+    private async Task CargarCajerosAsync()
+    {
+        if (_ventaService is null) return;
+
+        var seleccionado = CajeroSeleccionado?.Id;
+        var usuarios = await _ventaService.ObtenerCajerosConVentasAsync();
+
+        Cajeros.Clear();
+        Cajeros.Add(TodosLosCajeros);
+
+        foreach (var usuario in usuarios)
+            Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+
+        CajeroSeleccionado = Cajeros
+            .FirstOrDefault(c => c.Id == seleccionado) ?? TodosLosCajeros;
     }
 
     [RelayCommand(CanExecute = nameof(PuedeVerTicket))]
@@ -160,7 +211,10 @@ public partial class VentasViewModel : OperacionViewModel
 
         Paginacion.Reiniciar();
         VentasItems.Clear();
+        Cajeros.Clear();
         Busqueda = string.Empty;
+        MetodoSeleccionado = "Todos";
+        CajeroSeleccionado = null;
         VerAnuladas = false;
         SelectedVenta = null;
         Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));

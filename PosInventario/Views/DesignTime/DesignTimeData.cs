@@ -504,6 +504,10 @@ public sealed class VentasDesignTime : VentasViewModel
             FechaCreacion = DateTime.Now
         };
 
+        Cajeros.Add(new OpcionCajero(null, "Todos los cajeros"));
+        Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+        CajeroSeleccionado = Cajeros[0];
+
         VentasItems.Add(new Venta
         {
             Id = 32,
