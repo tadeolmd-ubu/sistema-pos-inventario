@@ -168,7 +168,7 @@ public class ReporteService
                 ventasNetas,
                 costo,
                 utilidad,
-                AgruparPeriodos(ventas, utilidadPorVenta, agrupacion, inicio, fin),
+                AgruparPeriodos(ventas, utilidadPorVenta, agrupacion, fin),
                 CalcularMetodos(ventas, ventasNetas),
                 CalcularProductos(lineas, topProductos)));
     }
@@ -246,7 +246,6 @@ public class ReporteService
         IReadOnlyList<Venta> ventas,
         IReadOnlyDictionary<int, decimal> utilidadPorVenta,
         AgrupacionReporte agrupacion,
-        DateTime inicio,
         DateTime fin)
     {
         var periodos = ventas
