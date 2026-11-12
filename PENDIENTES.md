@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 157 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 166 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -249,9 +249,13 @@
     Imprimir; también se reimprime desde el detalle de una caja cerrada.
   - **Tamaño:** M.
 
-- [ ] **3.2 Exportar a CSV**
+- [x] **3.2 Exportar a CSV**
   - **Qué:** ventas, inventario y compras en un rango de fechas.
   - **Criterio:** el archivo abre en Excel y coincide con lo mostrado.
+  - **Hecho en:** rama `feat/exportar-csv` (300f36f): botón "Exportar CSV" en
+    cada módulo, con rango de fechas en Inventario y Compras. Exporta las filas
+    visibles, con UTF-8 con BOM, coma decimal y escape de comas, comillas y
+    fórmulas; las pruebas están en 7174b3b.
   - **Tamaño:** M.
 
 - [ ] **3.3 Reportes de administración**

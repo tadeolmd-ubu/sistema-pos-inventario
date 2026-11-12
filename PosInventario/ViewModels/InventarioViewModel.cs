@@ -45,6 +45,12 @@ public partial class InventarioViewModel : OperacionViewModel
     [ObservableProperty] private string stockContadoTexto = string.Empty;
     [ObservableProperty] private bool verTodosLosMovimientos;
 
+    [ObservableProperty] private DateTimeOffset? desde =
+        new(DateTime.Today.AddDays(-7));
+
+    [ObservableProperty] private DateTimeOffset? hasta =
+        new(DateTime.Today);
+
     public IReadOnlyList<string> MotivosDisponibles =>
         MotivosInventario.Para(TipoSeleccionado);
 
@@ -59,8 +65,26 @@ public partial class InventarioViewModel : OperacionViewModel
             ? "Últimos movimientos"
             : $"Movimientos de {SelectedProducto.Nombre}";
 
+    public bool SinMovimientos => MovimientosItems.Count == 0;
+
+    public int CantidadExportable => MovimientosItems.Count;
+
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo("inventario", DesdeFecha, HastaFecha);
+
+    public string GenerarCsv() => ExportadorCsv.Inventario(MovimientosItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+
+    [RelayCommand]
+    private Task BuscarMovimientosAsync() => CargarMovimientosAsync();
 
     private async Task CargarDatosAsync()
     {
@@ -184,7 +208,11 @@ public partial class InventarioViewModel : OperacionViewModel
         _cargados.Clear();
         ProductosItems.Clear();
         MovimientosItems.Clear();
+        OnPropertyChanged(nameof(SinMovimientos));
+        OnPropertyChanged(nameof(CantidadExportable));
         Busqueda = string.Empty;
+        Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
+        Hasta = new DateTimeOffset(DateTime.Today);
         LimpiarFormulario();
         _limpiando = false;
     }
@@ -193,12 +221,26 @@ public partial class InventarioViewModel : OperacionViewModel
     {
         if (_inventarioService is null) return;
 
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion =
+                "La fecha hasta no puede ser anterior a la fecha desde.";
+            return;
+        }
+
         try
         {
             var idProducto = VerTodosLosMovimientos ? null : SelectedProducto?.Id;
 
-            var movimientos = await _inventarioService.ObtenerMovimientosAsync(idProducto);
+            var movimientos = await _inventarioService.ObtenerMovimientosPorRangoAsync(
+                desdeFecha, hastaFecha, idProducto);
+
             ReemplazarItems(MovimientosItems, movimientos);
+            OnPropertyChanged(nameof(SinMovimientos));
+            OnPropertyChanged(nameof(CantidadExportable));
         }
         catch (Exception ex)
         {

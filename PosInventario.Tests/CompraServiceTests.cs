@@ -388,4 +388,41 @@ public class CompraServiceTests
         Assert.Equal(segunda.Id, recientes[0].Id);
         Assert.Equal(primera.Id, recientes[1].Id);
     }
+
+    [Fact]
+    public async Task ObtenerPorRangoFiltraFechasSinLimiteDeFilas()
+    {
+        await using var prueba = await PruebaCompras.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var proveedor = await prueba.CrearProveedorAsync();
+        var producto = await prueba.CrearProductoAsync("ABC-001");
+
+        var primera = await prueba.RegistrarCompraAsync(
+            proveedor, new LineaCompra(producto.Id, 1, 50m));
+        var segunda = await prueba.RegistrarCompraAsync(
+            proveedor, new LineaCompra(producto.Id, 1, 50m));
+
+        var compras = await prueba.Db.Compras
+            .OrderBy(c => c.Id)
+            .ToListAsync();
+
+        compras[0].Fecha = new DateTime(2026, 1, 10, 9, 0, 0);
+        compras[1].Fecha = new DateTime(2026, 2, 10, 9, 0, 0);
+        await prueba.Db.SaveChangesAsync();
+
+        var febrero = await prueba.CompraService.ObtenerPorRangoAsync(
+            new DateTime(2026, 2, 1), new DateTime(2026, 2, 28));
+
+        Assert.Single(febrero);
+        Assert.Equal(segunda.Id, febrero[0].Id);
+        Assert.NotNull(febrero[0].Proveedor);
+        Assert.NotNull(febrero[0].Usuario);
+        Assert.NotEmpty(febrero[0].Detalles);
+
+        var enero = await prueba.CompraService.ObtenerPorRangoAsync(
+            new DateTime(2026, 1, 1), new DateTime(2026, 1, 31));
+
+        Assert.Single(enero);
+        Assert.Equal(primera.Id, enero[0].Id);
+    }
 }

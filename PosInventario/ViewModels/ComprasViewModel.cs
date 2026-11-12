@@ -41,6 +41,12 @@ public partial class ComprasViewModel : OperacionViewModel
     [ObservableProperty] private string cantidadTexto = string.Empty;
     [ObservableProperty] private string costoTexto = string.Empty;
 
+    [ObservableProperty] private DateTimeOffset? desde =
+        new(DateTime.Today.AddDays(-7));
+
+    [ObservableProperty] private DateTimeOffset? hasta =
+        new(DateTime.Today);
+
     public decimal Total => LineasItems.Sum(l => l.Subtotal);
 
     public string TotalTexto => Total.ToString("0.00", Cultura);
@@ -50,6 +56,19 @@ public partial class ComprasViewModel : OperacionViewModel
     public bool PuedeAnular =>
         SelectedCompra is not null && SelectedCompra.Estado == EstadoCompra.Completada;
 
+    public int CantidadExportable => ComprasItems.Count;
+
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo("compras", DesdeFecha, HastaFecha);
+
+    public string GenerarCsv() => ExportadorCsv.Compras(ComprasItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
 
@@ -58,13 +77,24 @@ public partial class ComprasViewModel : OperacionViewModel
         if (_compraService is null || _proveedorService is null || _productoService is null)
             return;
 
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion = Notificar(
+                "La fecha hasta no puede ser anterior a la fecha desde.");
+            return;
+        }
+
         var idProveedor = SelectedProveedor?.Id;
         var idProducto = SelectedProducto?.Id;
         var idCompra = SelectedCompra?.Id;
 
         var proveedores = await _proveedorService.ObtenerActivosAsync();
         var productos = await _productoService.ObtenerTodosAsync();
-        var compras = await _compraService.ObtenerRecientesAsync();
+        var compras = await _compraService.ObtenerPorRangoAsync(
+            desdeFecha, hastaFecha);
 
         ReemplazarItems(ProveedoresItems, proveedores);
         ReemplazarItems(ProductosItems, productos);
@@ -203,6 +233,8 @@ public partial class ComprasViewModel : OperacionViewModel
         ComprasItems.Clear();
         ProveedoresItems.Clear();
         ProductosItems.Clear();
+        Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
+        Hasta = new DateTimeOffset(DateTime.Today);
         LimpiarFormulario();
     }
 

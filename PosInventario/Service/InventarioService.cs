@@ -45,6 +45,34 @@ public class InventarioService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Movimientos entre dos fechas (inclusive), sin límite de filas, para el
+    /// historial filtrado y la exportación a CSV.
+    /// </summary>
+    public async Task<List<MovimientoInventario>> ObtenerMovimientosPorRangoAsync(
+        DateTime desde, DateTime hasta, int? idProducto = null)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        var query = _db.MovimientosInventario
+            .AsNoTracking()
+            .Include(m => m.Producto)
+            .Include(m => m.Usuario)
+            .Where(m => m.Fecha >= inicio && m.Fecha < fin);
+
+        if (idProducto is not null)
+            query = query.Where(m => m.IdProducto == idProducto);
+
+        return await query
+            .OrderByDescending(m => m.Fecha)
+            .ThenByDescending(m => m.Id)
+            .ToListAsync();
+    }
+
     public Task<Resultado<MovimientoInventario>> RegistrarEntradaAsync(
         int idProducto, int cantidad, string referencia)
         => RegistrarManualAsync(

@@ -50,6 +50,19 @@ public partial class VentasViewModel : OperacionViewModel
 
     public bool PuedeVerTicket => SelectedVenta is not null;
 
+    public int CantidadExportable => VentasItems.Count;
+
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo("ventas", DesdeFecha, HastaFecha);
+
+    public string GenerarCsv() => ExportadorCsv.Ventas(VentasItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
     /// <summary>
     /// Solo se puede devolver una venta completada con unidades pendientes.
     /// El servicio valida que el usuario sea el vendedor o un administrador.
@@ -79,8 +92,8 @@ public partial class VentasViewModel : OperacionViewModel
     {
         if (_ventaService is null) return;
 
-        var desdeFecha = (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
-        var hastaFecha = (Hasta ?? DateTimeOffset.Now).Date;
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
 
         if (hastaFecha < desdeFecha)
         {

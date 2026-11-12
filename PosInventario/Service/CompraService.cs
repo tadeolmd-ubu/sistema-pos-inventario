@@ -36,6 +36,31 @@ public class CompraService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Compras entre dos fechas (inclusive), sin límite de filas, para el
+    /// historial filtrado y la exportación a CSV.
+    /// </summary>
+    public async Task<List<Compra>> ObtenerPorRangoAsync(
+        DateTime desde, DateTime hasta)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        return await _db.Compras
+            .AsNoTracking()
+            .Include(c => c.Proveedor)
+            .Include(c => c.Usuario)
+            .Include(c => c.Detalles)
+                .ThenInclude(d => d.Producto)
+            .Where(c => c.Fecha >= inicio && c.Fecha < fin)
+            .OrderByDescending(c => c.Fecha)
+            .ThenByDescending(c => c.Id)
+            .ToListAsync();
+    }
+
     public async Task<Compra?> ObtenerPorIdAsync(int id)
         => await _db.Compras
             .AsNoTracking()

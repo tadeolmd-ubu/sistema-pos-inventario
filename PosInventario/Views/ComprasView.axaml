@@ -21,9 +21,32 @@
             <Border Classes="cardFlat" Padding="16">
                 <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
 
-                    <StackPanel Grid.Row="0" Spacing="4">
-                        <TextBlock Text="Compras" Classes="sectionTitle"/>
-                        <TextBlock Text="Historial reciente" Classes="caption"/>
+                    <StackPanel Grid.Row="0" Spacing="10">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Compras" Classes="sectionTitle"/>
+                            <TextBlock Text="Historial por rango de fechas" Classes="caption"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Desde" Classes="fieldLabel"/>
+                                <DatePicker SelectedDate="{Binding Desde}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                                <DatePicker SelectedDate="{Binding Hasta}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Buscar"
+                                    Classes="primary"
+                                    Command="{Binding CargarCommand}"/>
+                            <Button Content="Exportar CSV"
+                                    Classes="secondary"
+                                    Click="Exportar_Click"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <ListBox Grid.Row="1"
