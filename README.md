@@ -37,6 +37,12 @@ registro de errores.
   Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
   ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
   venta ya quedó registrada y solo se muestra un aviso.
+- **Reportes:** (solo administrador) ventas por período agrupadas por día,
+  semana o mes, desglose por método de pago, productos más vendidos y utilidad
+  (venta neta menos costo). Incluye rangos rápidos (hoy, últimos 7 días, mes
+  actual y mes anterior) y muestra los números dentro de la app, sin exportar
+  a otro sistema. Las devoluciones se descuentan por unidad y la utilidad usa
+  el costo guardado al momento de cada venta.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
@@ -47,7 +53,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 178 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 188 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -194,6 +200,27 @@ decimal, de modo que Excel los abre con acentos y columnas correctas. Los
 campos con comas, comillas o saltos de línea se escapan, y los textos que
 empiezan con `=`, `+`, `-` o `@` se neutralizan para evitar fórmulas. Si no hay
 filas en el rango, el archivo solo contiene el encabezado.
+
+## Reportes de administración
+
+El módulo **Reportes** (solo administrador) responde las preguntas del dueño
+sin salir de la aplicación:
+
+- **Ventas por período:** se elige un rango de fechas y se agrupa por día,
+  semana (inicio en lunes) o mes. Cada fila muestra tickets, ventas netas,
+  devoluciones y utilidad, con una barra comparativa.
+- **Ventas por método:** efectivo, tarjeta y transferencia, descontando los
+  reembolsos de cada pago, con monto, cantidad de ventas y porcentaje.
+- **Productos más vendidos:** top 10 por unidades netas de devoluciones, con
+  SKU, ventas y utilidad.
+- **Utilidad:** cada línea aporta `precio de venta - costo`; el descuento de la
+  venta y las devoluciones se prorratean por unidad. Para que el histórico no
+  cambie cuando se actualiza un producto, cada `DetalleVenta` guarda el
+  `CostoUnitario` vigente al momento de la venta. Las ventas totalmente
+  anuladas no se cuentan.
+
+El cálculo vive en `ReporteService` y las vistas solo presentan el resultado.
+Los importes son netos de devoluciones y se muestran con dos decimales.
 
 ## Publicación
 

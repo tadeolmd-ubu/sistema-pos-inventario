@@ -47,15 +47,16 @@ PosInventario/
 │                              RespaldoAutomaticoService, ConfiguracionAppService,
 │                              RegistroApp, InstanciaUnica, SesionActual,
 │                              VersionService, Usuario/Producto/Proveedor/
-│                              Inventario/Compra/Caja/VentaService, Linea*,
-│                              ResumenPagosCaja, GeneradorTicketTexto,
+│                              Inventario/Compra/Caja/Venta/ReporteService,
+│                              Linea*, ResumenPagosCaja, GeneradorTicketTexto,
 │                              GeneradorCorteCajaTexto, ExportadorCsv,
-│                              PaginaResultado<T>
+│                              PaginaResultado<T>, ReporteAdministracion
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
-│                              Ventas, Usuarios, Configuración, Login, Setup,
-│                              Ticket, CorteCaja, CancelarVenta, CerrarCaja,
+│                              Ventas, Reportes, Usuarios, Configuración,
+│                              Login, Setup, Ticket, CorteCaja, CancelarVenta,
+│                              CerrarCaja,
 │                              CajaHistorial, MovimientoCaja,
 │                              RestablecerContrasena, SeleccionarProducto,
 │                              PaginacionViewModel) e ítems de líneas
@@ -241,6 +242,16 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 - Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
   de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
   el botón "Ver ticket" o doble clic, incluidas las canceladas.
+- Reportes: `ReporteService` calcula ventas netas, devoluciones, utilidad,
+  ticket promedio, ventas por método y top de productos. `ReportesViewModel`
+  maneja el rango de fechas, los atajos (hoy, 7 días, mes actual/anterior) y
+  la agrupación por día, semana o mes; `ReportesView` solo presenta el
+  resultado. Cada línea de venta guarda `CostoUnitario` al momento del cobro
+  (migración `AddCostoDetalleVenta`) para que la utilidad histórica no cambie
+  cuando se actualiza el costo del producto. El servicio exige rol
+  administrador y excluye las ventas totalmente anuladas. El descuento y las
+  devoluciones se prorratean por unidad, y las sumas por método y producto se
+  muestran netas. Solo lectura: no modifica caja, inventario ni ventas.
 - Paginación: `PaginacionViewModel` concentra página actual, tamaño
   (10/25/50, inicio en 10), total y comandos de navegación; `Paginador` es el
   control XAML reutilizable. Los servicios `VentaService`,
