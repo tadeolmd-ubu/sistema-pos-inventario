@@ -239,9 +239,14 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   producto existente o se prepara el alta con ese SKU (`EscanearCodigoAsync`).
   En Caja el mismo código agrega el producto a la venta.
 - Compras: `CompraService` con líneas y actualización de stock.
-- Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
-  de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
-  el botón "Ver ticket" o doble clic, incluidas las canceladas.
+- Historial de ventas: `VentasViewModel` con filtros por fecha, búsqueda,
+  método de pago y cajero (se combinan en la misma consulta), paginación y
+  reimpresión. `VentaService.ObtenerHistorialPaginadoAsync` recibe el método y
+  el `IdUsuario` opcionales, y `ObtenerCajerosConVentasAsync` alimenta el
+  selector con los usuarios que realmente tienen ventas. El detalle de una
+  caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con el
+  botón "Ver ticket" o doble clic, incluidas las canceladas. La exportación
+  CSV respeta todos los filtros activos.
 - Reportes: `ReporteService` calcula ventas netas, devoluciones, utilidad,
   ticket promedio, ventas por método y top de productos. `ReportesViewModel`
   maneja el rango de fechas, los atajos (hoy, 7 días, mes actual/anterior) y

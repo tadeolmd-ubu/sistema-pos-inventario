@@ -30,10 +30,11 @@ registro de errores.
   movimientos por rango de fechas, paginado y exportable a CSV.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock;
   historial por rango de fechas paginado y exportable a CSV.
-- **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
-  método de pago, paginación, reimpresión de ticket desde el historial o el
-  detalle de una caja cerrada, botón de devolución (checklist por producto o
-  unidad, con reembolso estimado) y exportación a CSV de las ventas filtradas.
+- **Ventas:** historial global con filtros por fecha, búsqueda, método de pago
+  y cajero (todos se combinan), desglose por método de pago, paginación,
+  reimpresión de ticket desde el historial o el detalle de una caja cerrada,
+  botón de devolución (checklist por producto o unidad, con reembolso
+  estimado) y exportación a CSV de las ventas filtradas.
   Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
   ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
   venta ya quedó registrada y solo se muestra un aviso.
@@ -53,7 +54,7 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 189 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 191 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -182,9 +183,9 @@ lanzar una consulta por cada pulsación.
 Ventas, Inventario y Compras tienen un botón **Exportar CSV** que guarda
 exactamente las filas de la **página visible** en ese momento:
 
-- **Ventas:** respeta el rango de fechas, la búsqueda y la casilla "Ver
-  anuladas". Incluye ticket, fecha, cajero, método, estado, subtotal,
-  descuento, total, devuelto y neto.
+- **Ventas:** respeta el rango de fechas, la búsqueda, el método de pago, el
+  cajero seleccionado y la casilla "Ver anuladas". Incluye ticket, fecha,
+  cajero, método, estado, subtotal, descuento, total, devuelto y neto.
 - **Inventario:** respeta el rango de fechas y, si hay un producto
   seleccionado, sus movimientos. Incluye producto, SKU, tipo, cantidad, stock
   anterior/resultante, referencia, fecha y usuario.
