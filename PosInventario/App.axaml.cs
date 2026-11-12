@@ -105,6 +105,7 @@ public partial class App : Application
             var compraService = new CompraService(dbContext, sesion);
             var cajaService = new CajaService(dbContext, sesion);
             var ventaService = new VentaService(dbContext, sesion);
+            var reporteService = new ReporteService(dbContext, sesion);
             var versionService = new VersionService();
 
             var inicioViewModel = new InicioViewModel(
@@ -118,6 +119,7 @@ public partial class App : Application
             var comprasViewModel = new ComprasViewModel(
                 compraService, proveedorService, productoService);
             var ventasViewModel = new VentasViewModel(ventaService);
+            var reportesViewModel = new ReportesViewModel(reporteService);
             var usuariosViewModel = new UsuariosViewModel(usuarioService, sesion);
             var configuracionViewModel = new ConfiguracionViewModel(
                 respaldoService, rutaBaseDatos, sesion, configuracionAppService);
@@ -125,8 +127,9 @@ public partial class App : Application
             var mainViewModel = new MainViewModel(
                 inicioViewModel, cajaViewModel, productosViewModel,
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
-                ventasViewModel, usuariosViewModel, configuracionViewModel,
-                versionService, sesion, respaldoAutomaticoService);
+                ventasViewModel, reportesViewModel, usuariosViewModel,
+                configuracionViewModel, versionService, sesion,
+                respaldoAutomaticoService);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

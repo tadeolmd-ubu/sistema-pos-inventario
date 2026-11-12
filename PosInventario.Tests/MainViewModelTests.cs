@@ -51,6 +51,7 @@ public class MainViewModelTests
             new InventarioViewModel(),
             new ComprasViewModel(),
             new VentasViewModel(),
+            new ReportesViewModel(),
             new UsuariosViewModel(),
             new ConfiguracionViewModel(),
             new VersionService(),

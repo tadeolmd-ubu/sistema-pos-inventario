@@ -14,6 +14,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly InventarioViewModel _inventarioViewModel;
     private readonly ComprasViewModel _comprasViewModel;
     private readonly VentasViewModel _ventasViewModel;
+    private readonly ReportesViewModel _reportesViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly ConfiguracionViewModel _configuracionViewModel;
     private readonly VersionService _versionService;
@@ -28,6 +29,7 @@ public partial class MainViewModel : OperacionViewModel
         InventarioViewModel inventarioViewModel,
         ComprasViewModel comprasViewModel,
         VentasViewModel ventasViewModel,
+        ReportesViewModel reportesViewModel,
         UsuariosViewModel usuariosViewModel,
         ConfiguracionViewModel configuracionViewModel,
         VersionService versionService,
@@ -41,6 +43,7 @@ public partial class MainViewModel : OperacionViewModel
         _inventarioViewModel = inventarioViewModel;
         _comprasViewModel = comprasViewModel;
         _ventasViewModel = ventasViewModel;
+        _reportesViewModel = reportesViewModel;
         _usuariosViewModel = usuariosViewModel;
         _configuracionViewModel = configuracionViewModel;
         _versionService = versionService;
@@ -54,6 +57,7 @@ public partial class MainViewModel : OperacionViewModel
         _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
         _comprasViewModel.MensajeSolicitado += SolicitarMensaje;
         _ventasViewModel.MensajeSolicitado += SolicitarMensaje;
+        _reportesViewModel.MensajeSolicitado += SolicitarMensaje;
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
         _configuracionViewModel.MensajeSolicitado += SolicitarMensaje;
 
@@ -223,6 +227,15 @@ public partial class MainViewModel : OperacionViewModel
 
         CambiarVista(_ventasViewModel, "Ventas");
         await _ventasViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAReportesAsync()
+    {
+        if (!EsAdministrador) return;
+
+        CambiarVista(_reportesViewModel, "Reportes");
+        await _reportesViewModel.CargarAsync();
     }
 
     [RelayCommand]
