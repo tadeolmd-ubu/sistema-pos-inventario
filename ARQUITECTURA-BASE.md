@@ -124,7 +124,10 @@ Views → ViewModels → Service → Data + Models
   con retención de 30 días. Nunca lanza.
 - `InstanciaUnica`: bloqueo de archivo para una sola ejecución.
 - `RespaldoService`: respaldo con `BackupDatabase` de SQLite; nombra
-  `respaldo_<fecha>_<hash>.db` en la carpeta destino.
+  `respaldo_<fecha>_<hash>.db` en la carpeta destino. Además valida archivos
+  con `PRAGMA integrity_check`, el esquema mínimo y el historial de
+  migraciones, y restaura reemplazando la base actual después de guardar un
+  respaldo de seguridad.
 - `VersionService`: versión del ensamblado o de la última release de GitHub.
 
 ## Reglas de negocio
@@ -177,9 +180,9 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 135 pruebas pasan. El trabajo pendiente (respaldo
-automático, restauración, reportes, instalador) está ordenado por fases y
-prioridades en `PENDIENTES.md`.
+La base está estable y sus 139 pruebas pasan. El trabajo pendiente (respaldo
+automático, reportes, instalador) está ordenado por fases y prioridades en
+`PENDIENTES.md`.
 
 ## Invariantes
 
@@ -243,7 +246,9 @@ prioridades en `PENDIENTES.md`.
   una caja o el historial de ventas.
   Los totales de Inicio, cierre e historiales se muestran netos de
   devoluciones (`Venta.TotalNeto`).
-- Configuración: respaldo manual desde la UI (solo administrador).
+- Configuración: respaldo manual desde la UI (solo administrador) y
+  restauración de un archivo validado, con respaldo de seguridad previo y
+  reinicio automático de la aplicación.
 
 ## Módulos opcionales (no incluidos)
 

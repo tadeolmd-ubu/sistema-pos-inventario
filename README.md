@@ -35,11 +35,13 @@ registro de errores.
   hay impresora, la venta ya quedó registrada y solo se muestra un aviso.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
-- **Configuración:** respaldos manuales con `BackupDatabase` de SQLite.
+- **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
+  restauración desde un archivo validado (solo administrador; crea un respaldo
+  de seguridad y reinicia la aplicación al terminar).
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 135 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
+- **Tests:** 139 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
@@ -63,6 +65,10 @@ dotnet run --project PosInventario/PosInventario.csproj
 
 SQLite local (`SistemaInventario.db`). Las migraciones se aplican al iniciar;
 antes de migrar se crea un respaldo previo y, si falla, no se migra.
+
+La restauración desde Configuración valida el archivo (`integrity_check` y
+tablas del sistema), crea un respaldo de seguridad de la base actual y la
+reemplaza con confirmación. Al terminar, la aplicación se reinicia.
 
 - En `Debug` la base se busca en el directorio actual y sus padres.
 - En `Release` se usa `%LOCALAPPDATA%/SistemaInventario/SistemaInventario.db`

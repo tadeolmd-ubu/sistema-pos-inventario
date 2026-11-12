@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 135 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 139 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -31,7 +31,7 @@
 - [x] Desglose por método de pago en cierre e historial de caja.
 - [x] Devoluciones totales y parciales de ventas, con reembolso en efectivo
   desde la caja abierta y sin recalcular cajas cerradas.
-- [x] Respaldos manuales con `BackupDatabase`.
+- [x] Respaldos manuales con `BackupDatabase` y restauración desde la app.
 - [x] Manejo global de errores y logs en archivo.
 - [x] Instancia única con bloqueo de archivo.
 - [x] Textos en español de México.
@@ -46,7 +46,8 @@
 - El reembolso en efectivo de una devolución requiere una caja abierta; con
   tarjeta o transferencia la devolución se registra de todos modos.
 - Ticket solo en pantalla.
-- Respaldo manual, sin restauración desde la app.
+- La restauración reemplaza toda la base actual y reinicia la aplicación; no
+  combina datos de dos bases.
 - Sin facturación ni impuestos.
 - Sin clientes ni ventas a crédito.
 
@@ -178,7 +179,7 @@
 
 ## Fase 2 — Datos, confianza y soporte
 
-- [ ] **2.1 Restaurar respaldo desde la app**
+- [x] **2.1 Restaurar respaldo desde la app**
   - **Qué:** elegir un archivo, validarlo, respaldar la base actual y
     reemplazarla con confirmación.
   - **Reglas:** solo administrador; la app se reinicia al terminar.
@@ -186,6 +187,9 @@
     archivos a mano.
   - **Tests:** respaldo válido, archivo corrupto, restauración completa.
   - **Tamaño:** M.
+  - **Implementado:** `RespaldoService.ValidarRespaldoAsync` +
+    `RestaurarRespaldoAsync`, confirmación y reinicio en Configuración, y
+    pruebas `RespaldoServiceTests`.
 
 - [ ] **2.2 Respaldo automático**
   - **Qué:** respaldar al cerrar caja y/o una vez por día, con retención
