@@ -19,31 +19,55 @@
             <Border Classes="cardFlat" Padding="22">
                 <StackPanel Spacing="16">
 
-                    <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="14">
-                        <StackPanel Spacing="6">
+                    <WrapPanel Orientation="Horizontal">
+                        <StackPanel Spacing="6" Margin="0,0,14,10">
                             <TextBlock Text="Desde" Classes="fieldLabel"/>
-                            <DatePicker SelectedDate="{Binding Desde}"/>
+                            <DatePicker SelectedDate="{Binding Desde}"
+                                        Width="150"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Spacing="6">
+                        <StackPanel Spacing="6" Margin="0,0,14,10">
                             <TextBlock Text="Hasta" Classes="fieldLabel"/>
-                            <DatePicker SelectedDate="{Binding Hasta}"/>
+                            <DatePicker SelectedDate="{Binding Hasta}"
+                                        Width="150"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="2" Spacing="6">
+                        <StackPanel Spacing="6" Margin="0,0,14,10">
+                            <TextBlock Text="Método" Classes="fieldLabel"/>
+                            <ComboBox ItemsSource="{Binding OpcionesMetodo}"
+                                      SelectedItem="{Binding MetodoSeleccionado}"
+                                      Width="150"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6" Margin="0,0,14,10">
+                            <TextBlock Text="Cajero" Classes="fieldLabel"/>
+                            <ComboBox ItemsSource="{Binding Cajeros}"
+                                      SelectedItem="{Binding CajeroSeleccionado}"
+                                      Width="190">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:OpcionCajero">
+                                        <TextBlock Text="{Binding Nombre}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="14">
+                        <StackPanel Spacing="6">
                             <TextBlock Text="Buscar" Classes="fieldLabel"/>
                             <TextBox Text="{Binding Busqueda}"
                                      PlaceholderText="Ticket o cajero..."
                                      Classes="search"/>
                         </StackPanel>
 
-                        <CheckBox Grid.Column="3"
+                        <CheckBox Grid.Column="1"
                                   Content="Ver anuladas"
                                   IsChecked="{Binding VerAnuladas}"
                                   VerticalAlignment="Bottom"
                                   Margin="0,0,0,6"/>
 
-                        <Button Grid.Column="4"
+                        <Button Grid.Column="2"
                                 Content="Buscar"
                                 Classes="primary"
                                 VerticalAlignment="Bottom"

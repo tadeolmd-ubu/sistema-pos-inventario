@@ -27,7 +27,8 @@
 - [x] Ventas con stock, efectivo/tarjeta/transferencia, ticket en pantalla y anulación.
 - [x] Descuento sobre el subtotal.
 - [x] Búsqueda y alta por SKU en Caja (compatible con lector de código de barras).
-- [x] Historial global de ventas con filtros y reimpresión de ticket.
+- [x] Historial global de ventas con filtros por fecha, búsqueda, método y
+  cajero, y reimpresión de ticket.
 - [x] Reportes de administración: ventas por período y método, productos más
   vendidos y utilidad neta de devoluciones.
 - [x] Desglose por método de pago en cierre e historial de caja.
@@ -292,9 +293,13 @@
   - **Criterio:** la app abre donde y como se cerró.
   - **Tamaño:** S.
 
-- [ ] **3.6 Filtros adicionales en el historial de ventas**
+- [x] **3.6 Filtros adicionales en el historial de ventas**
   - **Qué:** filtrar por método de pago y por cajero.
   - **Criterio:** los filtros se combinan con fecha y búsqueda.
+  - **Hecho en:** rama `feat/filtros-historial-ventas` (d3c09a4): selector de
+    método (incluye Mixto) y de cajero con las personas que tienen ventas;
+    ambos se aplican en la consulta paginada junto con fecha, búsqueda y
+    anuladas. La exportación CSV y el total vendido respetan los filtros.
   - **Tamaño:** S.
 
 ---
