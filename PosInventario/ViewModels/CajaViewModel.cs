@@ -492,6 +492,19 @@ public partial class CajaViewModel : OperacionViewModel
         return new CajaHistorialViewModel(caja, ventas, _ventaService, _sesion);
     }
 
+    /// <summary>
+    /// Crea el resumen imprimible de una caja cerrada con las ventas netas y
+    /// los montos congelados al cierre. Se usa al cerrar la caja y al
+    /// reimprimirlo desde el detalle del historial.
+    /// </summary>
+    public async Task<CorteCajaViewModel?> CrearCorteCajaViewModelAsync(Caja caja)
+    {
+        if (_cajaService is null) return null;
+
+        var resumen = await _cajaService.ObtenerResumenPagosAsync(caja.Id);
+        return new CorteCajaViewModel(caja, resumen);
+    }
+
     public override void LimpiarPantalla()
     {
         base.LimpiarPantalla();

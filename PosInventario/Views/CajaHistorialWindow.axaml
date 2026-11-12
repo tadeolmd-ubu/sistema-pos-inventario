@@ -151,12 +151,19 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <Button Content="Cerrar"
-                        Classes="primary"
-                        HorizontalAlignment="Stretch"
-                        IsDefault="True"
-                        IsCancel="True"
-                        Click="Cerrar_Click"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Content="Imprimir corte"
+                            Classes="secondary"
+                            HorizontalAlignment="Stretch"
+                            Click="ImprimirCorte_Click"/>
+                    <Button Grid.Column="1"
+                            Content="Cerrar"
+                            Classes="primary"
+                            HorizontalAlignment="Stretch"
+                            IsDefault="True"
+                            IsCancel="True"
+                            Click="Cerrar_Click"/>
+                </Grid>
 
             </StackPanel>
         </ScrollViewer>

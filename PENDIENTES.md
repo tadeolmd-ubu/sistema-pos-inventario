@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 147 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 157 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -46,7 +46,8 @@
 - Una sola forma de pago por venta.
 - El reembolso en efectivo de una devolución requiere una caja abierta; con
   tarjeta o transferencia la devolución se registra de todos modos.
-- Ticket solo en pantalla.
+- Impresión por la cola del sistema (API de Windows o CUPS); sin ESC/POS
+  directo ni apertura de cajón.
 - La restauración reemplaza toda la base actual y reinicia la aplicación; no
   combina datos de dos bases.
 - Sin facturación ni impuestos.
@@ -238,11 +239,14 @@
 
 ## Fase 3 — Administración y reportes
 
-- [ ] **3.1 Corte de caja imprimible**
+- [x] **3.1 Corte de caja imprimible**
   - **Qué:** imprimir el resumen de cierre con ventas, métodos, esperado,
     contado y diferencia.
   - **Depende de:** 1.1.
   - **Criterio:** el dueño se lleva el corte en papel.
+  - **Hecho en:** rama `feat/corte-caja-imprimible` (d2870c3): al cerrar la
+    caja se abre `CorteCajaWindow` con el resumen en 58/80 mm y botón
+    Imprimir; también se reimprime desde el detalle de una caja cerrada.
   - **Tamaño:** M.
 
 - [ ] **3.2 Exportar a CSV**
