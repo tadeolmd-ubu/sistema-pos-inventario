@@ -1155,6 +1155,7 @@ public class VentaServiceTests
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
 
         vm.Busqueda = "SEL-001";
+        await vm.CargarAsync();
 
         Assert.NotNull(vm.SelectedProducto);
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);

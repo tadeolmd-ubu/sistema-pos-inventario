@@ -304,4 +304,53 @@ public class ProductoServiceTests
 
         Assert.Null(await prueba.ProductoService.ObtenerPorSkuAsync("SKU-ABC"));
     }
+
+    [Fact]
+    public async Task ObtenerConStockPaginadoExcluyeSinStockYPagina()
+    {
+        await using var prueba = await PruebaProductos.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+
+        var alfa = await prueba.CrearProductoAsync("PAG-001", "Producto Alfa");
+        var beta = await prueba.CrearProductoAsync("PAG-002", "Producto Beta");
+        var gamma = await prueba.CrearProductoAsync("OTRO-03", "Producto Gamma");
+        var sinStock = await prueba.CrearProductoAsync("PAG-000", "Sin stock");
+
+        await CambiarStockAsync(prueba.Db, alfa.Id, 5);
+        await CambiarStockAsync(prueba.Db, beta.Id, 5);
+        await CambiarStockAsync(prueba.Db, gamma.Id, 5);
+
+        var paginaUno = await prueba.ProductoService
+            .ObtenerConStockPaginadoAsync(null, 1, 2);
+
+        Assert.Equal(3, paginaUno.TotalRegistros);
+        Assert.Equal(2, paginaUno.Items.Count);
+        Assert.Equal(alfa.Id, paginaUno.Items[0].Id);
+        Assert.Equal(beta.Id, paginaUno.Items[1].Id);
+        Assert.DoesNotContain(paginaUno.Items, p => p.Id == sinStock.Id);
+
+        var paginaDos = await prueba.ProductoService
+            .ObtenerConStockPaginadoAsync(null, 2, 2);
+
+        Assert.Single(paginaDos.Items);
+        Assert.Equal(gamma.Id, paginaDos.Items[0].Id);
+
+        var porSku = await prueba.ProductoService
+            .ObtenerConStockPaginadoAsync("pag-00", 1, 10);
+
+        Assert.Equal(2, porSku.TotalRegistros);
+        Assert.DoesNotContain(porSku.Items, p => p.Id == sinStock.Id);
+
+        var porNombre = await prueba.ProductoService
+            .ObtenerConStockPaginadoAsync("gamma", 1, 10);
+
+        Assert.Single(porNombre.Items);
+        Assert.Equal(gamma.Id, porNombre.Items[0].Id);
+
+        var fueraDeRango = await prueba.ProductoService
+            .ObtenerConStockPaginadoAsync(null, 99, 2);
+
+        Assert.Single(fueraDeRango.Items);
+        Assert.Equal(gamma.Id, fueraDeRango.Items[0].Id);
+    }
 }
