@@ -32,32 +32,33 @@
                 <Border Classes="cardFlat" Padding="22">
                     <StackPanel Spacing="14">
 
-                        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto"
-                              ColumnSpacing="14">
-                            <StackPanel Spacing="6">
+                        <WrapPanel Orientation="Horizontal">
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
                                 <TextBlock Text="Desde" Classes="fieldLabel"/>
-                                <DatePicker SelectedDate="{Binding Desde}"/>
+                                <DatePicker SelectedDate="{Binding Desde}"
+                                            Width="150"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Spacing="6">
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
                                 <TextBlock Text="Hasta" Classes="fieldLabel"/>
-                                <DatePicker SelectedDate="{Binding Hasta}"/>
+                                <DatePicker SelectedDate="{Binding Hasta}"
+                                            Width="150"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2" Spacing="6">
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
                                 <TextBlock Text="Agrupar por" Classes="fieldLabel"/>
                                 <ComboBox ItemsSource="{Binding OpcionesAgrupacion}"
                                           SelectedItem="{Binding AgrupacionSeleccionada}"
-                                          MinWidth="120"/>
+                                          Width="130"/>
                             </StackPanel>
 
-                            <Button Grid.Column="4"
-                                    Content="Generar reporte"
+                            <Button Content="Generar reporte"
                                     Classes="primary"
+                                    MinWidth="140"
                                     VerticalAlignment="Bottom"
-                                    Margin="0,0,0,2"
+                                    Margin="0,0,0,10"
                                     Command="{Binding CargarCommand}"/>
-                        </Grid>
+                        </WrapPanel>
 
                         <WrapPanel Orientation="Horizontal">
                             <TextBlock Text="Rangos rápidos:"
