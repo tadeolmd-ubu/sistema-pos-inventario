@@ -29,7 +29,7 @@ public sealed class ImpresoraSistema : IImpresoraTicket
         }
         catch (Exception ex)
         {
-            RegistroApp.Escribir("No se pudo imprimir el ticket.", ex);
+            RegistroApp.Escribir("No se pudo imprimir.", ex);
 
             return new Resultado(false, ImpresionPlataforma.MensajeError);
         }
@@ -39,7 +39,7 @@ public sealed class ImpresoraSistema : IImpresoraTicket
 internal static class ImpresionPlataforma
 {
     public const string MensajeError =
-        "No se pudo imprimir el ticket. Revisa que la impresora esté encendida y configurada.";
+        "No se pudo imprimir. Revisa que la impresora esté encendida y configurada.";
 
     public static Task<Resultado> ImprimirAsync(string contenido, AnchoTicket ancho)
     {

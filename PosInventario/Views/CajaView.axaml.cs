@@ -129,6 +129,20 @@ public partial class CajaView : UserControl
         if (cerrada && _viewModel is not null)
         {
             await _viewModel.CargarAsync();
+
+            var cajaCerrada = _viewModel.HistorialItems.FirstOrDefault();
+
+            if (cajaCerrada is not null)
+            {
+                var corte = await _viewModel.CrearCorteCajaViewModelAsync(cajaCerrada);
+
+                if (corte is not null)
+                {
+                    await new CorteCajaWindow { DataContext = corte }
+                        .ShowDialog(ventana);
+                }
+            }
+
             await _viewModel.EjecutarRespaldoAlCerrarCajaAsync();
         }
 

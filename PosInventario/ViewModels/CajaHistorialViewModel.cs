@@ -109,6 +109,18 @@ public partial class CajaHistorialViewModel : OperacionViewModel
     public TicketViewModel CrearTicketViewModel(Venta venta) => new(venta);
 
     /// <summary>
+    /// Crea el corte imprimible de esta caja cerrada con los totales actuales
+    /// netos de devoluciones.
+    /// </summary>
+    public CorteCajaViewModel CrearCorteViewModel() => new(
+        _caja,
+        new ResumenPagosCaja(
+            CantidadVentas,
+            TotalEfectivo,
+            TotalTarjeta,
+            TotalTransferencia));
+
+    /// <summary>
     /// Vuelve a leer las ventas de la caja; la ventana lo llama después de
     /// registrar una devolución.
     /// </summary>
