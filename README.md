@@ -131,13 +131,16 @@ listado completo.
 | **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
 | **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
 | **↑/↓ + Enter** (selector de productos) | Navegar y agregar | Elegir un producto sin mouse |
+| **←/→** (selector de productos) | Cambiar de página | Recorrer el catálogo sin mouse |
 | **Ctrl+P** (ticket o corte) | Imprimir | Imprimir o reimprimir el documento |
 | **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
 
 Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
 campo; si está vacío, limpia la venta (con confirmación cuando hay productos).
 En el selector de productos, el primer resultado queda seleccionado al filtrar
-y **Enter** lo agrega.
+y **Enter** lo agrega. Las flechas **←/→** cambian de página cuando la lista
+tiene el foco o el buscador está vacío; los botones **◀/▶** están arriba a la
+derecha de la lista.
 
 ## Impresión de tickets y corte de caja
 
