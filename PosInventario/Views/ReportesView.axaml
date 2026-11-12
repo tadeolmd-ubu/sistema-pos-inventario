@@ -26,6 +26,7 @@
                     <Button Grid.Column="1"
                             Content="Actualizar"
                             Classes="secondary"
+                            IsEnabled="{Binding !IsBusy}"
                             Command="{Binding CargarCommand}"/>
                 </Grid>
 
@@ -57,6 +58,7 @@
                                     MinWidth="140"
                                     VerticalAlignment="Bottom"
                                     Margin="0,0,0,10"
+                                    IsEnabled="{Binding !IsBusy}"
                                     Command="{Binding CargarCommand}"/>
                         </WrapPanel>
 
@@ -69,26 +71,43 @@
                             <Button Content="Hoy"
                                     Classes="secondary small"
                                     Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
                                     Command="{Binding VerHoyCommand}"/>
 
                             <Button Content="Últimos 7 días"
                                     Classes="secondary small"
                                     Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
                                     Command="{Binding VerUltimos7DiasCommand}"/>
 
                             <Button Content="Este mes"
                                     Classes="secondary small"
                                     Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
                                     Command="{Binding VerEsteMesCommand}"/>
 
                             <Button Content="Mes anterior"
                                     Classes="secondary small"
                                     Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
                                     Command="{Binding VerMesAnteriorCommand}"/>
                         </WrapPanel>
 
                         <TextBlock Text="{Binding PeriodoTexto}"
                                    Classes="caption"/>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ProgressBar IsIndeterminate="True"
+                                         IsVisible="{Binding IsBusy}"
+                                         Width="110"
+                                         Height="6"
+                                         VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding MensajeOperacion}"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -300,10 +319,6 @@
                     </Border>
 
                 </controls:ResponsiveColumnsGrid>
-
-                <TextBlock Text="{Binding MensajeOperacion}"
-                           Classes="caption"
-                           TextWrapping="Wrap"/>
 
             </StackPanel>
         </ScrollViewer>

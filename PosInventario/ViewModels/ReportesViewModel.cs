@@ -102,7 +102,12 @@ public partial class ReportesViewModel : OperacionViewModel
         }
 
         if (_reporteService is null)
+        {
+            MensajeOperacion = "El servicio de reportes no está disponible.";
             return;
+        }
+
+        MensajeOperacion = "Generando reporte...";
 
         var resultado = await _reporteService.ObtenerAsync(
             desde, hasta, AgrupacionActual);
@@ -114,6 +119,10 @@ public partial class ReportesViewModel : OperacionViewModel
         }
 
         Aplicar(resultado.Valor);
+
+        MensajeOperacion = resultado.Valor.CantidadVentas == 0
+            ? "No hay ventas en el rango seleccionado."
+            : $"Reporte actualizado a las {DateTime.Now:HH:mm}.";
     }
 
     private void Aplicar(ReporteAdministracion reporte)
@@ -131,7 +140,6 @@ public partial class ReportesViewModel : OperacionViewModel
         Margen = reporte.Margen;
         TicketPromedio = reporte.TicketPromedio;
 
-        MensajeOperacion = string.Empty;
         NotificarResumen();
     }
 

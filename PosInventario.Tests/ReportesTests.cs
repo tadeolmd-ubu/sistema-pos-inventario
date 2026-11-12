@@ -430,7 +430,17 @@ public class ReportesTests
         Assert.Single(vm.Periodos);
         Assert.Equal(3, vm.Metodos.Count);
         Assert.Single(vm.Productos);
-        Assert.Equal(string.Empty, vm.MensajeOperacion);
+        Assert.StartsWith("Reporte actualizado", vm.MensajeOperacion);
+    }
+
+    [Fact]
+    public async Task SinServicioDeReportesAvisaEnLugarDeQuedarseCallado()
+    {
+        var vm = new ReportesViewModel();
+
+        await vm.CargarAsync();
+
+        Assert.Contains("no está disponible", vm.MensajeOperacion);
     }
 
     [Fact]
