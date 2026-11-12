@@ -315,6 +315,7 @@ public class VentaService
                 Producto = producto,
                 Cantidad = linea.Cantidad,
                 PrecioUnitario = precioUnitario,
+                CostoUnitario = producto.Costo,
                 Subtotal = subtotalLinea
             });
 

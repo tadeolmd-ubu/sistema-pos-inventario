@@ -1,0 +1,326 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:service="using:PosInventario.Service"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Reportes}"
+             x:DataType="vm:ReportesViewModel"
+             x:Class="PosInventario.Views.ReportesView">
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="18"
+                        MaxWidth="1100"
+                        HorizontalAlignment="Left">
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Reportes" Classes="sectionTitle"/>
+                        <TextBlock Text="Ventas, métodos de pago, productos y utilidad"
+                                   Classes="caption"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Actualizar"
+                            Classes="secondary"
+                            IsEnabled="{Binding !IsBusy}"
+                            Command="{Binding CargarCommand}"/>
+                </Grid>
+
+                <Border Classes="cardFlat" Padding="22">
+                    <StackPanel Spacing="14">
+
+                        <WrapPanel Orientation="Horizontal">
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
+                                <TextBlock Text="Desde" Classes="fieldLabel"/>
+                                <DatePicker SelectedDate="{Binding Desde}"
+                                            Width="150"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
+                                <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                                <DatePicker SelectedDate="{Binding Hasta}"
+                                            Width="150"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="6" Margin="0,0,14,10">
+                                <TextBlock Text="Agrupar por" Classes="fieldLabel"/>
+                                <ComboBox ItemsSource="{Binding OpcionesAgrupacion}"
+                                          SelectedItem="{Binding AgrupacionSeleccionada}"
+                                          Width="130"/>
+                            </StackPanel>
+
+                            <Button Content="Generar reporte"
+                                    Classes="primary"
+                                    MinWidth="140"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,10"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    Command="{Binding CargarCommand}"/>
+                        </WrapPanel>
+
+                        <WrapPanel Orientation="Horizontal">
+                            <TextBlock Text="Rangos rápidos:"
+                                       Classes="caption"
+                                       Margin="0,0,8,6"
+                                       VerticalAlignment="Center"/>
+
+                            <Button Content="Hoy"
+                                    Classes="secondary small"
+                                    Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    Command="{Binding VerHoyCommand}"/>
+
+                            <Button Content="Últimos 7 días"
+                                    Classes="secondary small"
+                                    Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    Command="{Binding VerUltimos7DiasCommand}"/>
+
+                            <Button Content="Este mes"
+                                    Classes="secondary small"
+                                    Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    Command="{Binding VerEsteMesCommand}"/>
+
+                            <Button Content="Mes anterior"
+                                    Classes="secondary small"
+                                    Margin="0,0,6,6"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    Command="{Binding VerMesAnteriorCommand}"/>
+                        </WrapPanel>
+
+                        <TextBlock Text="{Binding PeriodoTexto}"
+                                   Classes="caption"/>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ProgressBar IsIndeterminate="True"
+                                         IsVisible="{Binding IsBusy}"
+                                         Width="110"
+                                         Height="6"
+                                         VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding MensajeOperacion}"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <controls:ResponsiveColumnsGrid WideColumns="4"
+                                                NarrowColumns="2"
+                                                Breakpoint="900"
+                                                Spacing="18">
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Ventas netas" Classes="caption"/>
+                            <TextBlock Text="{Binding VentasNetasTexto}"
+                                       FontSize="28"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding VentasBrutasTexto, StringFormat='Brutas {0}'}"
+                                           Classes="caption"/>
+                                <TextBlock Text="·" Classes="caption"/>
+                                <TextBlock Text="{Binding DevolucionesTexto, StringFormat='Devuelto {0}'}"
+                                           Classes="caption"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Utilidad" Classes="caption"/>
+                            <TextBlock Text="{Binding UtilidadTexto}"
+                                       FontSize="28"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource SuccessBrush}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding MargenTexto, StringFormat='Margen {0}'}"
+                                           Classes="caption"/>
+                                <TextBlock Text="·" Classes="caption"/>
+                                <TextBlock Text="{Binding CostoTexto, StringFormat='Costo {0}'}"
+                                           Classes="caption"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Costo de lo vendido" Classes="caption"/>
+                            <TextBlock Text="{Binding CostoTexto}"
+                                       FontSize="28"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Costo histórico de las unidades netas"
+                                       Classes="caption"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="card" Padding="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Ventas" Classes="caption"/>
+                            <TextBlock Text="{Binding CantidadVentas}"
+                                       FontSize="28"
+                                       FontWeight="ExtraBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding TicketPromedioTexto, StringFormat='Ticket promedio {0}'}"
+                                       Classes="caption"/>
+                        </StackPanel>
+                    </Border>
+
+                </controls:ResponsiveColumnsGrid>
+
+                <Border Classes="cardFlat" Padding="18">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="Ventas por período" Classes="subsection"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Neto de devoluciones"
+                                       Classes="caption"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <TextBlock Text="Sin ventas en el rango seleccionado."
+                                   Classes="caption"
+                                   IsVisible="{Binding SinDatos}"/>
+
+                        <DataGrid ItemsSource="{Binding Periodos}"
+                                  IsVisible="{Binding HayDatos}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  MaxHeight="320">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Período"
+                                                    Binding="{Binding Etiqueta}"
+                                                    Width="*"/>
+                                <DataGridTextColumn Header="Ventas"
+                                                    Binding="{Binding CantidadVentas}"
+                                                    Width="80"/>
+                                <DataGridTextColumn Header="Neto"
+                                                    Binding="{Binding VentasNetas, StringFormat='{}{0:0.00}'}"
+                                                    Width="110"/>
+                                <DataGridTextColumn Header="Devuelto"
+                                                    Binding="{Binding Devoluciones, StringFormat='{}{0:0.00}'}"
+                                                    Width="100"/>
+                                <DataGridTextColumn Header="Utilidad"
+                                                    Binding="{Binding Utilidad, StringFormat='{}{0:0.00}'}"
+                                                    Width="110"/>
+                                <DataGridTemplateColumn Header="Tendencia" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="service:ReportePeriodo">
+                                            <ProgressBar Minimum="0"
+                                                         Maximum="1"
+                                                         Value="{Binding Proporcion}"
+                                                         Height="8"
+                                                         VerticalAlignment="Center"
+                                                         Margin="4,0"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <controls:ResponsiveColumnsGrid WideColumns="2"
+                                                NarrowColumns="1"
+                                                Breakpoint="1000"
+                                                Spacing="18">
+
+                    <Border Classes="cardFlat" Padding="18">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Ventas por método" Classes="subsection"/>
+                            <TextBlock Text="Neto de devoluciones por forma de pago"
+                                       Classes="caption"/>
+
+                            <ItemsControl ItemsSource="{Binding Metodos}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="service:ReporteMetodo">
+                                        <StackPanel Spacing="4" Margin="0,0,0,12">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="{Binding Nombre}"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Monto, StringFormat='{}{0:0.00}'}"
+                                                           FontWeight="SemiBold"/>
+                                            </Grid>
+
+                                            <ProgressBar Minimum="0"
+                                                         Maximum="1"
+                                                         Value="{Binding Proporcion}"
+                                                         Height="8"/>
+
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="{Binding CantidadVentas, StringFormat='{}{0} ventas'}"
+                                                           Classes="caption"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Porcentaje, StringFormat='{}{0:0.0}%'}"
+                                                           Classes="caption"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="cardFlat" Padding="18">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Productos más vendidos" Classes="subsection"/>
+                            <TextBlock Text="Top 10 por unidades netas de devoluciones"
+                                       Classes="caption"/>
+
+                            <TextBlock Text="Sin productos vendidos en el rango."
+                                       Classes="caption"
+                                       IsVisible="{Binding SinDatos}"/>
+
+                            <DataGrid ItemsSource="{Binding Productos}"
+                                      IsVisible="{Binding HayDatos}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      MaxHeight="300">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Producto" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate x:DataType="service:ReporteProducto">
+                                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Nombre}"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Sku}"
+                                                               Classes="caption"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Unidades"
+                                                        Binding="{Binding Cantidad}"
+                                                        Width="80"/>
+                                    <DataGridTextColumn Header="Ventas"
+                                                        Binding="{Binding Ventas, StringFormat='{}{0:0.00}'}"
+                                                        Width="100"/>
+                                    <DataGridTextColumn Header="Utilidad"
+                                                        Binding="{Binding Utilidad, StringFormat='{}{0:0.00}'}"
+                                                        Width="100"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                </controls:ResponsiveColumnsGrid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

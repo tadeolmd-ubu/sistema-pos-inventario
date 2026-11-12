@@ -209,6 +209,10 @@ namespace PosInventario.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("cantidadDevuelta");
 
+                    b.Property<decimal>("CostoUnitario")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("costoUnitario");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("INTEGER")
                         .HasColumnName("idProducto");
@@ -236,6 +240,8 @@ namespace PosInventario.Migrations
                             t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
 
                             t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
+
+                            t.HasCheckConstraint("CK_DetalleVenta_costoUnitario", "costoUnitario >= 0");
 
                             t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
 

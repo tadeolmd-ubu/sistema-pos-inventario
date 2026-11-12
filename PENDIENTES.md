@@ -28,6 +28,8 @@
 - [x] Descuento sobre el subtotal.
 - [x] Búsqueda y alta por SKU en Caja (compatible con lector de código de barras).
 - [x] Historial global de ventas con filtros y reimpresión de ticket.
+- [x] Reportes de administración: ventas por período y método, productos más
+  vendidos y utilidad neta de devoluciones.
 - [x] Desglose por método de pago en cierre e historial de caja.
 - [x] Devoluciones totales y parciales de ventas, con reembolso en efectivo
   desde la caja abierta y sin recalcular cajas cerradas.
@@ -273,10 +275,17 @@
     paginado y exportación de la página actual.
   - **Tamaño:** M.
 
-- [ ] **3.4 Reportes de administración**
+- [x] **3.4 Reportes de administración**
   - **Qué:** ventas por período, por método, productos más vendidos y utilidad
     (precio de venta menos costo).
   - **Criterio:** el dueño puede ver sus números sin exportar a otro sistema.
+  - **Hecho en:** rama `feat/reportes-administracion` (821fee7 y pruebas en
+    5e5167e): módulo Reportes solo para administrador con rango de fechas,
+    agrupación por día/semana/mes, atajos de hoy/7 días/mes actual/mes
+    anterior, ventas netas de devoluciones, desglose por método, top 10 de
+    productos y utilidad. Cada detalle de venta guarda su costo al momento
+    del cobro (migración `AddCostoDetalleVenta`, e8577c6) para que la
+    utilidad histórica no cambie al actualizar el producto.
   - **Tamaño:** L.
 
 - [ ] **3.5 Persistencia de tamaño y posición de la ventana**

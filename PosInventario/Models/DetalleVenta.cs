@@ -18,6 +18,14 @@ public class DetalleVenta
     public int CantidadDevuelta { get; set; }
 
     public decimal PrecioUnitario { get; set; }
+
+    /// <summary>
+    /// Costo del producto al momento de la venta. Se guarda como foto del
+    /// costo para que la utilidad histórica no cambie si el producto se
+    /// actualiza después.
+    /// </summary>
+    public decimal CostoUnitario { get; set; }
+
     public decimal Subtotal { get; set; }
 
     /// <summary>

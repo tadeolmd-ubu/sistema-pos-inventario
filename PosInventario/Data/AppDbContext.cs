@@ -396,6 +396,7 @@ public class AppDbContext : DbContext
                 t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
                 t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
                 t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
+                t.HasCheckConstraint("CK_DetalleVenta_costoUnitario", "costoUnitario >= 0");
                 t.HasCheckConstraint("CK_DetalleVenta_subtotal", "subtotal >= 0");
             });
             e.HasKey(x => x.Id);
@@ -407,6 +408,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.CantidadDevuelta).HasColumnName("cantidadDevuelta")
                 .IsRequired().HasDefaultValue(0);
             e.Property(x => x.PrecioUnitario).HasColumnName("precioUnitario")
+                .HasColumnType("decimal(12,2)").IsRequired();
+            e.Property(x => x.CostoUnitario).HasColumnName("costoUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")
                 .HasColumnType("decimal(12,2)").IsRequired();
