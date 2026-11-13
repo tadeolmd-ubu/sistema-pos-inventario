@@ -226,14 +226,51 @@ Los importes son netos de devoluciones y se muestran con dos decimales.
 ## Publicación
 
 El workflow `.github/workflows/deploy.yml` ejecuta las pruebas, publica
-`win-x64` self-contained y crea una release en cada push a `main`
-(repositorio `tadeolmd-ubu/sistema-pos-inventario`).
+`win-x64` self-contained, compila el instalador con Inno Setup y crea una
+release en cada push a `main` (repositorio
+`tadeolmd-ubu/sistema-pos-inventario`). En los pull requests solo compila y
+prueba, sin publicar release.
+
+Cada release incluye:
+
+- `PosInventario-<versión>-win-x64-installer.exe`: instalador recomendado.
+- `PosInventario-<versión>-win-x64.zip`: versión portable.
+
+## Instalador de Windows
+
+El instalador vive en `installer/PosInventario.iss`. Es **por usuario**, así
+que no pide permisos de administrador:
+
+- instala en `%LOCALAPPDATA%\Programs\Sistema de inventario`,
+- crea el acceso directo en el menú Inicio y, opcionalmente, en el escritorio,
+- registra el desinstalador en Configuración → Aplicaciones,
+- no necesita abrir una terminal después de instalarse.
+
+La base, los respaldos y los logs siguen en
+`%LOCALAPPDATA%\SistemaInventario`. Desinstalar **no borra** esa carpeta: los
+datos del negocio sobreviven a una reinstalación. El workflow de CI hace una
+instalación y desinstalación silenciosa en Windows y verifica que el
+desinstalador no elimine esos datos.
+
+Para compilarlo localmente en Windows:
+
+```powershell
+dotnet publish PosInventario/PosInventario.csproj -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -o publish
+& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\PosInventario.iss
+```
+
+El `.exe` queda en `dist/`. Para cambiar la versión o la carpeta publicada:
+
+```powershell
+& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=1.0.5 /DSourceDir=C:\ruta\publish installer\PosInventario.iss
+```
 
 ## Estructura
 
 ```text
 PosInventario/          aplicación (Models, Data, Migrations, Service, ViewModels, Views, Controls, Styles)
 PosInventario.Tests/    pruebas xUnit sobre SQLite en memoria y en disco
+installer/              script de Inno Setup para el instalador de Windows
 ```
 
 Reglas de capas y convenciones: ver `ARQUITECTURA-BASE.md` y `COLABORACION.md`.
