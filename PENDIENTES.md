@@ -36,6 +36,8 @@
   desde la caja abierta y sin recalcular cajas cerradas.
 - [x] Respaldos manuales y automáticos, con verificación de integridad,
   retención configurable y restauración desde la app.
+- [x] Instalador de Windows por usuario con Inno Setup, adjunto a la release
+  y validado en CI con instalación y desinstalación silenciosa.
 - [x] Manejo global de errores y logs en archivo.
 - [x] Instancia única con bloqueo de archivo.
 - [x] Textos en español de México.
@@ -306,11 +308,18 @@
 
 ## Fase 4 — Distribución y producto vendible
 
-- [ ] **4.1 Instalador para Windows**
+- [x] **4.1 Instalador para Windows**
   - **Qué:** Inno Setup o MSIX; acceso directo, desinstalador y datos en
     `LocalApplicationData`.
   - **Criterio:** una instalación limpia en Windows funciona sin pasar por la
     terminal.
+  - **Hecho en:** rama `feat/instalador-windows` (3c011c4 y docs en 9fc90ff):
+    `installer/PosInventario.iss` instala por usuario sin UAC, crea accesos
+    directos y desinstalador, y deja intacta la carpeta
+    `%LOCALAPPDATA%\SistemaInventario`. El workflow compila el instalador y
+    hace una instalación/desinstalación silenciosa en CI, verificando que el
+    desinstalador no borre los datos. Falta la prueba visual en un Windows
+    real antes de entregar al cliente.
   - **Tamaño:** M.
 
 - [ ] **4.2 Firma de código**
@@ -319,9 +328,12 @@
   - **Criterio:** Windows no muestra “editor desconocido”.
   - **Tamaño:** S (requiere comprar certificado).
 
-- [ ] **4.3 Release con instalador adjunto**
+- [x] **4.3 Release con instalador adjunto**
   - **Qué:** que el workflow publique el instalador y no solo el ZIP.
   - **Criterio:** cada release tiene un único archivo instalable.
+  - **Hecho en:** rama `feat/instalador-windows` (3c011c4): la release adjunta
+    `PosInventario-<versión>-win-x64-installer.exe` además del ZIP portable.
+    Los pull requests compilan y prueban, pero no crean release.
   - **Tamaño:** S.
 
 - [ ] **4.4 Manual de usuario**
