@@ -3,13 +3,14 @@ name: Build and Release
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-main
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -50,6 +51,99 @@ jobs:
             throw "No se generó publish/PosInventario.exe"
           }
 
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Compilar instalador
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+
+          if (!(Test-Path $iscc)) {
+            throw "No se encontró Inno Setup en $iscc"
+          }
+
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          & $iscc `
+            "/DAppVersion=${{ steps.version.outputs.value }}" `
+            "/DSourceDir=${{ github.workspace }}\publish" `
+            "installer\PosInventario.iss"
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup falló con código $LASTEXITCODE"
+          }
+
+      - name: Verificar instalador
+        shell: pwsh
+        run: |
+          $instalador = "dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe"
+
+          if (!(Test-Path $instalador)) {
+            throw "No se generó $instalador"
+          }
+
+      - name: Probar instalación y desinstalación
+        shell: pwsh
+        run: |
+          $instalador = (Resolve-Path "dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe").Path
+          $programa = Join-Path $env:LOCALAPPDATA "Programs\Sistema de inventario"
+          $datos = Join-Path $env:LOCALAPPDATA "SistemaInventario"
+          $marca = Join-Path $datos "prueba-instalador.txt"
+          $inicio = Join-Path ([Environment]::GetFolderPath("Programs")) "Sistema de inventario.lnk"
+          $escritorio = Join-Path ([Environment]::GetFolderPath("Desktop")) "Sistema de inventario.lnk"
+
+          New-Item -ItemType Directory -Force -Path $datos | Out-Null
+          Set-Content -Path $marca -Value "los datos deben sobrevivir a la desinstalación"
+
+          Start-Process -FilePath $instalador `
+            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/TASKS=desktopicon" `
+            -Wait
+
+          $exe = Join-Path $programa "PosInventario.exe"
+
+          if (!(Test-Path $exe)) {
+            throw "El instalador no copió PosInventario.exe"
+          }
+
+          if (!(Test-Path $inicio)) {
+            throw "El instalador no creó el acceso directo del menú Inicio"
+          }
+
+          if (!(Test-Path $escritorio)) {
+            throw "El instalador no creó el acceso directo del escritorio"
+          }
+
+          $desinstalador = Get-ChildItem $programa -Filter "unins*.exe" |
+            Select-Object -First 1
+
+          if ($null -eq $desinstalador) {
+            throw "El instalador no creó el desinstalador"
+          }
+
+          Start-Process -FilePath $desinstalador.FullName `
+            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" `
+            -Wait
+
+          if (Test-Path $exe) {
+            throw "El desinstalador no eliminó PosInventario.exe"
+          }
+
+          if (Test-Path $inicio) {
+            throw "El desinstalador no eliminó el acceso directo del menú Inicio"
+          }
+
+          if (Test-Path $escritorio) {
+            throw "El desinstalador no eliminó el acceso directo del escritorio"
+          }
+
+          if (!(Test-Path $marca)) {
+            throw "El desinstalador borró datos de LocalApplicationData"
+          }
+
+          Remove-Item $marca -Force
+
       - name: Comprimir
         shell: pwsh
         run: >
@@ -57,8 +151,20 @@ jobs:
           -Path publish/*
           -DestinationPath PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
 
+      - name: Subir artefactos de prueba
+        uses: actions/upload-artifact@v4
+        with:
+          name: PosInventario-${{ steps.version.outputs.value }}-win-x64
+          path: |
+            dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe
+            PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
+          if-no-files-found: error
+
       - name: Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
-          files: PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
+          files: |
+            PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
+            dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe

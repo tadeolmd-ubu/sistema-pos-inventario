@@ -300,6 +300,22 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   reinicio automático de la aplicación. Los respaldos automáticos se activan o
   desactivan y su retención se configura desde la misma pantalla.
 
+## Distribución en Windows
+
+- `installer/PosInventario.iss` compila el instalador con Inno Setup 6. Se
+  instala por usuario (`PrivilegesRequired=lowest`), sin UAC, en
+  `%LOCALAPPDATA%\Programs\Sistema de inventario`; crea accesos directos y
+  desinstalador, y deja intacta la carpeta de datos
+  `%LOCALAPPDATA%\SistemaInventario` al desinstalar.
+- `.github/workflows/deploy.yml` publica `win-x64` self-contained, compila el
+  instalador con `ISCC.exe` y adjunta a la release tanto el `.exe` como el ZIP
+  portable. En pull requests ejecuta pruebas, publish e instalación silenciosa
+  de prueba, pero no crea release.
+- La prueba de CI instala, verifica el ejecutable y el desinstalador, y
+  desinstala; antes crea un archivo marcador en `%LOCALAPPDATA%\SistemaInventario`
+  para comprobar que el desinstalador no borra datos del negocio.
+- La firma de código (SmartScreen) queda pendiente en el ítem 4.2.
+
 ## Módulos opcionales (no incluidos)
 
 PDF (QuestPDF), actualización automática y configuración persistente de otras
