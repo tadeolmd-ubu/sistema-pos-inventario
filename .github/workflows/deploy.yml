@@ -91,18 +91,28 @@ jobs:
           $programa = Join-Path $env:LOCALAPPDATA "Programs\Sistema de inventario"
           $datos = Join-Path $env:LOCALAPPDATA "SistemaInventario"
           $marca = Join-Path $datos "prueba-instalador.txt"
+          $inicio = Join-Path ([Environment]::GetFolderPath("Programs")) "Sistema de inventario.lnk"
+          $escritorio = Join-Path ([Environment]::GetFolderPath("Desktop")) "Sistema de inventario.lnk"
 
           New-Item -ItemType Directory -Force -Path $datos | Out-Null
           Set-Content -Path $marca -Value "los datos deben sobrevivir a la desinstalación"
 
           Start-Process -FilePath $instalador `
-            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-" `
+            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/TASKS=desktopicon" `
             -Wait
 
           $exe = Join-Path $programa "PosInventario.exe"
 
           if (!(Test-Path $exe)) {
             throw "El instalador no copió PosInventario.exe"
+          }
+
+          if (!(Test-Path $inicio)) {
+            throw "El instalador no creó el acceso directo del menú Inicio"
+          }
+
+          if (!(Test-Path $escritorio)) {
+            throw "El instalador no creó el acceso directo del escritorio"
           }
 
           $desinstalador = Get-ChildItem $programa -Filter "unins*.exe" |
@@ -118,6 +128,14 @@ jobs:
 
           if (Test-Path $exe) {
             throw "El desinstalador no eliminó PosInventario.exe"
+          }
+
+          if (Test-Path $inicio) {
+            throw "El desinstalador no eliminó el acceso directo del menú Inicio"
+          }
+
+          if (Test-Path $escritorio) {
+            throw "El desinstalador no eliminó el acceso directo del escritorio"
           }
 
           if (!(Test-Path $marca)) {
