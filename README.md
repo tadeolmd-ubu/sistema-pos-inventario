@@ -231,10 +231,13 @@ release en cada push a `main` (repositorio
 `tadeolmd-ubu/sistema-pos-inventario`). En los pull requests solo compila y
 prueba, sin publicar release.
 
-Cada release incluye:
+Cada release publica un único archivo instalable:
 
 - `PosInventario-<versión>-win-x64-installer.exe`: instalador recomendado.
-- `PosInventario-<versión>-win-x64.zip`: versión portable.
+
+El ZIP portable se genera en cada ejecución del workflow y queda como
+artefacto de CI (`PosInventario-<versión>-win-x64`) para pruebas; no se
+adjunta a la release.
 
 ## Instalador de Windows
 

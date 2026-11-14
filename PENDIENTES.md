@@ -331,9 +331,11 @@
 - [x] **4.3 Release con instalador adjunto**
   - **Qué:** que el workflow publique el instalador y no solo el ZIP.
   - **Criterio:** cada release tiene un único archivo instalable.
-  - **Hecho en:** rama `feat/instalador-windows` (3c011c4): la release adjunta
-    `PosInventario-<versión>-win-x64-installer.exe` además del ZIP portable.
-    Los pull requests compilan y prueban, pero no crean release.
+  - **Hecho en:** rama `ci/release-instalador-unico` (sobre `dev`): la release
+    adjunta solo `PosInventario-<versión>-win-x64-installer.exe` y el workflow
+    verifica que exista un único instalador en `dist/`. El ZIP portable queda
+    como artefacto del workflow para pruebas. Los pull requests compilan y
+    prueban, pero no crean release.
   - **Tamaño:** S.
 
 - [ ] **4.4 Manual de usuario**

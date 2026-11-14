@@ -308,9 +308,10 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   desinstalador, y deja intacta la carpeta de datos
   `%LOCALAPPDATA%\SistemaInventario` al desinstalar.
 - `.github/workflows/deploy.yml` publica `win-x64` self-contained, compila el
-  instalador con `ISCC.exe` y adjunta a la release tanto el `.exe` como el ZIP
-  portable. En pull requests ejecuta pruebas, publish e instalación silenciosa
-  de prueba, pero no crea release.
+  instalador con `ISCC.exe` y adjunta a la release únicamente el `.exe`
+  instalable. El ZIP portable se genera como artefacto de CI para pruebas. En
+  pull requests ejecuta pruebas, publish e instalación silenciosa de prueba,
+  pero no crea release.
 - La prueba de CI instala, verifica el ejecutable y el desinstalador, y
   desinstala; antes crea un archivo marcador en `%LOCALAPPDATA%\SistemaInventario`
   para comprobar que el desinstalador no borra datos del negocio.

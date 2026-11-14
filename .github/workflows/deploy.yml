@@ -84,6 +84,12 @@ jobs:
             throw "No se generó $instalador"
           }
 
+          $instaladores = @(Get-ChildItem dist -Filter "*-installer.exe")
+
+          if ($instaladores.Count -ne 1) {
+            throw "La release debe tener un único instalador; se encontraron $($instaladores.Count)"
+          }
+
       - name: Probar instalación y desinstalación
         shell: pwsh
         run: |
@@ -144,7 +150,7 @@ jobs:
 
           Remove-Item $marca -Force
 
-      - name: Comprimir
+      - name: Comprimir versión portable para CI
         shell: pwsh
         run: >
           Compress-Archive
@@ -165,6 +171,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
-          files: |
-            PosInventario-${{ steps.version.outputs.value }}-win-x64.zip
-            dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe
+          files: dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe
