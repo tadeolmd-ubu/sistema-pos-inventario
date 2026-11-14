@@ -59,7 +59,8 @@ registro de errores.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
 `PENDIENTES.md`. Para instalar y operar el sistema paso a paso, consulta
-[`MANUAL-USUARIO.md`](MANUAL-USUARIO.md).
+[`MANUAL-USUARIO.md`](MANUAL-USUARIO.md); la matriz de pruebas de interfaz en
+Windows está en [`PRUEBAS-WINDOWS.md`](PRUEBAS-WINDOWS.md).
 
 ## Requisitos
 

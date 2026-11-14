@@ -7,7 +7,7 @@
         Title="Corte de caja"
         Width="460"
         SizeToContent="Height"
-        MaxHeight="820"
+        MaxHeight="640"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource ContentBackgroundBrush}">
@@ -60,7 +60,7 @@
                            Foreground="{StaticResource ErrorBrush}"/>
             </StackPanel>
 
-            <ScrollViewer MaxHeight="620" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer MaxHeight="460" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="10">
 
                     <StackPanel Spacing="2" HorizontalAlignment="Center">

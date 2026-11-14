@@ -6,7 +6,7 @@
         Title="Devolver venta"
         Width="520"
         SizeToContent="Height"
-        MaxHeight="720"
+        MaxHeight="620"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource ContentBackgroundBrush}">
