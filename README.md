@@ -58,7 +58,8 @@ registro de errores.
   en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
-`PENDIENTES.md`.
+`PENDIENTES.md`. Para instalar y operar el sistema paso a paso, consulta
+[`MANUAL-USUARIO.md`](MANUAL-USUARIO.md).
 
 ## Requisitos
 
