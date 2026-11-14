@@ -338,10 +338,16 @@
     prueban, pero no crean release.
   - **Tamaño:** S.
 
-- [ ] **4.4 Manual de usuario**
+- [x] **4.4 Manual de usuario**
   - **Qué:** guía de instalación, apertura de caja, venta, cierre, respaldos y
     recuperación.
   - **Criterio:** una persona nueva puede operar sin acompañamiento.
+  - **Hecho en:** rama `chore/manual-usuario` (2a2a0b6): `MANUAL-USUARIO.md`
+    cubre instalación, primer administrador, roles, apertura y cierre de caja,
+    venta con todos los métodos de pago, devoluciones, movimientos de efectivo,
+    catálogos, inventario, compras, historial, reportes, usuarios, respaldos,
+    recuperación, atajos, problemas comunes y rutina diaria. `README.md`
+    enlaza el manual.
   - **Tamaño:** M.
 
 - [ ] **4.5 Licenciamiento o modelo de cobro**
