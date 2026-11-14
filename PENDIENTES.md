@@ -366,6 +366,16 @@
   - **Qué:** distintas resoluciones, escalado DPI y versiones de Windows.
   - **Criterio:** la interfaz no se rompe en 1366x768 ni en 1920x1080 con 125%
     de escala.
+  - **Preparado en:** rama `chore/matriz-pruebas-windows` (6591ad0):
+    `PRUEBAS-WINDOWS.md` define entornos Windows 10/11, resoluciones
+    1366x768 y 1920x1080 al 100 %/125 %, y casos para todos los módulos,
+    diálogos, tickets, cortes y cambios de DPI. La ventana principal se
+    maximiza cuando su tamaño de diseño no cabe en el área de trabajo;
+    **Ventas** ahora tiene desplazamiento vertical y los diálogos altos
+    limitan su altura. `AjusteVentanaTests` cubre el cálculo.
+  - **Pendiente:** ejecutar la matriz en Windows real, adjuntar capturas y
+    registrar los resultados. No se marca terminado hasta validar la interfaz
+    en 1366x768 y 1920x1080 al 125 %.
   - **Tamaño:** M.
 
 - [ ] **4.8 Migración de datos desde Excel u otro sistema**
