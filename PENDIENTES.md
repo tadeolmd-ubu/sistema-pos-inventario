@@ -36,6 +36,8 @@
   desde la caja abierta y sin recalcular cajas cerradas.
 - [x] Respaldos manuales y automáticos, con verificación de integridad,
   retención configurable y restauración desde la app.
+- [x] Importación de productos, proveedores y stock inicial desde CSV con
+  vista previa, validación por fila y plantilla descargable.
 - [x] Instalador de Windows por usuario con Inno Setup, adjunto a la release
   y validado en CI con instalación y desinstalación silenciosa.
 - [x] Manejo global de errores y logs en archivo.
@@ -378,9 +380,18 @@
     en 1366x768 y 1920x1080 al 125 %.
   - **Tamaño:** M.
 
-- [ ] **4.8 Migración de datos desde Excel u otro sistema**
+- [x] **4.8 Migración de datos desde Excel u otro sistema**
   - **Qué:** importar productos, proveedores y stock inicial.
   - **Criterio:** un negocio nuevo arranca sin cargar todo a mano.
+  - **Hecho en:** rama `feat/importacion-datos` (4cc2ef5):
+    `ImportacionDatosService` lee CSV exportado de Excel (coma, punto y coma
+    o tabulador; UTF-8 o Latin-1), valida cada fila y muestra una vista previa
+    antes de escribir. **Productos → Importar CSV...** crea productos y
+    proveedores, actualiza los SKU existentes sin tocar su stock y registra el
+    stock inicial como movimiento de inventario; **Descargar plantilla**
+    genera el encabezado esperado. La importación es atómica: si hay errores,
+    no guarda nada. Cubierto por `ImportacionDatosServiceTests` (216 pruebas
+    en total) y documentado en `MANUAL-USUARIO.md` y `README.md`.
   - **Tamaño:** M.
 
 ---
