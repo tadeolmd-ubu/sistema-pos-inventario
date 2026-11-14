@@ -107,13 +107,15 @@ public partial class App : Application
             var ventaService = new VentaService(dbContext, sesion);
             var reporteService = new ReporteService(dbContext, sesion);
             var versionService = new VersionService();
+            var importacionService = new ImportacionDatosService(dbContext, sesion);
 
             var inicioViewModel = new InicioViewModel(
                 ventaService, productoService, cajaService, compraService, sesion);
             var cajaViewModel = new CajaViewModel(
                 cajaService, ventaService, productoService, sesion,
                 respaldoAutomaticoService);
-            var productosViewModel = new ProductosViewModel(productoService);
+            var productosViewModel = new ProductosViewModel(
+                productoService, importacionService);
             var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
             var comprasViewModel = new ComprasViewModel(

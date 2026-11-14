@@ -434,6 +434,72 @@ Otros botones:
 4. Usa **Desactivar** / **Activar** para ocultarlo o recuperarlo, y
    **Ver inactivos** para ver los desactivados.
 
+### 10.3 Importar productos y proveedores desde Excel
+
+Para un negocio nuevo no hace falta capturar cientos de productos a mano.
+Puedes preparar una hoja de Excel y cargarla de una vez.
+
+**Formato admitido:** archivo CSV (también `.txt` o `.tsv`) separado por
+coma, punto y coma o tabulador. Los archivos `.xlsx` **no** se leen
+directamente: en Excel usa **Archivo → Guardar como → CSV UTF-8**.
+
+Columnas de la plantilla:
+
+| Columna | Obligatoria | Ejemplo | Notas |
+|---|---|---|---|
+| `sku` | Sí | `ABC-123` | También es el código de barras. Sin espacios, máximo 40 caracteres. |
+| `nombre` | Sí | `Refresco 600 ml` | Mínimo 3 caracteres. |
+| `descripcion` | No | `Botella de vidrio` | Máximo 500 caracteres. |
+| `precio_venta` | Sí | `18.50` | Puede ser `18.50`, `18,50` o `1,234.56`. |
+| `costo` | No | `12.00` | Si se omite queda en `0`. |
+| `stock_minimo` | No | `5` | Si se omite queda en `0`. |
+| `stock_inicial` | No | `24` | Solo se aplica a productos **nuevos**. |
+| `proveedor` | No | `Distribuidora del Norte` | Si capturas datos del proveedor, el nombre y el teléfono son obligatorios. |
+| `proveedor_telefono` | No | `555-123-4567` | Identifica al proveedor: si ya existe, se reutiliza. |
+| `proveedor_email` | No | `ventas@proveedor.com` | Opcional. |
+| `proveedor_direccion` | No | `Av. Principal 123` | Opcional. |
+
+Pasos:
+
+1. Entra a **Productos** y presiona **Descargar plantilla**.
+2. Abre el archivo `plantilla-importacion.csv` en Excel.
+3. Captura un producto por fila. No cambies los encabezados.
+4. Guarda el archivo como **CSV UTF-8**.
+5. En **Productos**, presiona **Importar CSV...** y elige el archivo.
+6. Revisa la vista previa:
+   - productos nuevos,
+   - productos que se actualizarán,
+   - proveedores nuevos y reutilizados,
+   - unidades de stock inicial,
+   - errores por fila.
+7. Si hay errores, corrígelos en Excel y vuelve a importar. **No se importa
+   nada hasta que el archivo esté sin errores.**
+8. Presiona **Importar**.
+
+Reglas de la importación:
+
+- El archivo completo se valida antes de escribir. Si una fila tiene un error,
+  no se guarda ninguna.
+- Un SKU repetido dentro del archivo es un error. Corrige o elimina la fila.
+- Si el SKU ya existe, se actualizan nombre, descripción, precio, costo y
+  stock mínimo, pero **no** se cambia su stock. Así puedes volver a importar
+  para corregir precios sin duplicar existencias.
+- El **stock inicial** de un producto nuevo queda registrado como una entrada
+  de inventario con referencia **Importación inicial**.
+- Los proveedores se crean si su teléfono no existe; si ya existe, se
+  reutiliza. La importación no vincula el producto con el proveedor (esa
+  relación se usa en **Compras**).
+- Acepta acentos y textos entre comillas, incluso con comas o saltos de línea.
+- Puedes importar productos sin proveedor y proveedores sin productos.
+
+Ejemplo de archivo:
+
+```csv
+sku,nombre,descripcion,precio_venta,costo,stock_minimo,stock_inicial,proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
+ABC-123,Refresco 600 ml,Botella de vidrio,18.50,12.00,6,24,Distribuidora del Norte,555-123-4567,ventas@proveedor.com,Av. Principal 123
+ABC-124,Agua 1 L,,12.00,7.50,6,36,,,,
+```
+
 ---
 
 ## 11. Inventario

@@ -33,6 +33,15 @@
                                  Classes="search"/>
                         <CheckBox Content="Ver archivados"
                                   IsChecked="{Binding VerArchivados}"/>
+                        <WrapPanel Orientation="Horizontal">
+                            <Button Content="Importar CSV..."
+                                    Classes="secondary small"
+                                    Margin="0,0,8,0"
+                                    Click="Importar_Click"/>
+                            <Button Content="Descargar plantilla"
+                                    Classes="secondary small"
+                                    Click="Plantilla_Click"/>
+                        </WrapPanel>
                     </StackPanel>
 
                     <ListBox Grid.Row="1"

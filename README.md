@@ -26,6 +26,9 @@ registro de errores.
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
   o se prepara el alta con ese SKU si es nuevo.
+- **Importación:** productos, proveedores y stock inicial desde un CSV
+  exportado de Excel, con plantilla descargable, vista previa, validación por
+  fila e importación en una sola transacción.
 - **Inventario:** entradas/salidas con motivo, ajuste de stock e historial de
   movimientos por rango de fechas, paginado y exportable a CSV.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock;
@@ -203,6 +206,26 @@ decimal, de modo que Excel los abre con acentos y columnas correctas. Los
 campos con comas, comillas o saltos de línea se escapan, y los textos que
 empiezan con `=`, `+`, `-` o `@` se neutralizan para evitar fórmulas. Si no hay
 filas en el rango, el archivo solo contiene el encabezado.
+
+## Importación desde Excel o CSV
+
+**Productos → Importar CSV...** carga productos, proveedores y stock inicial
+desde un archivo separado por comas, punto y coma o tabuladores. El botón
+**Descargar plantilla** genera el encabezado esperado:
+
+```text
+sku,nombre,descripcion,precio_venta,costo,stock_minimo,stock_inicial,
+proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
+```
+
+La lectura no modifica la base: primero muestra una vista previa con productos
+nuevos, actualizaciones, proveedores y errores por fila. Si hay un error, no se
+importa nada. Al confirmar, todo se guarda en una sola transacción. El stock
+inicial solo se aplica a productos nuevos y deja un movimiento de inventario
+con referencia **Importación inicial**; los productos existentes se actualizan
+sin tocar su stock. Los archivos `.xlsx` deben guardarse como **CSV UTF-8**
+desde Excel. El detalle de columnas y reglas está en el
+[manual de usuario](MANUAL-USUARIO.md#103-importar-productos-y-proveedores-desde-excel).
 
 ## Reportes de administración
 

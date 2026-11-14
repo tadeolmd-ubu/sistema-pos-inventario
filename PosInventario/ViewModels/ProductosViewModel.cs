@@ -12,13 +12,19 @@ public partial class ProductosViewModel : OperacionViewModel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private readonly ProductoService? _productoService;
+    private readonly ImportacionDatosService? _importacionService;
     private readonly List<Producto> _cargados = [];
     private bool _limpiando;
 
     public ProductosViewModel() { }
 
-    public ProductosViewModel(ProductoService productoService)
-        => _productoService = productoService;
+    public ProductosViewModel(
+        ProductoService productoService,
+        ImportacionDatosService? importacionService = null)
+    {
+        _productoService = productoService;
+        _importacionService = importacionService;
+    }
 
     public ObservableCollection<Producto> ProductosItems { get; } = [];
 
@@ -60,6 +66,38 @@ public partial class ProductosViewModel : OperacionViewModel
             : await _productoService.ObtenerTodosAsync());
 
         Filtrar();
+    }
+
+    /// <summary>
+    /// Valida el archivo sin modificar la base y devuelve la ventana de vista
+    /// previa. Devuelve null cuando el archivo no se puede leer.
+    /// </summary>
+    public async Task<ImportarDatosViewModel?> PrepararImportacionAsync(string ruta)
+    {
+        if (_importacionService is null)
+            return null;
+
+        var lectura = await _importacionService.LeerAsync(ruta);
+
+        if (!lectura.Correcta || lectura.Valor is null)
+        {
+            MensajeOperacion = Notificar(lectura.Mensaje);
+            return null;
+        }
+
+        return new ImportarDatosViewModel(_importacionService, lectura.Valor);
+    }
+
+    public static string GenerarPlantillaImportacion()
+        => ImportadorCsv.Plantilla;
+
+    public void NotificarPlantillaGuardada(string ruta)
+        => MensajeOperacion = $"Plantilla guardada en:\n{ruta}";
+
+    public async Task RecargarTrasImportacionAsync(string mensaje)
+    {
+        MensajeOperacion = mensaje;
+        await CargarDatosAsync();
     }
 
     partial void OnVerArchivadosChanged(bool value)
