@@ -244,6 +244,9 @@ sin salir de la aplicación:
   cambie cuando se actualiza un producto, cada `DetalleVenta` guarda el
   `CostoUnitario` vigente al momento de la venta. Las ventas totalmente
   anuladas no se cuentan.
+- **Exportar Excel:** genera un libro `.xlsx` con el reporte mostrado. La hoja
+  **Resumen** incluye el **total vendido (neto)** y la **utilidad**; después
+  vienen las hojas de períodos, métodos de pago y productos.
 
 El cálculo vive en `ReporteService` y las vistas solo presentan el resultado.
 Los importes son netos de devoluciones y se muestran con dos decimales.

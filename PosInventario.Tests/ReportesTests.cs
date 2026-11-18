@@ -476,4 +476,30 @@ public class ReportesTests
         Assert.Contains("no puede ser anterior", vm.MensajeOperacion);
         Assert.False(vm.HayDatos);
     }
+
+    [Fact]
+    public async Task ElViewModelPermiteExportarElReporteGenerado()
+    {
+        await using var prueba = await PruebaReportes.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("REP-009", 100m, 50m);
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 5, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+        await prueba.VenderAsync(producto, MetodoPago.Efectivo, 2);
+
+        var vm = new ReportesViewModel(prueba.ReporteService)
+        {
+            Desde = new DateTimeOffset(DateTime.Today),
+            Hasta = new DateTimeOffset(DateTime.Today)
+        };
+
+        Assert.False(vm.PuedeExportar);
+
+        await vm.CargarAsync();
+
+        Assert.True(vm.PuedeExportar);
+        Assert.EndsWith(".xlsx", vm.NombreArchivoExportacion);
+        Assert.NotEmpty(vm.GenerarExcel());
+    }
 }
