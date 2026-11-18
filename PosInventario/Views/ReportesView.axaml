@@ -17,13 +17,19 @@
                         MaxWidth="1100"
                         HorizontalAlignment="Left">
 
-                <Grid ColumnDefinitions="*,Auto">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                     <StackPanel Spacing="2">
                         <TextBlock Text="Reportes" Classes="sectionTitle"/>
                         <TextBlock Text="Ventas, métodos de pago, productos y utilidad"
                                    Classes="caption"/>
                     </StackPanel>
                     <Button Grid.Column="1"
+                            Content="Exportar Excel"
+                            Classes="secondary"
+                            IsEnabled="{Binding PuedeExportar}"
+                            ToolTip.Tip="Exporta el reporte mostrado a un libro .xlsx"
+                            Click="ExportarExcel_Click"/>
+                    <Button Grid.Column="2"
                             Content="Actualizar"
                             Classes="secondary"
                             IsEnabled="{Binding !IsBusy}"

@@ -50,7 +50,8 @@ PosInventario/
 │                              Inventario/Compra/Caja/Venta/ReporteService,
 │                              Linea*, ResumenPagosCaja, GeneradorTicketTexto,
 │                              GeneradorCorteCajaTexto, ExportadorCsv,
-│                              PaginaResultado<T>, ReporteAdministracion
+│                              ExportadorReporteExcel, PaginaResultado<T>,
+│                              ReporteAdministracion
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
@@ -257,6 +258,10 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   administrador y excluye las ventas totalmente anuladas. El descuento y las
   devoluciones se prorratean por unidad, y las sumas por método y producto se
   muestran netas. Solo lectura: no modifica caja, inventario ni ventas.
+  `ExportadorReporteExcel` convierte el reporte cargado en un libro `.xlsx`
+  con una hoja Resumen (total vendido neto y utilidad) y hojas de detalle por
+  período, método y producto; `ExportadorExcelArchivo` solo abre el selector
+  de archivos y escribe el resultado.
 - Paginación: `PaginacionViewModel` concentra página actual, tamaño
   (10/25/50, inicio en 10), total y comandos de navegación; `Paginador` es el
   control XAML reutilizable. Los servicios `VentaService`,

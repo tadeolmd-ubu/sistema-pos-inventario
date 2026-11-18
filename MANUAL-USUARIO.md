@@ -610,6 +610,9 @@ aplicación.
    días**, **Este mes** o **Mes anterior**.
 2. Elige **Agrupar por**: **Día**, **Semana** (inicia en lunes) o **Mes**.
 3. Presiona **Generar reporte** (o **Actualizar**).
+4. Presiona **Exportar Excel** para guardar el reporte en un libro `.xlsx`.
+   La hoja **Resumen** muestra el **total vendido (neto)** y la **utilidad**;
+   las demás hojas detallan períodos, métodos de pago y productos.
 
 Verás:
 

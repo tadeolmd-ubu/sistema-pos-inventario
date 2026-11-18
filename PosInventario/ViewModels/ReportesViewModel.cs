@@ -15,6 +15,7 @@ public partial class ReportesViewModel : OperacionViewModel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private readonly ReporteService? _reporteService;
+    private ReporteAdministracion? _reporteActual;
     private bool _suprimirRecarga;
 
     public ReportesViewModel() { }
@@ -68,6 +69,18 @@ public partial class ReportesViewModel : OperacionViewModel
 
     public string TicketPromedioTexto =>
         TicketPromedio.ToString("0.00", Cultura);
+
+    public bool PuedeExportar => _reporteActual is not null;
+
+    public string NombreArchivoExportacion => _reporteActual is null
+        ? "reporte.xlsx"
+        : ExportadorReporteExcel.NombreArchivo(_reporteActual);
+
+    public byte[] GenerarExcel()
+        => _reporteActual is null
+            ? throw new InvalidOperationException(
+                "Genere el reporte antes de exportarlo.")
+            : ExportadorReporteExcel.Generar(_reporteActual);
 
     public bool HayDatos => Periodos.Count > 0;
     public bool SinDatos => !HayDatos;
@@ -127,6 +140,8 @@ public partial class ReportesViewModel : OperacionViewModel
 
     private void Aplicar(ReporteAdministracion reporte)
     {
+        _reporteActual = reporte;
+
         ReemplazarItems(Periodos, reporte.Periodos);
         ReemplazarItems(Metodos, reporte.Metodos);
         ReemplazarItems(Productos, reporte.Productos);
@@ -216,6 +231,7 @@ public partial class ReportesViewModel : OperacionViewModel
         base.LimpiarPantalla();
 
         _suprimirRecarga = true;
+        _reporteActual = null;
 
         Periodos.Clear();
         Metodos.Clear();
@@ -253,5 +269,7 @@ public partial class ReportesViewModel : OperacionViewModel
         OnPropertyChanged(nameof(HayDatos));
         OnPropertyChanged(nameof(SinDatos));
         OnPropertyChanged(nameof(PeriodoTexto));
+        OnPropertyChanged(nameof(PuedeExportar));
+        OnPropertyChanged(nameof(NombreArchivoExportacion));
     }
 }
