@@ -51,9 +51,10 @@ registro de errores.
 - **Reportes:** (solo administrador) ventas por período agrupadas por día,
   semana o mes, desglose por método de pago, productos más vendidos y utilidad
   (venta neta menos costo). Incluye rangos rápidos (hoy, últimos 7 días, mes
-  actual y mes anterior) y muestra los números dentro de la app, sin exportar
-  a otro sistema. Las devoluciones se descuentan por unidad y la utilidad usa
-  el costo guardado al momento de cada venta.
+  actual y mes anterior), muestra los números dentro de la app y permite
+  exportarlos a un libro `.xlsx` con resumen, períodos, métodos y productos.
+  Las devoluciones se descuentan por unidad y la utilidad usa el costo guardado
+  al momento de cada venta. El desglose por método incluye crédito.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
@@ -64,8 +65,8 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 191 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
-  en disco); build de Windows en CI.
+- **Tests:** 240 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria
+  y en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
 `PENDIENTES.md`. Para instalar y operar el sistema paso a paso, consulta

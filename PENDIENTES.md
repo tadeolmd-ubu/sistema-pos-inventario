@@ -434,6 +434,9 @@
 - [x] **6.1 Actualizar documentación**
   - **Qué:** README, `ARQUITECTURA-BASE.md` y `COLABORACION.md` con los módulos,
     logs, instancia única y el repositorio correcto.
+  - **Hecho en:** rama `chore/actualizar-documentacion` (f0d73c4): módulos de
+    clientes y crédito, rutas de logs y respaldos, bloqueo de instancia única,
+    repositorio remoto, comandos de migración pendiente y 240 pruebas.
   - **Tamaño:** S.
 
 - [ ] **6.2 Limpiar ramas y datos de prueba**
