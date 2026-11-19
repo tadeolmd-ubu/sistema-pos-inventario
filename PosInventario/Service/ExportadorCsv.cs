@@ -20,7 +20,7 @@ public static class ExportadorCsv
         var contenido = new StringBuilder();
 
         contenido.Append(Linea(
-            "Ticket", "Fecha", "Cajero", "Método", "Estado",
+            "Ticket", "Fecha", "Cajero", "Cliente", "Método", "Estado",
             "Subtotal", "Descuento", "Total", "Devuelto", "Neto"));
 
         foreach (var venta in ventas)
@@ -29,7 +29,8 @@ public static class ExportadorCsv
                 $"V-{venta.Id:000000}",
                 Fecha(venta.Fecha),
                 venta.Usuario?.Nombre ?? string.Empty,
-                venta.MetodoPago.ToString(),
+                venta.ClienteTexto,
+                venta.MetodoPagoTexto,
                 venta.Estado.ToString(),
                 Monto(venta.Subtotal),
                 Monto(venta.Descuento),

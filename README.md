@@ -28,6 +28,8 @@ registro de errores.
   o se prepara el alta con ese SKU si es nuevo. Cada producto se vende por
   **pieza** o por **peso (kg)**; los productos por peso admiten cantidades y
   stock con hasta tres decimales.
+- **Clientes:** catálogo con límite de crédito, estado de cuenta, ventas a
+  crédito y abonos. Una venta sin cliente se registra como **Público**.
 - **Importación:** productos, proveedores y stock inicial desde un CSV
   exportado de Excel, con plantilla descargable, vista previa, validación por
   fila e importación en una sola transacción. La columna opcional `unidad`
@@ -37,10 +39,12 @@ registro de errores.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock;
   historial por rango de fechas paginado y exportable a CSV.
 - **Ventas:** historial global con filtros por fecha, búsqueda, método de pago
-  y cajero (todos se combinan), desglose por método de pago, paginación,
-  reimpresión de ticket desde el historial o el detalle de una caja cerrada,
-  botón de devolución (checklist por producto/unidad o cantidad en kg, con
-  reembolso estimado) y exportación a CSV de las ventas filtradas.
+  y cajero (todos se combinan), cliente, desglose por método de pago,
+  paginación, reimpresión de ticket desde el historial o el detalle de una caja
+  cerrada, botón de devolución (checklist por producto/unidad o cantidad en
+  kg, con reembolso estimado) y exportación a CSV de las ventas filtradas.
+  Las ventas pueden ser de contado o a crédito; las de crédito quedan
+  pendientes en la cuenta del cliente y no entran al efectivo de la caja.
   Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
   ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
   venta ya quedó registrada y solo se muestra un aviso.
@@ -193,7 +197,7 @@ exactamente las filas de la **página visible** en ese momento:
 
 - **Ventas:** respeta el rango de fechas, la búsqueda, el método de pago, el
   cajero seleccionado y la casilla "Ver anuladas". Incluye ticket, fecha,
-  cajero, método, estado, subtotal, descuento, total, devuelto y neto.
+  cajero, cliente, método, estado, subtotal, descuento, total, devuelto y neto.
 - **Inventario:** respeta el rango de fechas y, si hay un producto
   seleccionado, sus movimientos. Incluye producto, SKU, unidad, tipo,
   cantidad, stock anterior/resultante, referencia, fecha y usuario.
@@ -238,8 +242,9 @@ sin salir de la aplicación:
 - **Ventas por período:** se elige un rango de fechas y se agrupa por día,
   semana (inicio en lunes) o mes. Cada fila muestra tickets, ventas netas,
   devoluciones y utilidad, con una barra comparativa.
-- **Ventas por método:** efectivo, tarjeta y transferencia, descontando los
-  reembolsos de cada pago, con monto, cantidad de ventas y porcentaje.
+- **Ventas por método:** efectivo, tarjeta, transferencia y crédito,
+  descontando los reembolsos de cada pago, con monto, cantidad de ventas y
+  porcentaje.
 - **Productos más vendidos:** top 10 por ventas netas de devoluciones, con
   SKU, cantidad y unidad, ventas y utilidad.
 - **Utilidad:** cada línea aporta `precio de venta - costo`; el descuento de la

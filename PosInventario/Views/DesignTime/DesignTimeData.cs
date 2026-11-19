@@ -11,12 +11,44 @@ public sealed class DesignTimeData
     public static readonly CajaDesignTime Caja = new();
     public static readonly ProductosDesignTime Productos = new();
     public static readonly ProveedoresDesignTime Proveedores = new();
+    public static readonly ClientesDesignTime Clientes = new();
     public static readonly InventarioDesignTime Inventario = new();
     public static readonly ComprasDesignTime Compras = new();
     public static readonly VentasDesignTime Ventas = new();
     public static readonly ReportesDesignTime Reportes = new();
     public static readonly UsuariosDesignTime Usuarios = new();
     public static readonly ConfiguracionDesignTime Configuracion = new();
+}
+
+public sealed class ClientesDesignTime : ClientesViewModel
+{
+    public ClientesDesignTime()
+    {
+        var cliente = new Cliente
+        {
+            Id = 1,
+            Nombre = "María López",
+            Telefono = "555-123-4567",
+            Email = "maria@example.com",
+            LimiteCredito = 5000m,
+            SaldoActual = 1250m
+        };
+
+        ClientesItems.Add(cliente);
+        SelectedCliente = cliente;
+
+        VentasPendientes.Add(new VentaCreditoResumen(
+            12, DateTime.Now.AddDays(-2), 1250m, 0m, 0m));
+
+        AbonosItems.Add(new Abono
+        {
+            Id = 1,
+            IdVenta = 12,
+            Monto = 500m,
+            Fecha = DateTime.Now.AddDays(-1),
+            Metodo = MetodoPago.Efectivo
+        });
+    }
 }
 
 public sealed class ConfiguracionDesignTime : ConfiguracionViewModel

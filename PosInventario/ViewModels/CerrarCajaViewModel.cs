@@ -42,6 +42,7 @@ public partial class CerrarCajaViewModel : OperacionViewModel
         TotalEfectivoTexto = resumen.Efectivo.ToString("0.00", Cultura);
         TotalTarjetaTexto = resumen.Tarjeta.ToString("0.00", Cultura);
         TotalTransferenciaTexto = resumen.Transferencia.ToString("0.00", Cultura);
+        TotalCreditoTexto = resumen.Credito.ToString("0.00", Cultura);
     }
 
     [ObservableProperty] private string usuarioAperturaTexto = string.Empty;
@@ -56,6 +57,7 @@ public partial class CerrarCajaViewModel : OperacionViewModel
     [ObservableProperty] private string totalEfectivoTexto = string.Empty;
     [ObservableProperty] private string totalTarjetaTexto = string.Empty;
     [ObservableProperty] private string totalTransferenciaTexto = string.Empty;
+    [ObservableProperty] private string totalCreditoTexto = string.Empty;
 
     public decimal MontoEsperado => _montoEsperado;
 

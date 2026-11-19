@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.Styles;
 
@@ -104,6 +105,17 @@ public class ActivoFondoConverter : IValueConverter
         => value is int activo && activo == 0
             ? FondoInactivo
             : Brushes.Transparent;
+
+    public object? ConvertBack(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+public class MetodoPagoNombreConverter : IValueConverter
+{
+    public object? Convert(
+        object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is MetodoPago metodo ? metodo.Nombre() : value;
 
     public object? ConvertBack(
         object? value, Type targetType, object? parameter, CultureInfo culture)

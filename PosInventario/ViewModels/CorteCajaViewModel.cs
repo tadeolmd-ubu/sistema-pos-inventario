@@ -50,6 +50,9 @@ public partial class CorteCajaViewModel : ObservableObject
     public string TotalTransferenciaTexto =>
         Resumen.Transferencia.ToString("0.00", Cultura);
 
+    public string TotalCreditoTexto =>
+        Resumen.Credito.ToString("0.00", Cultura);
+
     public string MontoInicialTexto => Caja.MontoInicial.ToString("0.00", Cultura);
 
     public decimal MontoEsperado => Caja.MontoEsperado ?? 0m;

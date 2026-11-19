@@ -84,7 +84,7 @@
                     <StackPanel Spacing="12">
                         <TextBlock Text="Ventas por método" Classes="subsection"/>
 
-                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                        <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="16">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Efectivo" Classes="caption"/>
                                 <TextBlock Text="{Binding TotalEfectivoTexto}"
@@ -100,6 +100,12 @@
                             <StackPanel Grid.Column="2" Spacing="2">
                                 <TextBlock Text="Transferencia" Classes="caption"/>
                                 <TextBlock Text="{Binding TotalTransferenciaTexto}"
+                                           FontSize="22"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Spacing="2">
+                                <TextBlock Text="Crédito" Classes="caption"/>
+                                <TextBlock Text="{Binding TotalCreditoTexto}"
                                            FontSize="22"
                                            FontWeight="Bold"/>
                             </StackPanel>

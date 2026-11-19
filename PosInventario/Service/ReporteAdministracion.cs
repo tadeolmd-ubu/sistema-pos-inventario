@@ -45,6 +45,7 @@ public sealed record ReporteMetodo(
         MetodoPago.Efectivo => "Efectivo",
         MetodoPago.Tarjeta => "Tarjeta",
         MetodoPago.Transferencia => "Transferencia",
+        MetodoPago.Credito => "Crédito",
         _ => Metodo.ToString()
     };
 
@@ -300,7 +301,8 @@ public class ReporteService
                  {
                      MetodoPago.Efectivo,
                      MetodoPago.Tarjeta,
-                     MetodoPago.Transferencia
+                     MetodoPago.Transferencia,
+                     MetodoPago.Credito
                  })
         {
             var delMetodo = pagos

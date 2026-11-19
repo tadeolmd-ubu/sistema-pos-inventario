@@ -101,10 +101,11 @@ public partial class App : Application
             var usuarioService = new UsuarioService(dbContext, sesion);
             var productoService = new ProductoService(dbContext, sesion);
             var proveedorService = new ProveedorService(dbContext, sesion);
+            var clienteService = new ClienteService(dbContext, sesion);
             var inventarioService = new InventarioService(dbContext, sesion);
             var compraService = new CompraService(dbContext, sesion);
             var cajaService = new CajaService(dbContext, sesion);
-            var ventaService = new VentaService(dbContext, sesion);
+            var ventaService = new VentaService(dbContext, sesion, clienteService);
             var reporteService = new ReporteService(dbContext, sesion);
             var versionService = new VersionService();
             var importacionService = new ImportacionDatosService(dbContext, sesion);
@@ -113,10 +114,11 @@ public partial class App : Application
                 ventaService, productoService, cajaService, compraService, sesion);
             var cajaViewModel = new CajaViewModel(
                 cajaService, ventaService, productoService, sesion,
-                respaldoAutomaticoService);
+                respaldoAutomaticoService, clienteService);
             var productosViewModel = new ProductosViewModel(
                 productoService, importacionService);
             var proveedoresViewModel = new ProveedoresViewModel(proveedorService);
+            var clientesViewModel = new ClientesViewModel(clienteService);
             var inventarioViewModel = new InventarioViewModel(productoService, inventarioService);
             var comprasViewModel = new ComprasViewModel(
                 compraService, proveedorService, productoService);
@@ -131,7 +133,7 @@ public partial class App : Application
                 proveedoresViewModel, inventarioViewModel, comprasViewModel,
                 ventasViewModel, reportesViewModel, usuariosViewModel,
                 configuracionViewModel, versionService, sesion,
-                respaldoAutomaticoService);
+                respaldoAutomaticoService, clientesViewModel);
 
             var mainWindow = new MainWindow { DataContext = mainViewModel };
 

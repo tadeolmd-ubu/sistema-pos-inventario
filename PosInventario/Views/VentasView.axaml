@@ -107,8 +107,11 @@
                                 <DataGridTextColumn Header="Cajero"
                                                     Binding="{Binding Usuario.Nombre}"
                                                     Width="*"/>
+                                <DataGridTextColumn Header="Cliente"
+                                                    Binding="{Binding ClienteTexto}"
+                                                    Width="*"/>
                                 <DataGridTextColumn Header="Método"
-                                                    Binding="{Binding MetodoPago}"
+                                                    Binding="{Binding MetodoPagoTexto}"
                                                     Width="120"/>
                                 <DataGridTextColumn Header="Estado"
                                                     Binding="{Binding Estado}"

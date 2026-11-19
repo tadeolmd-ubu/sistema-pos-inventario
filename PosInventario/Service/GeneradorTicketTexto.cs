@@ -30,6 +30,13 @@ public static class GeneradorTicketTexto
         lineas.Add(new string('-', columnas));
         EnvolverEtiqueta(lineas, "Fecha: ", venta.Fecha.ToString("dd/MM/yyyy HH:mm", Cultura), columnas);
         EnvolverEtiqueta(lineas, "Cajero: ", venta.Usuario?.Nombre ?? "—", columnas);
+
+        if (venta.TieneCliente)
+        {
+            EnvolverEtiqueta(
+                lineas, "Cliente: ", venta.ClienteTexto, columnas);
+        }
+
         lineas.Add(new string('-', columnas));
 
         foreach (var detalle in venta.Detalles)
@@ -65,33 +72,44 @@ public static class GeneradorTicketTexto
 
         lineas.Add(new string('-', columnas));
 
-        var pagos = venta.Pagos.Count > 0
-            ? venta.Pagos.ToList()
-            : [new PagoVenta { Metodo = venta.MetodoPago, Monto = venta.Total }];
-
-        if (pagos.Count > 0 && venta.Total > 0)
+        if (venta.EsCredito)
         {
-            foreach (var pago in pagos)
+            if (venta.Total > 0)
             {
                 AgregarDosColumnas(
-                    lineas,
-                    pago.Metodo.ToString(),
-                    pago.Monto.ToString("0.00", Cultura),
-                    columnas);
+                    lineas, "Crédito", venta.Total.ToString("0.00", Cultura), columnas);
             }
+        }
+        else
+        {
+            var pagos = venta.Pagos.Count > 0
+                ? venta.Pagos.ToList()
+                : [new PagoVenta { Metodo = venta.MetodoPago, Monto = venta.Total }];
 
-            var efectivoAplicado = pagos
-                .Where(p => p.Metodo == MetodoPago.Efectivo)
-                .Sum(p => p.Monto);
-
-            if (efectivoAplicado > 0)
+            if (pagos.Count > 0 && venta.Total > 0)
             {
-                var recibido = efectivoAplicado + venta.Vuelto;
+                foreach (var pago in pagos)
+                {
+                    AgregarDosColumnas(
+                        lineas,
+                        pago.Metodo.Nombre(),
+                        pago.Monto.ToString("0.00", Cultura),
+                        columnas);
+                }
 
-                AgregarDosColumnas(
-                    lineas, "Recibido", recibido.ToString("0.00", Cultura), columnas);
-                AgregarDosColumnas(
-                    lineas, "Cambio", venta.Vuelto.ToString("0.00", Cultura), columnas);
+                var efectivoAplicado = pagos
+                    .Where(p => p.Metodo == MetodoPago.Efectivo)
+                    .Sum(p => p.Monto);
+
+                if (efectivoAplicado > 0)
+                {
+                    var recibido = efectivoAplicado + venta.Vuelto;
+
+                    AgregarDosColumnas(
+                        lineas, "Recibido", recibido.ToString("0.00", Cultura), columnas);
+                    AgregarDosColumnas(
+                        lineas, "Cambio", venta.Vuelto.ToString("0.00", Cultura), columnas);
+                }
             }
         }
 

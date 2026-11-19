@@ -15,6 +15,7 @@ public partial class CajaViewModel : OperacionViewModel
     private readonly CajaService? _cajaService;
     private readonly VentaService? _ventaService;
     private readonly ProductoService? _productoService;
+    private readonly ClienteService? _clienteService;
     private readonly SesionActual? _sesion;
     private readonly RespaldoAutomaticoService? _respaldoAutomatico;
 
@@ -25,21 +26,30 @@ public partial class CajaViewModel : OperacionViewModel
         VentaService ventaService,
         ProductoService productoService,
         SesionActual sesion,
-        RespaldoAutomaticoService? respaldoAutomatico = null)
+        RespaldoAutomaticoService? respaldoAutomatico = null,
+        ClienteService? clienteService = null)
     {
         _cajaService = cajaService;
         _ventaService = ventaService;
         _productoService = productoService;
         _sesion = sesion;
         _respaldoAutomatico = respaldoAutomatico;
+        _clienteService = clienteService;
     }
 
     public ObservableCollection<MovimientoCaja> MovimientosItems { get; } = [];
     public ObservableCollection<Caja> HistorialItems { get; } = [];
     public ObservableCollection<LineaVentaItem> LineasVentaItems { get; } = [];
+    public ObservableCollection<OpcionCliente> ClientesItems { get; } = [];
 
     public IReadOnlyList<MetodoPago> MetodosPago { get; } =
-        [MetodoPago.Efectivo, MetodoPago.Tarjeta, MetodoPago.Transferencia, MetodoPago.Mixto];
+    [
+        MetodoPago.Efectivo,
+        MetodoPago.Tarjeta,
+        MetodoPago.Transferencia,
+        MetodoPago.Credito,
+        MetodoPago.Mixto
+    ];
 
     [ObservableProperty] private Caja? cajaAbierta;
     [ObservableProperty] private decimal montoEsperado;
@@ -51,6 +61,7 @@ public partial class CajaViewModel : OperacionViewModel
     [ObservableProperty] private string montoTransferenciaTexto = string.Empty;
     [ObservableProperty] private string descuentoTexto = string.Empty;
     [ObservableProperty] private string busquedaRapida = string.Empty;
+    [ObservableProperty] private OpcionCliente? clienteSeleccionado;
 
     /// <summary>
     /// La vista pregunta el peso cuando se agrega o edita un producto por peso.
@@ -122,7 +133,17 @@ public partial class CajaViewModel : OperacionViewModel
 
     public bool EsPagoMixto => MetodoPagoSeleccionado == MetodoPago.Mixto;
 
+    public bool EsPagoCredito => MetodoPagoSeleccionado == MetodoPago.Credito;
+
     public bool MuestraEfectivo => EsPagoEfectivo || EsPagoMixto;
+
+    public bool EsPublico => ClienteSeleccionado?.Id is null;
+
+    public string ClienteSeleccionadoTexto =>
+        ClienteSeleccionado?.Nombre ?? "Público";
+
+    public string CreditoDisponibleTexto =>
+        ClienteSeleccionado?.DisponibleTexto ?? "0.00";
 
     public decimal MontoEfectivo => Parse(MontoEfectivoTexto);
 
@@ -145,19 +166,23 @@ public partial class CajaViewModel : OperacionViewModel
 
     public decimal EfectivoRecibido => MuestraEfectivo ? MontoEfectivo : 0;
 
-    public decimal TotalRecibido =>
-        EsPagoMixto
+    public decimal TotalRecibido => EsPagoCredito
+        ? 0m
+        : EsPagoMixto
             ? MontoEfectivo + MontoTarjeta + MontoTransferencia
             : EsPagoEfectivo
                 ? MontoEfectivo
                 : TotalVenta;
 
-    public decimal TotalPagado =>
-        EsPagoMixto
+    public decimal TotalPagado => EsPagoCredito
+        ? 0m
+        : EsPagoMixto
             ? EfectivoAplicado + MontoTarjeta + MontoTransferencia
             : TotalVenta;
 
-    public decimal Faltante => Math.Max(0, TotalVenta - TotalRecibido);
+    public decimal Faltante => EsPagoCredito
+        ? 0m
+        : Math.Max(0, TotalVenta - TotalRecibido);
 
     public decimal Cambio => MuestraEfectivo
         ? Math.Max(0, EfectivoRecibido - EfectivoAplicado)
@@ -175,17 +200,19 @@ public partial class CajaViewModel : OperacionViewModel
 
     public string CambioTexto => Cambio.ToString("0.00", Cultura);
 
-    public bool PagosValidos =>
-        TotalVenta == 0 ||
-        (EsPagoEfectivo
-            ? MontoEfectivo >= TotalVenta
-            : EsPagoMixto
-                ? MontoTarjeta >= 0 &&
-                  MontoTransferencia >= 0 &&
-                  MontoEfectivo >= 0 &&
-                  MontoTarjeta + MontoTransferencia <= TotalVenta &&
-                  TotalRecibido >= TotalVenta
-                : true);
+    public bool PagosValidos => EsPagoCredito
+        ? ClienteSeleccionado?.Id is not null &&
+          TotalVenta <= (ClienteSeleccionado?.Disponible ?? 0m)
+        : TotalVenta == 0 ||
+          (EsPagoEfectivo
+              ? MontoEfectivo >= TotalVenta
+              : EsPagoMixto
+                  ? MontoTarjeta >= 0 &&
+                    MontoTransferencia >= 0 &&
+                    MontoEfectivo >= 0 &&
+                    MontoTarjeta + MontoTransferencia <= TotalVenta &&
+                    TotalRecibido >= TotalVenta
+                  : true);
 
     public event Action<CancelarVentaViewModel>? CancelarVentaSolicitado;
 
@@ -216,6 +243,33 @@ public partial class CajaViewModel : OperacionViewModel
 
         var historial = await _cajaService.ObtenerHistorialAsync();
         ReemplazarItems(HistorialItems, historial);
+
+        await CargarClientesAsync();
+    }
+
+    private async Task CargarClientesAsync()
+    {
+        if (_clienteService is null)
+            return;
+
+        var idAnterior = ClienteSeleccionado?.Id;
+        var clientes = await _clienteService.ObtenerActivosAsync();
+
+        ClientesItems.Clear();
+        ClientesItems.Add(new OpcionCliente(null, "Público general"));
+
+        foreach (var cliente in clientes)
+        {
+            ClientesItems.Add(new OpcionCliente(
+                cliente.Id,
+                cliente.Nombre,
+                cliente.LimiteCredito,
+                cliente.SaldoActual));
+        }
+
+        ClienteSeleccionado = ClientesItems
+            .FirstOrDefault(c => c.Id == idAnterior)
+            ?? ClientesItems[0];
     }
 
     partial void OnCajaAbiertaChanged(Caja? value)
@@ -233,6 +287,9 @@ public partial class CajaViewModel : OperacionViewModel
     partial void OnDescuentoTextoChanged(string value) => NotificarVenta();
 
     partial void OnMetodoPagoSeleccionadoChanged(MetodoPago value)
+        => NotificarPagos();
+
+    partial void OnClienteSeleccionadoChanged(OpcionCliente? value)
         => NotificarPagos();
 
     partial void OnMontoEfectivoTextoChanged(string value) => NotificarPagos();
@@ -473,6 +530,7 @@ public partial class CajaViewModel : OperacionViewModel
         MontoEfectivoTexto = string.Empty;
         MontoTarjetaTexto = string.Empty;
         MontoTransferenciaTexto = string.Empty;
+        ClienteSeleccionado = ClientesItems.FirstOrDefault();
         NotificarVenta();
     }
 
@@ -510,9 +568,16 @@ public partial class CajaViewModel : OperacionViewModel
             .ToList();
 
         var pagos = ConstruirPagos();
+        var tipoVenta = EsPagoCredito
+            ? TipoVenta.Credito
+            : TipoVenta.Contado;
 
         var resultado = await _ventaService.RegistrarAsync(
-            lineas, pagos, Descuento);
+            lineas,
+            pagos,
+            Descuento,
+            ClienteSeleccionado?.Id,
+            tipoVenta);
 
         if (!resultado.Correcta)
         {
@@ -637,7 +702,7 @@ public partial class CajaViewModel : OperacionViewModel
 
     private List<LineaPago> ConstruirPagos()
     {
-        if (TotalVenta <= 0)
+        if (TotalVenta <= 0 || EsPagoCredito)
             return [];
 
         if (EsPagoEfectivo)
@@ -685,7 +750,11 @@ public partial class CajaViewModel : OperacionViewModel
     {
         OnPropertyChanged(nameof(EsPagoEfectivo));
         OnPropertyChanged(nameof(EsPagoMixto));
+        OnPropertyChanged(nameof(EsPagoCredito));
         OnPropertyChanged(nameof(MuestraEfectivo));
+        OnPropertyChanged(nameof(EsPublico));
+        OnPropertyChanged(nameof(ClienteSeleccionadoTexto));
+        OnPropertyChanged(nameof(CreditoDisponibleTexto));
         OnPropertyChanged(nameof(MontoEfectivo));
         OnPropertyChanged(nameof(MontoTarjeta));
         OnPropertyChanged(nameof(MontoTransferencia));
@@ -706,6 +775,15 @@ public partial class CajaViewModel : OperacionViewModel
 
     private string MensajePagosInvalido()
     {
+        if (EsPagoCredito)
+        {
+            if (ClienteSeleccionado?.Id is null)
+                return "Selecciona un cliente para vender a crédito.";
+
+            return $"El cliente no tiene crédito suficiente. " +
+                   $"Disponible: {CreditoDisponibleTexto}.";
+        }
+
         if (MontoEfectivo < 0 || MontoTarjeta < 0 || MontoTransferencia < 0)
             return "Los montos de pago no pueden ser negativos.";
 

@@ -58,12 +58,14 @@ public partial class DevolverVentaViewModel : OperacionViewModel
             : _venta.MetodoPago == MetodoPago.Efectivo);
 
     public bool HayDesgloseReembolso =>
-        _venta is not null && _venta.Pagos.Count > 1;
+        _venta is not null && !_venta.EsCredito && _venta.Pagos.Count > 1;
 
     public string NotaReembolsoTexto =>
-        HayPagoEfectivo
-            ? "La parte en efectivo del reembolso se descuenta de la caja abierta."
-            : "El reembolso de este método de pago se hace fuera de la app; aquí solo se regresa el stock.";
+        _venta?.EsCredito == true
+            ? "La devolución reduce el saldo pendiente del cliente; no mueve efectivo de la caja."
+            : HayPagoEfectivo
+                ? "La parte en efectivo del reembolso se descuenta de la caja abierta."
+                : "El reembolso de este método de pago se hace fuera de la app; aquí solo se regresa el stock.";
 
     [ObservableProperty] private string desgloseReembolsoTexto = string.Empty;
 

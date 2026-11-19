@@ -59,7 +59,6 @@
 - La restauración reemplaza toda la base actual y reinicia la aplicación; no
   combina datos de dos bases.
 - Sin facturación ni impuestos.
-- Sin clientes ni ventas a crédito.
 
 ---
 

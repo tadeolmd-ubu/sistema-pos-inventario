@@ -38,7 +38,7 @@ public class CorteCajaImpresionTests
     }
 
     private static ResumenPagosCaja CrearResumen()
-        => new(12, 800.25m, 300m, 134.25m);
+        => new(12, 800.25m, 300m, 134.25m, 0m);
 
     private sealed class ImpresoraFalsa : IImpresoraTicket
     {

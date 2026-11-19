@@ -10,17 +10,21 @@ public class VentaService
 {
     private readonly AppDbContext _db;
     private readonly SesionActual _sesion;
+    private readonly ClienteService _clienteService;
 
-    public VentaService(AppDbContext db, SesionActual sesion)
+    public VentaService(
+        AppDbContext db, SesionActual sesion, ClienteService? clienteService = null)
     {
         _db = db;
         _sesion = sesion;
+        _clienteService = clienteService ?? new ClienteService(db, sesion);
     }
 
     public async Task<List<Venta>> ObtenerPorCajaAsync(int idCaja)
         => await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -37,6 +41,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Where(v => v.Estado == EstadoVenta.Completada &&
                         v.Fecha >= desde && v.Fecha < hasta)
@@ -53,6 +58,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -81,6 +87,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -168,6 +175,7 @@ public class VentaService
 
         var items = await query
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -211,7 +219,9 @@ public class VentaService
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
         IReadOnlyList<LineaPago> pagos,
-        decimal descuento = 0m)
+        decimal descuento = 0m,
+        int? idCliente = null,
+        TipoVenta tipoVenta = TipoVenta.Contado)
     {
         if (!_sesion.Iniciada)
             return new Resultado<Venta>(false, "La sesión no está iniciada.", null);
@@ -302,20 +312,79 @@ public class VentaService
 
         var total = subtotal - descuento;
 
-        var pagosNormalizados = NormalizarPagos(pagos, total, out var errorPagos);
+        Cliente? cliente = null;
 
-        if (errorPagos is not null)
-            return new Resultado<Venta>(false, errorPagos, null);
+        if (idCliente is not null)
+        {
+            cliente = await _db.Clientes
+                .FirstOrDefaultAsync(c => c.Id == idCliente.Value && c.Activo == 1);
 
-        var efectivoAplicado = pagosNormalizados
-            .Where(p => p.Metodo == MetodoPago.Efectivo)
-            .Sum(p => p.Monto);
+            if (cliente is null)
+            {
+                return new Resultado<Venta>(
+                    false, "El cliente no existe o está inactivo.", null);
+            }
+        }
 
-        var efectivoRecibido = pagosNormalizados
-            .Where(p => p.Metodo == MetodoPago.Efectivo)
-            .Sum(p => p.MontoRecibido ?? 0m);
+        if (tipoVenta == TipoVenta.Credito)
+        {
+            if (cliente is null)
+            {
+                return new Resultado<Venta>(
+                    false,
+                    "Selecciona un cliente para registrar una venta a crédito.",
+                    null);
+            }
 
-        var vuelto = efectivoRecibido - efectivoAplicado;
+            if (pagos.Count > 0)
+            {
+                return new Resultado<Venta>(
+                    false, "Una venta a crédito no lleva pagos.", null);
+            }
+
+            var saldo = await _clienteService.ObtenerSaldoAsync(cliente.Id);
+            var disponible = cliente.LimiteCredito - saldo;
+
+            if (total > disponible)
+            {
+                return new Resultado<Venta>(
+                    false,
+                    $"El cliente no tiene crédito suficiente. " +
+                    $"Disponible: {disponible.ToString("0.00", CultureInfo.InvariantCulture)}.",
+                    null);
+            }
+        }
+
+        List<LineaPago> pagosNormalizados;
+        decimal efectivoAplicado;
+        decimal efectivoRecibido;
+        decimal vuelto;
+
+        if (tipoVenta == TipoVenta.Credito)
+        {
+            pagosNormalizados = [];
+            efectivoAplicado = 0m;
+            efectivoRecibido = 0m;
+            vuelto = 0m;
+        }
+        else
+        {
+            pagosNormalizados = NormalizarPagos(pagos, total, out var errorPagos);
+
+            if (errorPagos is not null)
+                return new Resultado<Venta>(false, errorPagos, null);
+
+            efectivoAplicado = pagosNormalizados
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.Monto);
+
+            efectivoRecibido = pagosNormalizados
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.MontoRecibido ?? 0m);
+
+            vuelto = efectivoRecibido - efectivoAplicado;
+        }
+
         var momento = DateTime.Now;
 
         var venta = new Venta
@@ -323,34 +392,44 @@ public class VentaService
             IdUsuario = _sesion.IdUsuario,
             Usuario = _sesion.Usuario!,
             IdCaja = caja.Id,
+            IdCliente = cliente?.Id,
+            Cliente = cliente,
             Fecha = momento,
             Subtotal = subtotal,
             Descuento = descuento,
             Total = total,
-            MetodoPago = pagosNormalizados.Count switch
-            {
-                0 => MetodoPago.Efectivo,
-                1 => pagosNormalizados[0].Metodo,
-                _ => MetodoPago.Mixto
-            },
-            MontoRecibido = total + vuelto,
+            TipoVenta = tipoVenta,
+            MetodoPago = tipoVenta == TipoVenta.Credito
+                ? MetodoPago.Credito
+                : pagosNormalizados.Count switch
+                {
+                    0 => MetodoPago.Efectivo,
+                    1 => pagosNormalizados[0].Metodo,
+                    _ => MetodoPago.Mixto
+                },
+            MontoRecibido = tipoVenta == TipoVenta.Credito
+                ? total
+                : total + vuelto,
             Vuelto = vuelto,
             Estado = EstadoVenta.Completada
         };
 
-        foreach (var pago in pagosNormalizados)
+        if (tipoVenta == TipoVenta.Contado)
         {
-            // El efectivo con monto 0 se usa solo para calcular el cambio
-            // cuando tarjeta/transferencia ya cubrieron el total.
-            if (pago.Monto <= 0)
-                continue;
-
-            venta.Pagos.Add(new PagoVenta
+            foreach (var pago in pagosNormalizados)
             {
-                Metodo = pago.Metodo,
-                Monto = pago.Monto,
-                MontoDevuelto = 0m
-            });
+                // El efectivo con monto 0 se usa solo para calcular el cambio
+                // cuando tarjeta/transferencia ya cubrieron el total.
+                if (pago.Monto <= 0)
+                    continue;
+
+                venta.Pagos.Add(new PagoVenta
+                {
+                    Metodo = pago.Metodo,
+                    Monto = pago.Monto,
+                    MontoDevuelto = 0m
+                });
+            }
         }
 
         foreach (var linea in lineas)
@@ -530,6 +609,8 @@ public class VentaService
         if (venta.Estado == EstadoVenta.Anulada)
             return new Resultado(false, "La venta ya está anulada.");
 
+        var esCredito = venta.TipoVenta == TipoVenta.Credito;
+
         if (!_sesion.EsAdministrador && venta.IdUsuario != _sesion.IdUsuario)
             return new Resultado(
                 false, "Solo quien realizó la venta o un administrador puede hacer la devolución.");
@@ -599,7 +680,7 @@ public class VentaService
 
         // Compatibilidad: una venta anterior a la migración de pagos podría
         // no tener filas. Se crea una con su método y saldo original.
-        if (venta.Pagos.Count == 0 && venta.Total > 0)
+        if (!esCredito && venta.Pagos.Count == 0 && venta.Total > 0)
         {
             var metodo = venta.MetodoPago == MetodoPago.Mixto
                 ? MetodoPago.Efectivo
@@ -614,9 +695,11 @@ public class VentaService
         }
 
         var reembolso = CalcularReembolso(venta, lineas);
-        var reembolsos = RepartirReembolso(venta.Pagos.ToList(), reembolso);
+        IReadOnlyList<ReembolsoPago> reembolsos = esCredito
+            ? []
+            : RepartirReembolso(venta.Pagos.ToList(), reembolso);
 
-        if (reembolsos.Sum(r => r.Monto) != reembolso)
+        if (!esCredito && reembolsos.Sum(r => r.Monto) != reembolso)
             return new Resultado(false,
                 "No se pudo distribuir el reembolso entre los métodos de pago.");
 
@@ -629,7 +712,7 @@ public class VentaService
         // fue 100% electrónica, no se necesita caja.
         Caja? cajaReembolso = null;
 
-        if (reembolsoEfectivo > 0)
+        if (!esCredito && reembolsoEfectivo > 0)
         {
             if (venta.Caja is not null && venta.Caja.Estado == EstadoCaja.Abierta)
             {

@@ -28,6 +28,14 @@ public partial class TicketViewModel : ObservableObject
 
     public string Cajero => Venta.Usuario?.Nombre ?? "—";
 
+    public bool TieneCliente => Venta.TieneCliente;
+
+    public string Cliente => Venta.ClienteTexto;
+
+    public bool EsCredito => Venta.EsCredito;
+
+    public string TipoVentaTexto => Venta.TipoVentaTexto;
+
     public IReadOnlyList<DetalleVenta> Detalles => Venta.Detalles.ToList();
 
     public string SubtotalTexto => Venta.Subtotal.ToString("0.00", Cultura);

@@ -1,0 +1,220 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PosInventario.Controls"
+             xmlns:conv="using:PosInventario.Styles"
+             xmlns:dt="using:PosInventario.Views.DesignTime"
+             xmlns:models="using:PosInventario.Models"
+             xmlns:service="using:PosInventario.Service"
+             xmlns:vm="using:PosInventario.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             d:DataContext="{x:Static dt:DesignTimeData.Clientes}"
+             x:DataType="vm:ClientesViewModel"
+             x:Class="PosInventario.Views.ClientesView">
+
+    <UserControl.Resources>
+        <conv:ActivoConverter x:Key="EstadoNombre"/>
+        <conv:ActivoFondoConverter x:Key="FondoInactivo"/>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
+        <controls:ResponsiveTwoPane ExpandedListWidth="420"
+                                    MinListWidth="260"
+                                    ListWidthRatio="0.42"
+                                    Spacing="22">
+
+            <!-- Panel izquierdo -->
+            <Border Classes="cardFlat" Padding="16">
+                <Grid RowDefinitions="Auto,*" RowSpacing="14">
+                    <StackPanel Grid.Row="0" Spacing="10">
+                        <TextBlock Text="Clientes" Classes="sectionTitle"/>
+                        <TextBox Text="{Binding Busqueda}"
+                                 PlaceholderText="Buscar por nombre, teléfono o correo..."
+                                 Classes="search"/>
+                        <CheckBox Content="Ver inactivos"
+                                  IsChecked="{Binding VerInactivos}"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ClientesItems}"
+                             SelectedItem="{Binding SelectedCliente}"
+                             Classes="entityList">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Cliente">
+                                <Border Background="{Binding Activo, Converter={StaticResource FondoInactivo}}"
+                                        CornerRadius="8"
+                                        Padding="8,6">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Telefono}" Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding SaldoTexto, StringFormat='Saldo {0}'}"
+                                                       Classes="caption"/>
+                                            <TextBlock Text="·" Classes="caption"/>
+                                            <TextBlock Text="{Binding Activo, Converter={StaticResource EstadoNombre}, ConverterParameter=nombre}"
+                                                       Classes="caption"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Panel derecho -->
+            <Border Classes="cardFlat" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Detalle" Classes="subsection"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Nombre" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Nombre}" PlaceholderText="Nombre del cliente"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Teléfono" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding Telefono}" PlaceholderText="Teléfono"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="6">
+                                <TextBlock Text="Correo electrónico" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding Email}" PlaceholderText="correo@ejemplo.com"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Dirección" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Direccion}"
+                                     PlaceholderText="Dirección opcional"
+                                     AcceptsReturn="True"
+                                     Height="70"
+                                     TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Límite de crédito" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding LimiteCreditoTexto}"
+                                     PlaceholderText="0.00"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Guardar"
+                                    Classes="primary"
+                                    Command="{Binding GuardarCommand}"/>
+                            <Button Content="Limpiar"
+                                    Classes="secondary"
+                                    Command="{Binding LimpiarFormularioCommand}"/>
+                            <Button Content="Activar"
+                                    Classes="secondary"
+                                    IsVisible="{Binding PuedeActivar}"
+                                    Command="{Binding ActivarCommand}"/>
+                            <Button Content="Desactivar"
+                                    Classes="danger"
+                                    IsVisible="{Binding PuedeDesactivar}"
+                                    Command="{Binding DesactivarCommand}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding MensajeOperacion}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}"
+                                CornerRadius="10"
+                                Padding="14"
+                                IsVisible="{Binding HayCliente}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Estado de cuenta" Classes="subsection"/>
+
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto"
+                                      RowSpacing="4">
+                                    <TextBlock Text="Saldo pendiente" Classes="caption"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SaldoActualTexto}"
+                                               FontSize="22"
+                                               FontWeight="ExtraBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                    <TextBlock Grid.Row="1" Text="Límite de crédito" Classes="caption"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1"
+                                               Text="{Binding LimiteCreditoActualTexto}"/>
+
+                                    <TextBlock Grid.Row="2" Text="Crédito disponible" Classes="caption"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                               Text="{Binding CreditoDisponibleTexto}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource SuccessBrush}"/>
+                                </Grid>
+
+                                <TextBlock Text="Ventas a crédito"
+                                           Classes="fieldLabel"/>
+                                <TextBlock Text="Este cliente no tiene ventas a crédito."
+                                           Classes="caption"
+                                           IsVisible="{Binding SinVentasPendientes}"/>
+
+                                <DataGrid ItemsSource="{Binding VentasPendientes}"
+                                          SelectedItem="{Binding SelectedVentaPendiente}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          MaxHeight="220"
+                                          IsVisible="{Binding !SinVentasPendientes}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Ticket"
+                                                            Binding="{Binding Ticket}"
+                                                            Width="100"/>
+                                        <DataGridTextColumn Header="Fecha"
+                                                            Binding="{Binding FechaTexto}"
+                                                            Width="140"/>
+                                        <DataGridTextColumn Header="Total"
+                                                            Binding="{Binding TotalTexto}"
+                                                            Width="90"/>
+                                        <DataGridTextColumn Header="Abonado"
+                                                            Binding="{Binding AbonadoTexto}"
+                                                            Width="90"/>
+                                        <DataGridTextColumn Header="Pendiente"
+                                                            Binding="{Binding PendienteTexto}"
+                                                            Width="100"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Button Content="Registrar abono"
+                                        Classes="primary"
+                                        IsEnabled="{Binding PuedeAbonar}"
+                                        Command="{Binding AbonarCommand}"/>
+
+                                <TextBlock Text="Abonos recientes" Classes="fieldLabel"/>
+                                <ItemsControl ItemsSource="{Binding AbonosItems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Abono">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                                <StackPanel Spacing="1">
+                                                    <TextBlock Text="{Binding Ticket}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding FechaTexto}"
+                                                               Classes="caption"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1"
+                                                            HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding MontoTexto}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding MetodoTexto}"
+                                                               Classes="caption"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </controls:ResponsiveTwoPane>
+    </Border>
+</UserControl>

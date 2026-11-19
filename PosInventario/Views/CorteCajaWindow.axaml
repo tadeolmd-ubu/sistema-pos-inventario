@@ -91,7 +91,7 @@
                             <TextBlock Text="Ventas de la caja" Classes="fieldLabel"/>
 
                             <Grid ColumnDefinitions="*,Auto"
-                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                                   RowSpacing="3">
                                 <TextBlock Grid.Row="0" Text="Cantidad" Classes="caption"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1"
@@ -109,8 +109,12 @@
                                 <TextBlock Grid.Row="3" Grid.Column="1"
                                            Text="{Binding TotalTransferenciaTexto}"/>
 
-                                <TextBlock Grid.Row="4" Text="Total vendido" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="4" Text="Crédito" Classes="caption"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1"
+                                           Text="{Binding TotalCreditoTexto}"/>
+
+                                <TextBlock Grid.Row="5" Text="Total vendido" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1"
                                            Text="{Binding TotalVentasTexto}"
                                            FontWeight="SemiBold"/>
                             </Grid>
