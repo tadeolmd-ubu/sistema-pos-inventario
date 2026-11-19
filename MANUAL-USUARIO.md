@@ -949,3 +949,6 @@ filtrar y **Enter** lo agrega. Los botones **◀/▶** también cambian de pági
 Si algo no coincide con lo que ves en pantalla, revisa primero la sección
 [Problemas comunes](#19-problemas-comunes) y luego comparte el mensaje exacto
 y el archivo de log más reciente con soporte técnico.
+
+La instalación, el respaldo inicial, la capacitación y el contacto de soporte
+se entregan con [`ENTREGA-CLIENTE.md`](ENTREGA-CLIENTE.md).
