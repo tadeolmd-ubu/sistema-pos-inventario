@@ -402,7 +402,7 @@
 - [x] **5.1 Productos por peso o unidades decimales**
   - **Qué:** cantidades y stock decimales, precios por kg.
   - **Cuándo:** carnicería, frutería, abarrotes a granel.
-  - **Hecho en:** rama `feat/productos-por-peso` (adc8cf0): unidad de venta
+  - **Hecho en:** rama `feat/productos-por-peso` (01e6118): unidad de venta
     `Pieza`/`Kilogramo`, cantidades y stock con 3 decimales guardados en
     milésimas, captura de peso en Caja, compras, inventario, devoluciones,
     ticket, reportes, CSV/Excel e importación con columna `unidad`.
