@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.Data;
 
@@ -61,12 +62,17 @@ public class AppDbContext : DbContext
                 .HasMaxLength(100).IsRequired();
             e.Property(x => x.Descripcion).HasColumnName("descripcion")
                 .HasMaxLength(500);
+            e.Property(x => x.UnidadMedida).HasColumnName("unidadMedida")
+                .HasConversion<string>().HasMaxLength(15).IsRequired()
+                .HasDefaultValue(UnidadMedida.Pieza);
             e.Property(x => x.PrecioVenta).HasColumnName("precioVenta")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Costo).HasColumnName("costo")
                 .HasColumnType("decimal(12,2)").IsRequired();
-            e.Property(x => x.Stock).HasColumnName("stock").IsRequired();
-            e.Property(x => x.StockMinimo).HasColumnName("stockMinimo").IsRequired();
+            e.Property(x => x.Stock).HasColumnName("stock")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockMinimo).HasColumnName("stockMinimo")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.FechaArchivado).HasColumnName("fechaArchivado");
             e.Property(x => x.FechaCreacion).HasColumnName("fechaCreacion").IsRequired();
             e.Property(x => x.FechaModificacion).HasColumnName("fechaModificacion").IsRequired();
@@ -148,7 +154,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.IdCompra).HasColumnName("idCompra").IsRequired();
             e.Property(x => x.IdProducto).HasColumnName("idProducto").IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.CostoUnitario).HasColumnName("costoUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")
@@ -186,9 +193,12 @@ public class AppDbContext : DbContext
             e.Property(x => x.IdUsuario).HasColumnName("idUsuario").IsRequired();
             e.Property(x => x.Tipo).HasColumnName("tipo")
                 .HasConversion<string>().HasMaxLength(20).IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
-            e.Property(x => x.StockAnterior).HasColumnName("stockAnterior").IsRequired();
-            e.Property(x => x.StockResultante).HasColumnName("stockResultante").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockAnterior).HasColumnName("stockAnterior")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockResultante).HasColumnName("stockResultante")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.Referencia).HasColumnName("referencia").HasMaxLength(100);
             e.Property(x => x.IdVenta).HasColumnName("idVenta");
             e.Property(x => x.IdCompra).HasColumnName("idCompra");
@@ -404,9 +414,11 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.IdVenta).HasColumnName("idVenta").IsRequired();
             e.Property(x => x.IdProducto).HasColumnName("idProducto").IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.CantidadDevuelta).HasColumnName("cantidadDevuelta")
-                .IsRequired().HasDefaultValue(0);
+                .HasConversion(CantidadesConvertidor.Instancia)
+                .IsRequired().HasDefaultValue(0m);
             e.Property(x => x.PrecioUnitario).HasColumnName("precioUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.CostoUnitario).HasColumnName("costoUnitario")

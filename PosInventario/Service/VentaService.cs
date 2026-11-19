@@ -254,17 +254,42 @@ public class VentaService
             return new Resultado<Venta>(
                 false, "No se pueden vender productos archivados.", null);
 
-        var subtotal = 0m;
+        var cantidades = new Dictionary<int, decimal>();
 
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
 
-            if (producto.Stock < linea.Cantidad)
+            if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                return new Resultado<Venta>(
+                    false, "La cantidad no puede tener más de 3 decimales.", null);
+
+            if (producto.UnidadMedida == UnidadMedida.Pieza &&
+                !Cantidades.EsEntera(linea.Cantidad))
+            {
+                return new Resultado<Venta>(
+                    false,
+                    $"Para {producto.Nombre}, la cantidad debe ser un número entero.",
+                    null);
+            }
+
+            var cantidad = Cantidades.Normalizar(linea.Cantidad);
+            cantidades[producto.Id] = cantidad;
+
+            if (producto.Stock < cantidad)
                 return new Resultado<Venta>(
                     false, $"No hay stock suficiente de {producto.Nombre}.", null);
+        }
 
-            subtotal += producto.PrecioVenta * linea.Cantidad;
+        var subtotal = 0m;
+
+        foreach (var linea in lineas)
+        {
+            var producto = productos.First(p => p.Id == linea.IdProducto);
+            subtotal += Math.Round(
+                producto.PrecioVenta * cantidades[producto.Id],
+                2,
+                MidpointRounding.AwayFromZero);
         }
 
         if (descuento < 0)
@@ -331,18 +356,22 @@ public class VentaService
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
+            var cantidad = cantidades[producto.Id];
             var precioUnitario = producto.PrecioVenta;
-            var subtotalLinea = precioUnitario * linea.Cantidad;
+            var subtotalLinea = Math.Round(
+                precioUnitario * cantidad,
+                2,
+                MidpointRounding.AwayFromZero);
 
             var stockAnterior = producto.Stock;
-            producto.Stock -= linea.Cantidad;
+            producto.Stock -= cantidad;
             producto.FechaModificacion = momento;
 
             venta.Detalles.Add(new DetalleVenta
             {
                 IdProducto = producto.Id,
                 Producto = producto,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 PrecioUnitario = precioUnitario,
                 CostoUnitario = producto.Costo,
                 Subtotal = subtotalLinea
@@ -353,7 +382,7 @@ public class VentaService
                 IdProducto = producto.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimiento.Venta,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 StockAnterior = stockAnterior,
                 StockResultante = producto.Stock,
                 Referencia = "Venta",
@@ -512,7 +541,7 @@ public class VentaService
         }
 
         // Sin líneas se devuelven todas las unidades pendientes (anulación).
-        Dictionary<int, int> cantidades;
+        Dictionary<int, decimal> cantidades;
 
         if (lineas is null)
         {
@@ -546,11 +575,25 @@ public class VentaService
                     return new Resultado(
                         false, "La cantidad a devolver debe ser mayor que 0.");
 
-                if (linea.Cantidad > detalle.CantidadPendiente)
-                    return new Resultado(false,
-                        $"No se pueden devolver más unidades de {detalle.Producto!.Nombre} de las vendidas.");
+                if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                    return new Resultado(
+                        false, "La cantidad a devolver no puede tener más de 3 decimales.");
 
-                cantidades[detalle.Id] = linea.Cantidad;
+                if (detalle.Producto!.UnidadMedida == UnidadMedida.Pieza &&
+                    !Cantidades.EsEntera(linea.Cantidad))
+                {
+                    return new Resultado(
+                        false,
+                        $"Para {detalle.Producto.Nombre}, la cantidad a devolver debe ser un número entero.");
+                }
+
+                var cantidad = Cantidades.Normalizar(linea.Cantidad);
+
+                if (cantidad > detalle.CantidadPendiente)
+                    return new Resultado(false,
+                        $"No se puede devolver más de {detalle.Producto.Nombre} de lo vendido.");
+
+                cantidades[detalle.Id] = cantidad;
             }
         }
 
@@ -686,9 +729,13 @@ public class VentaService
         if (cantidadPendiente <= 0)
             return 0;
 
-        var unidadesADevolver = lineas?.Sum(l => l.Cantidad) ?? cantidadPendiente;
+        var devolucionTotal = lineas is null || venta.Detalles
+            .Where(d => d.CantidadPendiente > 0)
+            .All(d => lineas.Any(l =>
+                l.IdDetalleVenta == d.Id &&
+                Cantidades.Normalizar(l.Cantidad) == d.CantidadPendiente));
 
-        if (unidadesADevolver == cantidadPendiente)
+        if (devolucionTotal)
             return totalPendiente;
 
         var factor = venta.Subtotal > 0 ? venta.Total / venta.Subtotal : 1m;
@@ -703,7 +750,9 @@ public class VentaService
                 continue;
 
             reembolso += Math.Round(
-                detalle.PrecioUnitario * linea.Cantidad * factor, 2);
+                detalle.PrecioUnitario * linea.Cantidad * factor,
+                2,
+                MidpointRounding.AwayFromZero);
         }
 
         return Math.Min(reembolso, totalPendiente);

@@ -49,7 +49,8 @@
 
 - Una sola PC y una sola base SQLite local.
 - Una sola caja abierta a la vez.
-- Cantidades y stock enteros.
+- Los productos por pieza usan cantidades enteras; los productos por peso
+  usan kilogramos con hasta tres decimales.
 - Una sola forma de pago por venta.
 - El reembolso en efectivo de una devolución requiere una caja abierta; con
   tarjeta o transferencia la devolución se registra de todos modos.
@@ -398,9 +399,13 @@
 
 ## Fase 5 — Módulos según el cliente (no universales)
 
-- [ ] **5.1 Productos por peso o unidades decimales**
+- [x] **5.1 Productos por peso o unidades decimales**
   - **Qué:** cantidades y stock decimales, precios por kg.
   - **Cuándo:** carnicería, frutería, abarrotes a granel.
+  - **Hecho en:** rama `feat/productos-por-peso` (01e6118): unidad de venta
+    `Pieza`/`Kilogramo`, cantidades y stock con 3 decimales guardados en
+    milésimas, captura de peso en Caja, compras, inventario, devoluciones,
+    ticket, reportes, CSV/Excel e importación con columna `unidad`.
   - **Tamaño:** L.
 
 - [ ] **5.2 Clientes y ventas a crédito**

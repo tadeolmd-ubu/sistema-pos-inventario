@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:CantidadPesoViewModel"
+        x:Class="PosInventario.Views.CantidadPesoWindow"
+        Title="Cantidad"
+        Width="430"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="12">
+
+            <TextBlock Text="{Binding Titulo}" Classes="subsection"/>
+            <TextBlock Text="Escribe el peso del producto."
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Peso (kg)" Classes="fieldLabel"/>
+                <TextBox x:Name="CantidadBox"
+                         Text="{Binding CantidadTexto}"
+                         PlaceholderText="0.000"/>
+                <TextBlock Text="Máximo 3 decimales."
+                           Classes="caption"/>
+            </StackPanel>
+
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="0.250"
+                        Classes="secondary small"
+                        Margin="0,0,6,6"
+                        Command="{Binding UsarCantidadRapidaCommand}"
+                        CommandParameter="0.250"/>
+                <Button Content="0.500"
+                        Classes="secondary small"
+                        Margin="0,0,6,6"
+                        Command="{Binding UsarCantidadRapidaCommand}"
+                        CommandParameter="0.500"/>
+                <Button Content="1.000"
+                        Classes="secondary small"
+                        Margin="0,0,6,6"
+                        Command="{Binding UsarCantidadRapidaCommand}"
+                        CommandParameter="1.000"/>
+                <Button Content="2.000"
+                        Classes="secondary small"
+                        Margin="0,0,6,6"
+                        Command="{Binding UsarCantidadRapidaCommand}"
+                        CommandParameter="2.000"/>
+            </WrapPanel>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12">
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Precio por kg" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding PrecioTexto}"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Stock disponible" Classes="caption"/>
+                        <TextBlock Grid.Column="1" Text="{Binding StockTexto}"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Subtotal" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding SubtotalTexto}"
+                                   FontWeight="SemiBold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cerrar_Click"/>
+                <Button Content="Agregar"
+                        Classes="primary"
+                        Command="{Binding ConfirmarCommand}"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

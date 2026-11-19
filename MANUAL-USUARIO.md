@@ -222,13 +222,19 @@ Con la caja abierta, en la tarjeta **Venta**:
    Las flechas **←/→** cambian de página.
 4. Cada producto aparece en la tabla con **Producto, SKU, Precio, Cantidad,
    Subtotal** y botones de acción.
+5. Si el producto se vende **por peso**, el sistema abre una ventana para
+   capturar los kilogramos. Escribe el peso o usa un botón rápido
+   (**0.250, 0.500, 1.000 o 2.000**) y presiona **Agregar**. La ventana muestra
+   el precio por kg, el stock disponible y el subtotal antes de confirmar.
 
 Si el código no existe, el sistema avisa: **"No se encontró un producto con el
 código…"**. Revisa el código o da de alta el producto en **Productos**.
 
 ### 6.2 Cambiar cantidades y aplicar descuento
 
-- **+** y **−** aumentan o disminuyen una unidad.
+- **+** y **−** aumentan o disminuyen una unidad en productos por pieza.
+- En productos por peso, usa **Editar** para cambiar los kilogramos de la
+  línea; la ventana vuelve a mostrar el subtotal.
 - **✕** elimina la línea (pide confirmación).
 - Con el teclado: selecciona una línea y usa **+ / −** para la cantidad o
   **Delete** para quitarla.
@@ -271,7 +277,7 @@ Si la venta se devolvió por completo, el ticket muestra la marca **ANULADA**.
 
 ### 6.5 Qué pasa con el inventario
 
-- Cada venta descuenta automáticamente las unidades del stock.
+- Cada venta descuenta automáticamente las unidades o kilogramos del stock.
 - Si un producto no tiene stock, el sistema no permite agregarlo:
   **"El producto no tiene stock."** o **"No hay más stock disponible de ese
   producto."**.
@@ -297,8 +303,11 @@ Puedes devolver una venta completa o solo algunos productos o unidades.
 3. Presiona **Devolver**.
 4. Marca los productos o unidades que regresan:
    - **Seleccionar todos** marca todo lo pendiente.
-   - Si un producto tiene varias unidades, ábrelo y marca cada unidad.
-5. Revisa **Unidades a devolver** y **Reembolso estimado**.
+   - Si un producto es por pieza y tiene varias unidades, ábrelo y marca cada
+     unidad.
+   - Si un producto es por peso, escribe los kilogramos a devolver o usa
+     **Devolver todo**.
+5. Revisa **Cantidad a devolver** y **Reembolso estimado**.
 6. Presiona **Devolver**.
 
 ### 7.2 Desde el historial de ventas (administrador)
@@ -407,7 +416,10 @@ Para dar de alta un producto:
 3. Completa:
    - **Nombre** (mínimo 3 caracteres).
    - **Descripción** (opcional).
-   - **Precio de venta**.
+   - **Unidad de venta:** **Pieza** o **Kilogramo**. En los productos por peso,
+     el precio, el costo y el stock se manejan por kg y aceptan hasta tres
+     decimales.
+   - **Precio de venta** (en productos por peso cambia a **Precio por kg**).
    - **Costo** (lo que te cuesta; se usa para la utilidad de Reportes).
    - **Stock mínimo** (para las alertas de stock bajo; `0` desactiva la
      alerta de ese producto).
@@ -449,11 +461,12 @@ Columnas de la plantilla:
 |---|---|---|---|
 | `sku` | Sí | `ABC-123` | También es el código de barras. Sin espacios, máximo 40 caracteres. |
 | `nombre` | Sí | `Refresco 600 ml` | Mínimo 3 caracteres. |
+| `unidad` | No | `pieza` o `kg` | Si se omite se asume `pieza`. |
 | `descripcion` | No | `Botella de vidrio` | Máximo 500 caracteres. |
 | `precio_venta` | Sí | `18.50` | Puede ser `18.50`, `18,50` o `1,234.56`. |
 | `costo` | No | `12.00` | Si se omite queda en `0`. |
-| `stock_minimo` | No | `5` | Si se omite queda en `0`. |
-| `stock_inicial` | No | `24` | Solo se aplica a productos **nuevos**. |
+| `stock_minimo` | No | `5` | Si se omite queda en `0`. En `kg` acepta decimales. |
+| `stock_inicial` | No | `24` | Solo se aplica a productos **nuevos**. En `kg` acepta decimales. |
 | `proveedor` | No | `Distribuidora del Norte` | Si capturas datos del proveedor, el nombre y el teléfono son obligatorios. |
 | `proveedor_telefono` | No | `555-123-4567` | Identifica al proveedor: si ya existe, se reutiliza. |
 | `proveedor_email` | No | `ventas@proveedor.com` | Opcional. |
@@ -495,7 +508,7 @@ Reglas de la importación:
 Ejemplo de archivo:
 
 ```csv
-sku,nombre,descripcion,precio_venta,costo,stock_minimo,stock_inicial,proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
+sku,nombre,unidad,descripcion,precio_venta,costo,stock_minimo,stock_inicial,proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
 ABC-123,Refresco 600 ml,Botella de vidrio,18.50,12.00,6,24,Distribuidora del Norte,555-123-4567,ventas@proveedor.com,Av. Principal 123
 ABC-124,Agua 1 L,,12.00,7.50,6,36,,,,
 ```
@@ -520,6 +533,8 @@ derecha registras el movimiento.
    - **Ajuste:** corrige el stock después de un conteo físico.
 3. Elige el **Motivo**.
 4. Captura la **Cantidad** (entrada/salida) o el **Stock contado** (ajuste).
+   En productos por peso el campo indica **(kg)** y acepta decimales; en
+   productos por pieza solo se aceptan números enteros.
 5. Presiona **Registrar**.
 
 En un **Ajuste** escribes el número real contado. El sistema calcula la
@@ -546,7 +561,8 @@ diferencia y deja el stock en ese valor.
 2. Elige el **Proveedor** (solo aparecen los activos).
 3. Captura el **Comprobante** (factura o nota de remisión; opcional).
 4. En **Producto**, elige el artículo, la **Cantidad** y el **Costo
-   unitario**.
+   unitario**. En productos por peso los campos cambian a **(kg)** y aceptan
+   decimales.
 5. Presiona **Agregar línea**. Repite para cada producto.
 6. Revisa **Líneas de la compra** y el **Total**. Usa **Quitar línea** si te
    equivocaste.
@@ -622,8 +638,8 @@ Verás:
   tendencia.
 - **Ventas por método:** efectivo, tarjeta y transferencia con monto,
   cantidad y porcentaje.
-- **Productos más vendidos:** top 10 por unidades netas, con SKU, ventas y
-  utilidad.
+- **Productos más vendidos:** top 10 por ventas netas, con SKU, cantidad y
+  unidad, ventas y utilidad.
 
 La utilidad usa el costo guardado al momento de cada venta, de modo que el
 histórico no cambia si después actualizas el costo del producto.
@@ -886,7 +902,8 @@ filtrar y **Enter** lo agrega. Los botones **◀/▶** también cambian de pági
   tarjeta).
 - **Respaldo:** copia de seguridad completa de la base de datos.
 - **SKU:** código único del producto; también se usa como código de barras.
-- **Stock:** cantidad disponible en inventario.
+- **Stock:** cantidad disponible en inventario; se muestra en piezas o kg
+  según la unidad de venta del producto.
 - **Ticket:** comprobante de una venta (`V-000123`).
 
 ---

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.Service;
 
@@ -45,7 +46,7 @@ public static class ExportadorCsv
         var contenido = new StringBuilder();
 
         contenido.Append(Linea(
-            "Fecha", "Producto", "SKU", "Tipo", "Cantidad",
+            "Fecha", "Producto", "SKU", "Unidad", "Tipo", "Cantidad",
             "Stock anterior", "Stock resultante", "Referencia", "Usuario"));
 
         foreach (var movimiento in movimientos)
@@ -54,10 +55,11 @@ public static class ExportadorCsv
                 Fecha(movimiento.Fecha),
                 movimiento.Producto?.Nombre ?? string.Empty,
                 movimiento.Producto?.Sku ?? string.Empty,
+                movimiento.Unidad.Abreviatura(),
                 movimiento.Tipo.ToString(),
-                movimiento.Cantidad.ToString(Cultura),
-                movimiento.StockAnterior.ToString(Cultura),
-                movimiento.StockResultante.ToString(Cultura),
+                movimiento.Unidad.Formatear(movimiento.Cantidad),
+                movimiento.Unidad.Formatear(movimiento.StockAnterior),
+                movimiento.Unidad.Formatear(movimiento.StockResultante),
                 movimiento.Referencia ?? string.Empty,
                 movimiento.Usuario?.Nombre ?? string.Empty));
         }
@@ -81,7 +83,8 @@ public static class ExportadorCsv
                 compra.Proveedor?.Nombre ?? string.Empty,
                 compra.NumeroComprobante ?? string.Empty,
                 compra.Estado.ToString(),
-                compra.Detalles.Sum(d => d.Cantidad).ToString(Cultura),
+                compra.Detalles.Sum(d => d.Cantidad)
+                    .ToString("0.###", Cultura),
                 Monto(compra.Total),
                 compra.Usuario?.Nombre ?? string.Empty));
         }

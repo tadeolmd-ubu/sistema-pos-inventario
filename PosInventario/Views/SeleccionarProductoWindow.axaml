@@ -77,12 +77,12 @@
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="{Binding Sku}" Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding PrecioVenta, StringFormat='{}{0:0.00}'}"
+                                        <TextBlock Text="{Binding PrecioVentaTexto}"
                                                    Classes="caption"/>
                                     </StackPanel>
                                 </StackPanel>
                                 <TextBlock Grid.Column="1"
-                                           Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                           Text="{Binding StockTexto, StringFormat='Stock {0}'}"
                                            Classes="caption"
                                            VerticalAlignment="Center"/>
                             </Grid>

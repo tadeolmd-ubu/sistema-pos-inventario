@@ -126,24 +126,24 @@ public class InventarioService
     }
 
     public Task<Resultado<MovimientoInventario>> RegistrarEntradaAsync(
-        int idProducto, int cantidad, string referencia)
+        int idProducto, decimal cantidad, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Entrada, cantidad, referencia, esAjuste: false);
 
     public Task<Resultado<MovimientoInventario>> RegistrarSalidaAsync(
-        int idProducto, int cantidad, string referencia)
+        int idProducto, decimal cantidad, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Salida, cantidad, referencia, esAjuste: false);
 
     public Task<Resultado<MovimientoInventario>> RegistrarAjusteAsync(
-        int idProducto, int stockContado, string referencia)
+        int idProducto, decimal stockContado, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Ajuste, stockContado, referencia, esAjuste: true);
 
     private async Task<Resultado<MovimientoInventario>> RegistrarManualAsync(
         int idProducto,
         TipoMovimiento tipo,
-        int valor,
+        decimal valor,
         string referencia,
         bool esAjuste)
     {
@@ -184,9 +184,24 @@ public class InventarioService
             return new Resultado<MovimientoInventario>(
                 false, "El producto está archivado.", null);
 
+        if (Cantidades.TieneDemasiadosDecimales(valor))
+            return new Resultado<MovimientoInventario>(
+                false, "La cantidad no puede tener más de 3 decimales.", null);
+
+        if (producto.UnidadMedida == UnidadMedida.Pieza &&
+            !Cantidades.EsEntera(valor))
+        {
+            return new Resultado<MovimientoInventario>(
+                false,
+                "Para productos por pieza, la cantidad debe ser un número entero.",
+                null);
+        }
+
+        valor = Cantidades.Normalizar(valor);
+
         var stockAnterior = producto.Stock;
-        int stockResultante;
-        int cantidadMovimiento;
+        decimal stockResultante;
+        decimal cantidadMovimiento;
 
         switch (tipo)
         {

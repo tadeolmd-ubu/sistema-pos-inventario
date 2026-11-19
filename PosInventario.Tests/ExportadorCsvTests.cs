@@ -58,12 +58,12 @@ public class ExportadorCsvTests
             .Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(
-            "Fecha,Producto,SKU,Tipo,Cantidad,Stock anterior," +
+            "Fecha,Producto,SKU,Unidad,Tipo,Cantidad,Stock anterior," +
             "Stock resultante,Referencia,Usuario",
             lineas[0]);
         Assert.Equal(
             "12/11/2026 09:05,\"Producto \"\"especial\"\", grande\",ABC-001," +
-            "Entrada,5,2,7,\"Carga, inicial\",Administrador",
+            "pza,Entrada,5,2,7,\"Carga, inicial\",Administrador",
             lineas[1]);
     }
 
@@ -100,7 +100,7 @@ public class ExportadorCsvTests
     public void ListaVaciaConservaElEncabezado()
     {
         Assert.Equal(
-            "Fecha,Producto,SKU,Tipo,Cantidad,Stock anterior," +
+            "Fecha,Producto,SKU,Unidad,Tipo,Cantidad,Stock anterior," +
             "Stock resultante,Referencia,Usuario\r\n",
             ExportadorCsv.Inventario([]));
     }

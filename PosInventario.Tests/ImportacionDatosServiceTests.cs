@@ -315,6 +315,7 @@ public class ImportacionDatosServiceTests
 
         Assert.Contains("sku", encabezados);
         Assert.Contains("nombre", encabezados);
+        Assert.Contains("unidad", encabezados);
         Assert.Contains("precio_venta", encabezados);
         Assert.Contains("stock_inicial", encabezados);
         Assert.Contains("proveedor_telefono", encabezados);

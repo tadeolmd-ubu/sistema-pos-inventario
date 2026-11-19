@@ -59,6 +59,14 @@ public partial class ComprasViewModel : OperacionViewModel
 
     public bool HayLineas => LineasItems.Count > 0;
 
+    public bool EsPorPeso => SelectedProducto?.EsPorPeso == true;
+
+    public string EtiquetaCantidad =>
+        EsPorPeso ? "Cantidad (kg)" : "Cantidad";
+
+    public string EtiquetaCosto =>
+        EsPorPeso ? "Costo por kg" : "Costo unitario";
+
     public bool PuedeAnular =>
         SelectedCompra is not null && SelectedCompra.Estado == EstadoCompra.Completada;
 
@@ -152,6 +160,10 @@ public partial class ComprasViewModel : OperacionViewModel
 
     partial void OnSelectedProductoChanged(Producto? value)
     {
+        OnPropertyChanged(nameof(EsPorPeso));
+        OnPropertyChanged(nameof(EtiquetaCantidad));
+        OnPropertyChanged(nameof(EtiquetaCosto));
+
         if (value is null) return;
 
         CostoTexto = value.Costo.ToString("0.00", Cultura);
@@ -166,9 +178,24 @@ public partial class ComprasViewModel : OperacionViewModel
             return;
         }
 
-        if (!TryParseEntero(CantidadTexto, out var cantidad) || cantidad <= 0)
+        if (!TryParseDecimal(CantidadTexto, out var cantidad) || cantidad <= 0)
         {
-            MensajeOperacion = Notificar("La cantidad debe ser un número entero mayor que 0.");
+            MensajeOperacion = Notificar("La cantidad debe ser un número mayor que 0.");
+            return;
+        }
+
+        if (SelectedProducto.UnidadMedida == UnidadMedida.Pieza &&
+            !Cantidades.EsEntera(cantidad))
+        {
+            MensajeOperacion = Notificar(
+                "Para productos por pieza, la cantidad debe ser un número entero.");
+            return;
+        }
+
+        if (Cantidades.TieneDemasiadosDecimales(cantidad))
+        {
+            MensajeOperacion = Notificar(
+                "La cantidad no puede tener más de 3 decimales.");
             return;
         }
 
@@ -292,12 +319,6 @@ public partial class ComprasViewModel : OperacionViewModel
     {
         var limpio = (texto ?? string.Empty).Trim().Replace(',', '.');
         return decimal.TryParse(limpio, NumberStyles.Number, Cultura, out valor);
-    }
-
-    private static bool TryParseEntero(string? texto, out int valor)
-    {
-        var limpio = (texto ?? string.Empty).Trim();
-        return int.TryParse(limpio, NumberStyles.Integer, Cultura, out valor);
     }
 
     private static void ReemplazarItems<T>(

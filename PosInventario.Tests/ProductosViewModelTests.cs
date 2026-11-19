@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 using PosInventario.Service;
 using PosInventario.ViewModels;
 
@@ -128,5 +129,22 @@ public class ProductosViewModelTests
 
         Assert.Null(contexto.ViewModel.SelectedProducto);
         Assert.Equal(string.Empty, contexto.ViewModel.Sku);
+    }
+
+    [Fact]
+    public void CambiarLaUnidadActualizaLasEtiquetas()
+    {
+        var vm = new ProductosViewModel();
+
+        Assert.False(vm.EsPorPeso);
+        Assert.Equal("Precio de venta", vm.EtiquetaPrecio);
+        Assert.Equal("Stock mínimo", vm.EtiquetaStockMinimo);
+
+        vm.UnidadMedidaSeleccionada = UnidadMedida.Kilogramo;
+
+        Assert.True(vm.EsPorPeso);
+        Assert.Equal("Precio por kg", vm.EtiquetaPrecio);
+        Assert.Equal("Costo por kg", vm.EtiquetaCosto);
+        Assert.Equal("Stock mínimo (kg)", vm.EtiquetaStockMinimo);
     }
 }

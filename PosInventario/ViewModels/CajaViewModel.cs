@@ -53,6 +53,14 @@ public partial class CajaViewModel : OperacionViewModel
     [ObservableProperty] private string busquedaRapida = string.Empty;
 
     /// <summary>
+    /// La vista pregunta el peso cuando se agrega o edita un producto por peso.
+    /// </summary>
+    public delegate Task<decimal?> PedirCantidadPesoHandler(
+        Producto producto, decimal cantidadInicial);
+
+    public event PedirCantidadPesoHandler? CantidadPesoPreguntada;
+
+    /// <summary>
     /// La vista abre la ventana de selección de productos.
     /// </summary>
     public event Action<SeleccionarProductoViewModel>? SeleccionarProductoSolicitado;
@@ -294,42 +302,123 @@ public partial class CajaViewModel : OperacionViewModel
             return;
         }
 
-        AgregarProducto(producto);
+        await AgregarProductoAsync(producto);
         BusquedaRapida = string.Empty;
     });
 
     /// <summary>
     /// La llama la vista cuando la ventana de selección devuelve un producto.
+    /// Los productos por peso piden la cantidad antes de agregarse.
     /// </summary>
-    public void AgregarProducto(Producto producto)
+    public async Task AgregarProductoAsync(Producto producto)
     {
-        if (producto.Stock <= 0)
+        if (producto.Stock <= 0m)
         {
             MensajeOperacion = Notificar("El producto no tiene stock.");
             return;
         }
 
+        if (producto.EsPorPeso)
+        {
+            var cantidad = await PedirCantidadPesoAsync(producto, 1m);
+
+            if (cantidad is null)
+                return;
+
+            AgregarProductoConCantidad(producto, cantidad.Value);
+            return;
+        }
+
+        AgregarProductoConCantidad(producto, 1m);
+    }
+
+    private async Task<decimal?> PedirCantidadPesoAsync(
+        Producto producto, decimal cantidadInicial)
+    {
+        var handler = CantidadPesoPreguntada;
+
+        return handler is null
+            ? null
+            : await handler(producto, cantidadInicial);
+    }
+
+    private void AgregarProductoConCantidad(
+        Producto producto, decimal cantidad)
+    {
+        var etiqueta = producto.EsPorPeso ? "El peso" : "La cantidad";
+        var error = Cantidades.ErrorCantidad(
+            cantidad, producto.UnidadMedida, etiqueta);
+
+        if (error is not null)
+        {
+            MensajeOperacion = Notificar(error);
+            return;
+        }
+
+        cantidad = Cantidades.Normalizar(cantidad);
+
         var existente = LineasVentaItems
             .FirstOrDefault(l => l.Producto.Id == producto.Id);
 
-        if (existente is not null)
-        {
-            if (existente.Cantidad >= producto.Stock)
-            {
-                MensajeOperacion = Notificar("No hay más stock disponible de ese producto.");
-                return;
-            }
+        var nuevaCantidad = (existente?.Cantidad ?? 0m) + cantidad;
 
-            existente.Fusionar(1);
-        }
-        else
+        if (nuevaCantidad > producto.Stock)
         {
-            LineasVentaItems.Add(new LineaVentaItem(
-                producto, 1, AumentarLinea, DisminuirLinea, SolicitarEliminarLinea));
+            MensajeOperacion = Notificar(
+                producto.EsPorPeso
+                    ? $"El peso no puede superar el stock disponible " +
+                      $"({producto.StockTexto})."
+                    : "No hay más stock disponible de ese producto.");
+            return;
         }
+
+        if (existente is not null)
+            existente.Fusionar(cantidad);
+        else
+            LineasVentaItems.Add(new LineaVentaItem(
+                producto,
+                cantidad,
+                AumentarLinea,
+                DisminuirLinea,
+                SolicitarEliminarLinea,
+                EditarLineaAsync));
 
         NotificarVenta();
         MensajeOperacion = string.Empty;
+    }
+
+    private async Task EditarLineaAsync(LineaVentaItem linea)
+    {
+        var cantidad = await PedirCantidadPesoAsync(
+            linea.Producto, linea.Cantidad);
+
+        if (cantidad is null)
+            return;
+
+        var etiqueta = linea.Producto.EsPorPeso
+            ? "El peso"
+            : "La cantidad";
+        var error = Cantidades.ErrorCantidad(
+            cantidad.Value, linea.Producto.UnidadMedida, etiqueta);
+
+        if (error is not null)
+        {
+            MensajeOperacion = Notificar(error);
+            return;
+        }
+
+        if (cantidad.Value > linea.Producto.Stock)
+        {
+            MensajeOperacion = Notificar(
+                linea.Producto.EsPorPeso
+                    ? $"El peso no puede superar el stock disponible " +
+                      $"({linea.Producto.StockTexto})."
+                    : "No hay más stock disponible de ese producto.");
+            return;
+        }
+
+        linea.EstablecerCantidad(cantidad.Value);
+        NotificarVenta();
     }
 
     /// <summary>
@@ -343,6 +432,9 @@ public partial class CajaViewModel : OperacionViewModel
 
     private void AumentarLinea(LineaVentaItem linea)
     {
+        if (linea.EsPorPeso)
+            return;
+
         if (linea.Cantidad >= linea.Producto.Stock)
         {
             MensajeOperacion = Notificar("No hay más stock disponible de ese producto.");
@@ -355,6 +447,9 @@ public partial class CajaViewModel : OperacionViewModel
 
     private void DisminuirLinea(LineaVentaItem linea)
     {
+        if (linea.EsPorPeso)
+            return;
+
         if (linea.Cantidad <= 1)
         {
             SolicitarEliminarLinea(linea);

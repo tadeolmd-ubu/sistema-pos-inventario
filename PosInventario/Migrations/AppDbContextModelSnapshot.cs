@@ -156,7 +156,7 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
@@ -199,14 +199,14 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
-                    b.Property<int>("CantidadDevuelta")
+                    b.Property<long>("CantidadDevuelta")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(0)
+                        .HasDefaultValue(0L)
                         .HasColumnName("cantidadDevuelta");
 
                     b.Property<decimal>("CostoUnitario")
@@ -308,7 +308,7 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
@@ -337,11 +337,11 @@ namespace PosInventario.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("referencia");
 
-                    b.Property<int>("StockAnterior")
+                    b.Property<long>("StockAnterior")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockAnterior");
 
-                    b.Property<int>("StockResultante")
+                    b.Property<long>("StockResultante")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockResultante");
 
@@ -461,13 +461,21 @@ namespace PosInventario.Migrations
                         .HasColumnName("sku")
                         .UseCollation("NOCASE");
 
-                    b.Property<int>("Stock")
+                    b.Property<long>("Stock")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stock");
 
-                    b.Property<int>("StockMinimo")
+                    b.Property<long>("StockMinimo")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockMinimo");
+
+                    b.Property<string>("UnidadMedida")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Pieza")
+                        .HasColumnName("unidadMedida");
 
                     b.HasKey("Id");
 

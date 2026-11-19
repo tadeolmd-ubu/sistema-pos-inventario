@@ -1,3 +1,5 @@
+using PosInventario.Models.Enums;
+
 namespace PosInventario.Service;
 
 public sealed record ErrorImportacion(int Fila, string Mensaje);
@@ -6,11 +8,12 @@ public sealed record FilaImportacion(
     int Fila,
     string Sku,
     string Nombre,
+    UnidadMedida UnidadMedida,
     string? Descripcion,
     decimal PrecioVenta,
     decimal Costo,
-    int StockMinimo,
-    int StockInicial,
+    decimal StockMinimo,
+    decimal StockInicial,
     string? ProveedorNombre,
     string? ProveedorTelefono,
     string? ProveedorEmail,
@@ -25,7 +28,7 @@ public sealed class ImportacionVistaPrevia
     public required int ProductosActualizados { get; init; }
     public required int ProveedoresNuevos { get; init; }
     public required int ProveedoresReutilizados { get; init; }
-    public required int UnidadesStock { get; init; }
+    public required decimal UnidadesStock { get; init; }
 
     public bool PuedeImportar => Errores.Count == 0 && Filas.Count > 0;
 }
@@ -34,5 +37,5 @@ public sealed record ImportacionResultado(
     int ProductosNuevos,
     int ProductosActualizados,
     int ProveedoresNuevos,
-    int UnidadesStock,
+    decimal UnidadesStock,
     string Mensaje);

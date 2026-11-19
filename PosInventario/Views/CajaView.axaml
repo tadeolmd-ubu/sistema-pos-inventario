@@ -116,24 +116,30 @@
                                                         Binding="{Binding Sku}"
                                                         Width="120"/>
                                     <DataGridTextColumn Header="Precio"
-                                                        Binding="{Binding PrecioUnitario, StringFormat='{}{0:0.00}'}"
+                                                        Binding="{Binding PrecioUnitarioTexto}"
                                                         Width="105"/>
                                     <DataGridTextColumn Header="Cantidad"
-                                                        Binding="{Binding Cantidad}"
-                                                        Width="90"/>
-                                    <DataGridTextColumn Header="Subtotal"
-                                                        Binding="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                        Binding="{Binding CantidadConUnidadTexto}"
                                                         Width="110"/>
-                                    <DataGridTemplateColumn Header="Acciones" Width="165">
+                                    <DataGridTextColumn Header="Subtotal"
+                                                        Binding="{Binding SubtotalTexto}"
+                                                        Width="110"/>
+                                    <DataGridTemplateColumn Header="Acciones" Width="190">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate x:DataType="vm:LineaVentaItem">
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <Button Content="+"
                                                             Classes="secondary small"
+                                                            IsVisible="{Binding EsPorPieza}"
                                                             Command="{Binding AumentarCommand}"/>
                                                     <Button Content="−"
                                                             Classes="secondary small"
+                                                            IsVisible="{Binding EsPorPieza}"
                                                             Command="{Binding DisminuirCommand}"/>
+                                                    <Button Content="Editar"
+                                                            Classes="secondary small"
+                                                            IsVisible="{Binding EsPorPeso}"
+                                                            Command="{Binding EditarCommand}"/>
                                                     <Button Content="✕"
                                                             Classes="danger small"
                                                             Command="{Binding EliminarCommand}"/>

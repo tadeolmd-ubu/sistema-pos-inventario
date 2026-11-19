@@ -1058,7 +1058,7 @@ public class VentaServiceTests
             prueba.CajaService, prueba.VentaService,
             prueba.ProductoService, prueba.Sesion);
 
-        vm.AgregarProducto(producto);
+        await vm.AgregarProductoAsync(producto);
         vm.MontoEfectivoTexto = "100";
 
         await vm.CobrarCommand.ExecuteAsync(null);

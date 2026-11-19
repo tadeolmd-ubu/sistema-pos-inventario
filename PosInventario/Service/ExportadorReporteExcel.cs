@@ -12,6 +12,7 @@ public static class ExportadorReporteExcel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private const string FormatoMonto = "#,##0.00";
+    private const string FormatoCantidad = "0.###";
     private const string FormatoPorcentaje = "0.0%";
     private const string ColorEncabezado = "#1F4E79";
     private const string ColorTotales = "#E8F1FA";
@@ -189,7 +190,8 @@ public static class ExportadorReporteExcel
         var hoja = libro.Worksheets.Add("Productos");
         var encabezados = new[]
         {
-            "SKU", "Producto", "Unidades", "Ventas", "Costo", "Utilidad"
+            "SKU", "Producto", "Unidad", "Cantidad",
+            "Ventas", "Costo", "Utilidad"
         };
 
         for (var c = 0; c < encabezados.Length; c++)
@@ -202,11 +204,13 @@ public static class ExportadorReporteExcel
         {
             hoja.Cell(fila, 1).Value = producto.Sku;
             hoja.Cell(fila, 2).Value = producto.Nombre;
-            hoja.Cell(fila, 3).Value = (double)producto.Cantidad;
-            hoja.Cell(fila, 4).Value = (double)producto.Ventas;
-            hoja.Cell(fila, 5).Value = (double)producto.Costo;
-            hoja.Cell(fila, 6).Value = (double)producto.Utilidad;
-            hoja.Range(fila, 4, fila, 6).Style.NumberFormat.Format =
+            hoja.Cell(fila, 3).Value = producto.UnidadTexto;
+            hoja.Cell(fila, 4).Value = (double)producto.Cantidad;
+            hoja.Cell(fila, 4).Style.NumberFormat.Format = FormatoCantidad;
+            hoja.Cell(fila, 5).Value = (double)producto.Ventas;
+            hoja.Cell(fila, 6).Value = (double)producto.Costo;
+            hoja.Cell(fila, 7).Value = (double)producto.Utilidad;
+            hoja.Range(fila, 5, fila, 7).Style.NumberFormat.Format =
                 FormatoMonto;
             fila++;
         }
@@ -214,10 +218,11 @@ public static class ExportadorReporteExcel
         hoja.SheetView.FreezeRows(1);
         hoja.Column(1).Width = 16;
         hoja.Column(2).Width = 40;
-        hoja.Column(3).Width = 11;
-        hoja.Column(4).Width = 14;
+        hoja.Column(3).Width = 10;
+        hoja.Column(4).Width = 12;
         hoja.Column(5).Width = 14;
         hoja.Column(6).Width = 14;
+        hoja.Column(7).Width = 14;
     }
 
     private static void Encabezado(IXLRange rango)

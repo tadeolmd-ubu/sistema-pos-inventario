@@ -173,10 +173,10 @@
                                                     <TextBlock Text="{Binding Sku}" Classes="caption"/>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                                    <TextBlock Text="{Binding StockTexto, StringFormat='Stock {0}'}"
                                                                FontWeight="SemiBold"
                                                                HorizontalAlignment="Right"/>
-                                                    <TextBlock Text="{Binding StockMinimo, StringFormat='mín. {0}'}"
+                                                    <TextBlock Text="{Binding StockMinimoTexto, StringFormat='mín. {0}'}"
                                                                Classes="caption"
                                                                HorizontalAlignment="Right"/>
                                                 </StackPanel>

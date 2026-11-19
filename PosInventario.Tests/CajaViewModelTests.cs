@@ -17,13 +17,13 @@ public class CajaViewModelTests
         };
 
     [Fact]
-    public void DescuentoSeRestaDelTotal()
+    public async Task DescuentoSeRestaDelTotal()
     {
         var vm = new CajaViewModel();
         var producto = CrearProducto();
 
-        vm.AgregarProducto(producto);
-        vm.AgregarProducto(producto);
+        await vm.AgregarProductoAsync(producto);
+        await vm.AgregarProductoAsync(producto);
         vm.DescuentoTexto = "50";
 
         Assert.Equal(200m, vm.SubtotalVenta);
@@ -33,11 +33,11 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void DescuentoMayorAlSubtotalDejaTotalEnCero()
+    public async Task DescuentoMayorAlSubtotalDejaTotalEnCero()
     {
         var vm = new CajaViewModel();
 
-        vm.AgregarProducto(CrearProducto());
+        await vm.AgregarProductoAsync(CrearProducto());
         vm.DescuentoTexto = "500";
 
         Assert.Equal(100m, vm.SubtotalVenta);
@@ -45,11 +45,11 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void DescuentoInvalidoONegativoSeIgnora()
+    public async Task DescuentoInvalidoONegativoSeIgnora()
     {
         var vm = new CajaViewModel();
 
-        vm.AgregarProducto(CrearProducto());
+        await vm.AgregarProductoAsync(CrearProducto());
 
         vm.DescuentoTexto = "-10";
         Assert.Equal(0m, vm.Descuento);
@@ -61,11 +61,11 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void LimpiarVentaBorraDescuento()
+    public async Task LimpiarVentaBorraDescuento()
     {
         var vm = new CajaViewModel();
 
-        vm.AgregarProducto(CrearProducto());
+        await vm.AgregarProductoAsync(CrearProducto());
         vm.DescuentoTexto = "25";
 
         vm.LimpiarVentaCommand.Execute(null);
@@ -75,10 +75,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagoEfectivoUnicoCalculaFaltanteYCambio()
+    public async Task PagoEfectivoUnicoCalculaFaltanteYCambio()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
 
         Assert.False(vm.PagosValidos);
 
@@ -93,10 +93,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagoMixtoSumaLosTresMetodosYCalculaCambio()
+    public async Task PagoMixtoSumaLosTresMetodosYCalculaCambio()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
         vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
         vm.MontoEfectivoTexto = "50";
         vm.MontoTarjetaTexto = "60";
@@ -109,10 +109,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagoMixtoNoEsValidoSiLaSumaNoCubreElTotal()
+    public async Task PagoMixtoNoEsValidoSiLaSumaNoCubreElTotal()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
         vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
         vm.MontoEfectivoTexto = "30";
         vm.MontoTarjetaTexto = "60";
@@ -124,10 +124,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagosElectronicosNoPuedenSuperarElTotal()
+    public async Task PagosElectronicosNoPuedenSuperarElTotal()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
         vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
         vm.MontoTarjetaTexto = "60";
         vm.MontoTransferenciaTexto = "50";
@@ -137,10 +137,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void PagoConTarjetaNoRequiereCapturarMonto()
+    public async Task PagoConTarjetaNoRequiereCapturarMonto()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
         vm.MetodoPagoSeleccionado = MetodoPago.Tarjeta;
 
         Assert.True(vm.PagosValidos);
@@ -150,10 +150,10 @@ public class CajaViewModelTests
     }
 
     [Fact]
-    public void LimpiarVentaLimpiaPagosYMetodo()
+    public async Task LimpiarVentaLimpiaPagosYMetodo()
     {
         var vm = new CajaViewModel();
-        vm.AgregarProducto(CrearProducto(precio: 100m));
+        await vm.AgregarProductoAsync(CrearProducto(precio: 100m));
         vm.MetodoPagoSeleccionado = MetodoPago.Mixto;
         vm.MontoEfectivoTexto = "50";
         vm.MontoTarjetaTexto = "60";

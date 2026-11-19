@@ -36,7 +36,7 @@ public partial class DevolverVentaViewModel : OperacionViewModel
 
     [ObservableProperty] private bool seleccionarTodos;
     [ObservableProperty] private string reembolsoTexto = "0.00";
-    [ObservableProperty] private string unidadesTexto = "0";
+    [ObservableProperty] private string cantidadTexto = "0";
 
     public string Titulo =>
         _venta is null ? "Devolver venta" : $"Devolver venta V-{_venta.Id:000000}";
@@ -46,7 +46,7 @@ public partial class DevolverVentaViewModel : OperacionViewModel
     public bool SinPendientes => !HayPendientes;
 
     public string SinPendientesTexto =>
-        "Esta venta ya no tiene unidades pendientes de devolver.";
+        "Esta venta ya no tiene cantidades pendientes de devolver.";
 
     /// <summary>
     /// Aclara por dónde sale el reembolso según los pagos de la venta.
@@ -115,7 +115,13 @@ public partial class DevolverVentaViewModel : OperacionViewModel
     {
         var lineas = ConstruirLineas();
 
-        UnidadesTexto = lineas.Sum(l => l.Cantidad).ToString();
+        CantidadTexto = lineas.Count == 0
+            ? "0"
+            : string.Join(
+                " · ",
+                Items
+                    .Where(i => i.CantidadSeleccionada > 0)
+                    .Select(i => i.CantidadSeleccionadaTexto));
 
         if (_ventaService is not null && _venta is not null)
         {

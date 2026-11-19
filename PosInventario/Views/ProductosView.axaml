@@ -58,10 +58,10 @@
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <TextBlock Text="{Binding Sku}" Classes="caption"/>
                                             <TextBlock Text="·" Classes="caption"/>
-                                            <TextBlock Text="{Binding PrecioVenta, StringFormat='{}{0:0.00}'}"
+                                            <TextBlock Text="{Binding PrecioVentaTexto}"
                                                        Classes="caption"/>
                                             <TextBlock Text="·" Classes="caption"/>
-                                            <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                            <TextBlock Text="{Binding StockTexto, StringFormat='Stock {0}'}"
                                                        Classes="caption"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -107,19 +107,31 @@
                                      TextWrapping="Wrap"/>
                         </StackPanel>
 
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Unidad de venta" Classes="fieldLabel"/>
+                            <ComboBox ItemsSource="{Binding Unidades}"
+                                      SelectedItem="{Binding UnidadMedidaSeleccionada}"
+                                      Width="190"
+                                      HorizontalAlignment="Left"/>
+                            <TextBlock Text="Los productos por peso permiten cantidades como 0.250 kg."
+                                       Classes="caption"
+                                       TextWrapping="Wrap"
+                                       IsVisible="{Binding EsPorPeso}"/>
+                        </StackPanel>
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <StackPanel Grid.Column="0" Spacing="6">
-                                <TextBlock Text="Precio de venta" Classes="fieldLabel"/>
-                                <TextBox Text="{Binding PrecioVentaTexto}" PlaceholderText="Precio de venta"/>
+                                <TextBlock Text="{Binding EtiquetaPrecio}" Classes="fieldLabel"/>
+                                <TextBox Text="{Binding PrecioVentaTexto}" PlaceholderText="Precio"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="6">
-                                <TextBlock Text="Costo" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaCosto}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding CostoTexto}" PlaceholderText="Costo"/>
                             </StackPanel>
                         </Grid>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Stock mínimo" Classes="fieldLabel"/>
+                            <TextBlock Text="{Binding EtiquetaStockMinimo}" Classes="fieldLabel"/>
                             <TextBox Text="{Binding StockMinimoTexto}" PlaceholderText="Stock mínimo"/>
                         </StackPanel>
 
