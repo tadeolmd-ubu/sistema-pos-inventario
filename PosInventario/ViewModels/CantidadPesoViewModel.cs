@@ -49,10 +49,7 @@ public partial class CantidadPesoViewModel : OperacionViewModel
         2,
         MidpointRounding.AwayFromZero).ToString("0.00", Cultura);
 
-    public bool PuedeAgregar =>
-        CantidadActual > 0m &&
-        CantidadActual <= _producto.Stock &&
-        !Cantidades.TieneDemasiadosDecimales(CantidadActual);
+    public bool PuedeAgregar => ObtenerError() is null;
 
     public event Action<decimal>? Confirmado;
 
@@ -73,15 +70,38 @@ public partial class CantidadPesoViewModel : OperacionViewModel
     [RelayCommand]
     private void Confirmar()
     {
-        if (!PuedeAgregar)
+        var error = ObtenerError();
+
+        if (error is not null)
         {
-            MensajeOperacion =
-                "El peso debe ser mayor que 0, tener máximo 3 decimales " +
-                "y no superar el stock.";
+            MensajeOperacion = error;
             return;
         }
 
         Confirmado?.Invoke(Cantidades.Normalizar(CantidadActual));
+    }
+
+    private string? ObtenerError()
+    {
+        if (string.IsNullOrWhiteSpace(CantidadTexto))
+            return "Escribe el peso.";
+
+        if (!TryParseDecimal(CantidadTexto, out var cantidad))
+            return "El peso no es un número válido.";
+
+        var error = Cantidades.ErrorCantidad(
+            cantidad, UnidadMedida.Kilogramo, "El peso");
+
+        if (error is not null)
+            return error;
+
+        if (cantidad > _producto.Stock)
+        {
+            return $"El peso no puede superar el stock disponible " +
+                   $"({_producto.StockTexto}).";
+        }
+
+        return null;
     }
 
     private static bool TryParseDecimal(string? texto, out decimal valor)

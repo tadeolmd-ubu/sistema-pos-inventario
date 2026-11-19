@@ -345,12 +345,13 @@ public partial class CajaViewModel : OperacionViewModel
     private void AgregarProductoConCantidad(
         Producto producto, decimal cantidad)
     {
-        if (!Cantidades.EsCantidadValida(cantidad, producto.UnidadMedida))
+        var etiqueta = producto.EsPorPeso ? "El peso" : "La cantidad";
+        var error = Cantidades.ErrorCantidad(
+            cantidad, producto.UnidadMedida, etiqueta);
+
+        if (error is not null)
         {
-            MensajeOperacion = Notificar(
-                producto.EsPorPeso
-                    ? "El peso debe ser mayor que 0 y tener máximo 3 decimales."
-                    : "La cantidad debe ser un número entero mayor que 0.");
+            MensajeOperacion = Notificar(error);
             return;
         }
 
@@ -364,7 +365,10 @@ public partial class CajaViewModel : OperacionViewModel
         if (nuevaCantidad > producto.Stock)
         {
             MensajeOperacion = Notificar(
-                "No hay más stock disponible de ese producto.");
+                producto.EsPorPeso
+                    ? $"El peso no puede superar el stock disponible " +
+                      $"({producto.StockTexto})."
+                    : "No hay más stock disponible de ese producto.");
             return;
         }
 
@@ -391,18 +395,25 @@ public partial class CajaViewModel : OperacionViewModel
         if (cantidad is null)
             return;
 
-        if (!Cantidades.EsCantidadValida(
-                cantidad.Value, linea.Producto.UnidadMedida))
+        var etiqueta = linea.Producto.EsPorPeso
+            ? "El peso"
+            : "La cantidad";
+        var error = Cantidades.ErrorCantidad(
+            cantidad.Value, linea.Producto.UnidadMedida, etiqueta);
+
+        if (error is not null)
         {
-            MensajeOperacion = Notificar(
-                "El peso debe ser mayor que 0 y tener máximo 3 decimales.");
+            MensajeOperacion = Notificar(error);
             return;
         }
 
         if (cantidad.Value > linea.Producto.Stock)
         {
             MensajeOperacion = Notificar(
-                "El peso no puede superar el stock disponible.");
+                linea.Producto.EsPorPeso
+                    ? $"El peso no puede superar el stock disponible " +
+                      $"({linea.Producto.StockTexto})."
+                    : "No hay más stock disponible de ese producto.");
             return;
         }
 

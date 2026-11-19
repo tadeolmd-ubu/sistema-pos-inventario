@@ -292,6 +292,42 @@ public class ProductosPorPesoTests
     }
 
     [Fact]
+    public void CantidadPesoMuestraSoloElErrorEspecifico()
+    {
+        var producto = new Producto
+        {
+            Id = 1,
+            Sku = "KG-007",
+            Nombre = "Carne molida",
+            UnidadMedida = UnidadMedida.Kilogramo,
+            PrecioVenta = 120m,
+            Stock = 2.5m
+        };
+
+        var vm = new CantidadPesoViewModel(producto, 1m);
+
+        vm.CantidadTexto = "3";
+        vm.ConfirmarCommand.Execute(null);
+        Assert.Equal(
+            "El peso no puede superar el stock disponible (2.5 kg).",
+            vm.MensajeOperacion);
+
+        vm.CantidadTexto = "0";
+        vm.ConfirmarCommand.Execute(null);
+        Assert.Equal("El peso debe ser mayor que 0.", vm.MensajeOperacion);
+
+        vm.CantidadTexto = "0.1234";
+        vm.ConfirmarCommand.Execute(null);
+        Assert.Equal(
+            "El peso no puede tener más de 3 decimales.",
+            vm.MensajeOperacion);
+
+        vm.CantidadTexto = "abc";
+        vm.ConfirmarCommand.Execute(null);
+        Assert.Equal("El peso no es un número válido.", vm.MensajeOperacion);
+    }
+
+    [Fact]
     public async Task MigracionConvierteStockExistenteAMilesimas()
     {
         var conexion = new SqliteConnection("Data Source=:memory:");

@@ -33,6 +33,27 @@ public static class Cantidades
         return unidad != UnidadMedida.Pieza || EsEntera(cantidad);
     }
 
+    /// <summary>
+    /// Devuelve solo el primer problema de la cantidad, para que la interfaz
+    /// pueda mostrar un mensaje corto y específico.
+    /// </summary>
+    public static string? ErrorCantidad(
+        decimal cantidad,
+        UnidadMedida unidad,
+        string etiqueta = "La cantidad")
+    {
+        if (cantidad <= 0)
+            return $"{etiqueta} debe ser mayor que 0.";
+
+        if (TieneDemasiadosDecimales(cantidad))
+            return $"{etiqueta} no puede tener más de 3 decimales.";
+
+        if (unidad == UnidadMedida.Pieza && !EsEntera(cantidad))
+            return $"{etiqueta} debe ser un número entero.";
+
+        return null;
+    }
+
     public static string Formatear(decimal cantidad, UnidadMedida unidad)
         => unidad.Formatear(cantidad);
 
