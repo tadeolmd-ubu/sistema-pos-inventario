@@ -40,7 +40,8 @@ PosInventario/
 ├── Assets/
 ├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane,
 │                              Paginador (navegación de páginas)
-├── Data/                      AppDbContext, AppDbContextFactory
+├── Data/                      AppDbContext, AppDbContextFactory,
+│                              CantidadesConvertidor
 ├── Migrations/                generadas con dotnet-ef (InitialCreate)
 ├── Models/                    Usuario, Producto, Proveedor, Cliente, Abono,
 │                              Compra, Venta, Caja, enums
@@ -55,16 +56,18 @@ PosInventario/
 │                              PaginaResultado<T>, ReporteAdministracion
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
-│                              Productos, Proveedores, Inventario, Compras,
-│                              Ventas, Reportes, Usuarios, Configuración,
-│                              Login, Setup, Ticket, CorteCaja, CancelarVenta,
-│                              CerrarCaja,
-│                              CajaHistorial, MovimientoCaja,
+│                              Productos, Proveedores, Clientes, Inventario,
+│                              Compras, Ventas, Reportes, Usuarios,
+│                              Configuración, Login, Setup, Ticket, CorteCaja,
+│                              CancelarVenta, CerrarCaja, Abono,
+│                              CantidadPeso, CajaHistorial, MovimientoCaja,
 │                              RestablecerContrasena, SeleccionarProducto,
-│                              PaginacionViewModel) e ítems de líneas
+│                              PaginacionViewModel, OpcionCliente) e ítems de
+│                              líneas
 ├── Views/                     vistas por módulo + SidebarView, LoginWindow,
 │                              SetupWindow, TicketWindow, CorteCajaWindow,
 │                              CancelarVentaWindow, CerrarCajaWindow,
+│                              AbonoWindow, CantidadPesoWindow,
 │                              CajaHistorialWindow, MovimientoCajaWindow,
 │                              RegistrarMovimientoCajaWindow,
 │                              RestablecerContrasenaWindow, SeleccionarProductoWindow,
@@ -124,7 +127,7 @@ Views → ViewModels → Service → Data + Models
 - `SesionActual` guarda el `Usuario` activo; `EsAdministrador` se consulta
   desde ViewModels y servicios.
 - `MainViewModel` bloquea los comandos de módulos administrativos
-  (Productos, Proveedores, Inventario, Compras, Ventas, Usuarios,
+  (Productos, Proveedores, Clientes, Inventario, Compras, Ventas, Usuarios,
   Configuración); la caja está disponible para ambos roles.
 - Los servicios también validan rol en operaciones sensibles (respaldos,
   cancelaciones) además de la UI.
