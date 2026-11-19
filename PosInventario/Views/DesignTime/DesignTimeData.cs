@@ -221,7 +221,7 @@ public sealed class CajaDesignTime : CajaViewModel
         };
 
         LineasVentaItems.Add(new LineaVentaItem(
-            producto, 2, _ => { }, _ => { }, _ => { }));
+            producto, 2, _ => { }, _ => { }, _ => { }, _ => Task.CompletedTask));
 
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
         MontoEfectivoTexto = "3500.00";

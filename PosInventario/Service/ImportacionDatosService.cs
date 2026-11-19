@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Mail;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,11 @@ public class ImportacionDatosService
         ["nombre"] = "nombre",
         ["producto"] = "nombre",
         ["articulo"] = "nombre",
+        ["unidad"] = "unidad",
+        ["unidad_medida"] = "unidad",
+        ["tipo_unidad"] = "unidad",
+        ["vende_por_peso"] = "unidad",
+        ["por_peso"] = "unidad",
         ["descripcion"] = "descripcion",
         ["detalle"] = "descripcion",
         ["precio_venta"] = "precio_venta",
@@ -168,9 +174,21 @@ public class ImportacionDatosService
         {
             if (porSku.TryGetValue(fila.Sku, out var producto) &&
                 producto.FechaArchivado is not null)
+            {
                 errores.Add(new ErrorImportacion(
                     fila.Fila,
                     $"El SKU {fila.Sku} está archivado. Restáuralo antes de importar."));
+            }
+
+            if (porSku.TryGetValue(fila.Sku, out producto) &&
+                producto.FechaArchivado is null &&
+                producto.UnidadMedida != fila.UnidadMedida)
+            {
+                errores.Add(new ErrorImportacion(
+                    fila.Fila,
+                    $"La unidad de venta de {fila.Sku} no coincide con la del " +
+                    "producto existente. Edita el producto o corrige el archivo."));
+            }
         }
 
         var telefonos = filas
@@ -240,7 +258,7 @@ public class ImportacionDatosService
                 $"Importación completada: {resultado.ProductosNuevos} productos nuevos, " +
                 $"{resultado.ProductosActualizados} actualizados, " +
                 $"{proveedores.Nuevos} proveedores nuevos y " +
-                $"{resultado.UnidadesStock} unidades de stock inicial.";
+                $"{resultado.UnidadesStock.ToString("0.###", CultureInfo.InvariantCulture)} de stock inicial.";
 
             return new Resultado<ImportacionResultado>(
                 true,
@@ -312,7 +330,7 @@ public class ImportacionDatosService
         return (nuevos, telefonos.Count - nuevos);
     }
 
-    private async Task<(int ProductosNuevos, int ProductosActualizados, int UnidadesStock)>
+    private async Task<(int ProductosNuevos, int ProductosActualizados, decimal UnidadesStock)>
         CrearOActualizarProductosAsync(
             IReadOnlyList<FilaImportacion> filas,
             DateTime ahora)
@@ -331,7 +349,7 @@ public class ImportacionDatosService
 
         var nuevos = 0;
         var actualizados = 0;
-        var unidades = 0;
+        var unidades = 0m;
 
         foreach (var fila in filas)
         {
@@ -356,6 +374,7 @@ public class ImportacionDatosService
                 Sku = fila.Sku,
                 Nombre = fila.Nombre,
                 Descripcion = NormalizarOpcional(fila.Descripcion),
+                UnidadMedida = fila.UnidadMedida,
                 PrecioVenta = fila.PrecioVenta,
                 Costo = fila.Costo,
                 Stock = fila.StockInicial,
@@ -420,6 +439,7 @@ public class ImportacionDatosService
         else if (nombre.Length > MaxNombre)
             mensajes.Add($"El nombre no puede superar los {MaxNombre} caracteres.");
 
+        var unidad = LeerUnidad(Campo("unidad"), mensajes);
         var descripcion = Campo("descripcion");
 
         if (descripcion.Length > MaxDescripcion)
@@ -436,15 +456,25 @@ public class ImportacionDatosService
         else if (costo < 0)
             mensajes.Add("El costo no puede ser negativo.");
 
-        if (!ImportadorCsv.TryParseEntero(Campo("stock_minimo"), out var stockMinimo))
-            mensajes.Add("El stock mínimo debe ser un número entero.");
+        if (!ImportadorCsv.TryParseDecimal(Campo("stock_minimo"), out var stockMinimo))
+            mensajes.Add("El stock mínimo no es un número válido.");
         else if (stockMinimo < 0)
             mensajes.Add("El stock mínimo no puede ser negativo.");
+        else if (Cantidades.TieneDemasiadosDecimales(stockMinimo))
+            mensajes.Add("El stock mínimo no puede tener más de 3 decimales.");
+        else if (unidad == UnidadMedida.Pieza &&
+                 !Cantidades.EsEntera(stockMinimo))
+            mensajes.Add("El stock mínimo debe ser entero para productos por pieza.");
 
-        if (!ImportadorCsv.TryParseEntero(Campo("stock_inicial"), out var stockInicial))
-            mensajes.Add("El stock inicial debe ser un número entero.");
+        if (!ImportadorCsv.TryParseDecimal(Campo("stock_inicial"), out var stockInicial))
+            mensajes.Add("El stock inicial no es un número válido.");
         else if (stockInicial < 0)
             mensajes.Add("El stock inicial no puede ser negativo.");
+        else if (Cantidades.TieneDemasiadosDecimales(stockInicial))
+            mensajes.Add("El stock inicial no puede tener más de 3 decimales.");
+        else if (unidad == UnidadMedida.Pieza &&
+                 !Cantidades.EsEntera(stockInicial))
+            mensajes.Add("El stock inicial debe ser entero para productos por pieza.");
 
         var proveedorNombre = Campo("proveedor");
         var proveedorTelefono = Campo("proveedor_telefono");
@@ -500,15 +530,34 @@ public class ImportacionDatosService
             registro.Linea,
             sku,
             nombre,
+            unidad,
             NormalizarOpcional(descripcion),
             precio,
             costo,
-            stockMinimo,
-            stockInicial,
+            Cantidades.Normalizar(stockMinimo),
+            Cantidades.Normalizar(stockInicial),
             NormalizarOpcional(proveedorNombre),
             NormalizarOpcional(proveedorTelefono),
             NormalizarOpcional(proveedorEmail),
             NormalizarOpcional(proveedorDireccion));
+    }
+
+    private static UnidadMedida LeerUnidad(
+        string texto, List<string> mensajes)
+    {
+        var normalizado = ImportadorCsv.NormalizarEncabezado(texto);
+
+        if (normalizado.Length == 0 ||
+            normalizado is "pieza" or "piezas" or "pza" or "unidad" or
+            "unidades" or "no" or "false" or "0")
+            return UnidadMedida.Pieza;
+
+        if (normalizado is "kg" or "kilo" or "kilos" or "kilogramo" or
+            "kilogramos" or "peso" or "si" or "true" or "1")
+            return UnidadMedida.Kilogramo;
+
+        mensajes.Add("La unidad debe ser pieza o kg.");
+        return UnidadMedida.Pieza;
     }
 
     private static Dictionary<string, int> MapearColumnas(

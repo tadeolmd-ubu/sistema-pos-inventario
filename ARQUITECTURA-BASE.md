@@ -50,8 +50,8 @@ PosInventario/
 │                              Inventario/Compra/Caja/Venta/ReporteService,
 │                              Linea*, ResumenPagosCaja, GeneradorTicketTexto,
 │                              GeneradorCorteCajaTexto, ExportadorCsv,
-│                              ExportadorReporteExcel, PaginaResultado<T>,
-│                              ReporteAdministracion
+│                              ExportadorReporteExcel, Cantidades,
+│                              PaginaResultado<T>, ReporteAdministracion
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
 │                              Productos, Proveedores, Inventario, Compras,
@@ -239,7 +239,14 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   también el código de barras: al escanear y presionar Enter se carga el
   producto existente o se prepara el alta con ese SKU (`EscanearCodigoAsync`).
   En Caja el mismo código agrega el producto a la venta.
-- Compras: `CompraService` con líneas y actualización de stock.
+- Unidades de venta: `Producto.UnidadMedida` distingue `Pieza` de `Kilogramo`.
+  Las cantidades de peso usan hasta tres decimales y se guardan en SQLite como
+  enteros en milésimas mediante `Cantidades.Convertidor`; así las consultas
+  que comparan u ordenan stock siguen funcionando. Los productos por pieza
+  rechazan cantidades decimales en ventas, compras e inventario. En Caja, un
+  producto por peso abre `CantidadPesoWindow` antes de agregarse al carrito.
+- Compras: `CompraService` con líneas y actualización de stock; acepta
+  cantidades decimales para productos por peso.
 - Historial de ventas: `VentasViewModel` con filtros por fecha, búsqueda,
   método de pago y cajero (se combinan en la misma consulta), paginación y
   reimpresión. `VentaService.ObtenerHistorialPaginadoAsync` recibe el método y

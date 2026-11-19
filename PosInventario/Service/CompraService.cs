@@ -171,6 +171,24 @@ public class CompraService
             return new Resultado<Compra>(
                 false, "No se pueden comprar productos archivados.", null);
 
+        foreach (var linea in lineas)
+        {
+            var producto = productos.First(p => p.Id == linea.IdProducto);
+
+            if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                return new Resultado<Compra>(
+                    false, "La cantidad no puede tener más de 3 decimales.", null);
+
+            if (producto.UnidadMedida == UnidadMedida.Pieza &&
+                !Cantidades.EsEntera(linea.Cantidad))
+            {
+                return new Resultado<Compra>(
+                    false,
+                    $"Para {producto.Nombre}, la cantidad debe ser un número entero.",
+                    null);
+            }
+        }
+
         var compra = new Compra
         {
             IdProveedor = proveedor.Id,
@@ -186,19 +204,23 @@ public class CompraService
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
-            var subtotal = linea.Cantidad * linea.CostoUnitario;
+            var cantidad = Cantidades.Normalizar(linea.Cantidad);
+            var subtotal = Math.Round(
+                cantidad * linea.CostoUnitario,
+                2,
+                MidpointRounding.AwayFromZero);
             total += subtotal;
 
             var stockAnterior = producto.Stock;
 
-            producto.Stock += linea.Cantidad;
+            producto.Stock += cantidad;
             producto.Costo = linea.CostoUnitario;
             producto.FechaModificacion = compra.Fecha;
 
             compra.Detalles.Add(new DetalleCompra
             {
                 IdProducto = producto.Id,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 CostoUnitario = linea.CostoUnitario,
                 Subtotal = subtotal
             });
@@ -208,7 +230,7 @@ public class CompraService
                 IdProducto = producto.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimiento.Compra,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 StockAnterior = stockAnterior,
                 StockResultante = producto.Stock,
                 Referencia = referencia,

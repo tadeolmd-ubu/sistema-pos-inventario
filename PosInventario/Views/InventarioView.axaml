@@ -40,10 +40,10 @@
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="{Binding Sku}" Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                        <TextBlock Text="{Binding StockTexto, StringFormat='Stock {0}'}"
                                                    Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding StockMinimo, StringFormat='mín. {0}'}"
+                                        <TextBlock Text="{Binding StockMinimoTexto, StringFormat='mín. {0}'}"
                                                    Classes="caption"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -92,12 +92,12 @@
                             </Grid>
 
                             <StackPanel Spacing="6" IsVisible="{Binding !EsAjuste}">
-                                <TextBlock Text="Cantidad" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaCantidad}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6" IsVisible="{Binding EsAjuste}">
-                                <TextBlock Text="Stock contado" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaStockContado}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding StockContadoTexto}" PlaceholderText="Stock contado"/>
                             </StackPanel>
 
@@ -170,10 +170,10 @@
                                                            Classes="caption"/>
                                             </Grid>
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}" Classes="caption"/>
-                                                <TextBlock Text="{Binding StockAnterior}" Classes="caption"/>
+                                                <TextBlock Text="{Binding CantidadTexto, StringFormat='Cant. {0}'}" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockAnteriorTexto}" Classes="caption"/>
                                                 <TextBlock Text="→" Classes="caption"/>
-                                                <TextBlock Text="{Binding StockResultante}" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockResultanteTexto}" Classes="caption"/>
                                                 <TextBlock Text="·" Classes="caption"/>
                                                 <TextBlock Text="{Binding Referencia}" Classes="caption"/>
                                             </StackPanel>

@@ -163,7 +163,7 @@
                                        FontSize="28"
                                        FontWeight="ExtraBold"
                                        Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Text="Costo histórico de las unidades netas"
+                            <TextBlock Text="Costo histórico de lo vendido neto"
                                        Classes="caption"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
@@ -282,7 +282,7 @@
                     <Border Classes="cardFlat" Padding="18">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Productos más vendidos" Classes="subsection"/>
-                            <TextBlock Text="Top 10 por unidades netas de devoluciones"
+                            <TextBlock Text="Top 10 por ventas netas de devoluciones"
                                        Classes="caption"/>
 
                             <TextBlock Text="Sin productos vendidos en el rango."
@@ -310,9 +310,9 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Unidades"
-                                                        Binding="{Binding Cantidad}"
-                                                        Width="80"/>
+                                    <DataGridTextColumn Header="Cantidad"
+                                                        Binding="{Binding CantidadTexto}"
+                                                        Width="110"/>
                                     <DataGridTextColumn Header="Ventas"
                                                         Binding="{Binding Ventas, StringFormat='{}{0:0.00}'}"
                                                         Width="100"/>

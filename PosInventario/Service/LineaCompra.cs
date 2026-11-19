@@ -6,5 +6,5 @@ namespace PosInventario.Service;
 /// </summary>
 public sealed record LineaCompra(
     int IdProducto,
-    int Cantidad,
+    decimal Cantidad,
     decimal CostoUnitario);

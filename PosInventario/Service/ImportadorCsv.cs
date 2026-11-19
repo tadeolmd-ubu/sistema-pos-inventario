@@ -11,7 +11,7 @@ namespace PosInventario.Service;
 public static class ImportadorCsv
 {
     public const string EncabezadoPlantilla =
-        "sku,nombre,descripcion,precio_venta,costo,stock_minimo," +
+        "sku,nombre,unidad,descripcion,precio_venta,costo,stock_minimo," +
         "stock_inicial,proveedor,proveedor_telefono,proveedor_email," +
         "proveedor_direccion";
 

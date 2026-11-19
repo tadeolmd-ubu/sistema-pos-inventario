@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PosInventario.Service;
 
@@ -24,7 +25,7 @@ public partial class ImportarDatosViewModel : ObservableObject
             $"{vista.ProductosActualizados} se actualizarán, " +
             $"{vista.ProveedoresNuevos} proveedores nuevos " +
             $"({vista.ProveedoresReutilizados} ya existen) y " +
-            $"{vista.UnidadesStock} unidades de stock inicial.";
+            $"{vista.UnidadesStock.ToString("0.###", CultureInfo.InvariantCulture)} de stock inicial.";
 
         foreach (var error in vista.Errores)
             Errores.Add($"Fila {error.Fila}: {error.Mensaje}");

@@ -33,6 +33,7 @@ public partial class CajaView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.SeleccionarProductoSolicitado -= OnSeleccionarProducto;
+            _viewModel.CantidadPesoPreguntada -= OnCantidadPesoPreguntada;
             _viewModel.EliminarLineaSolicitada -= OnEliminarLinea;
             _viewModel.TicketSolicitado -= OnTicket;
             _viewModel.RegistrarMovimientoSolicitado -= OnRegistrarMovimiento;
@@ -45,6 +46,7 @@ public partial class CajaView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.SeleccionarProductoSolicitado += OnSeleccionarProducto;
+            _viewModel.CantidadPesoPreguntada += OnCantidadPesoPreguntada;
             _viewModel.EliminarLineaSolicitada += OnEliminarLinea;
             _viewModel.TicketSolicitado += OnTicket;
             _viewModel.RegistrarMovimientoSolicitado += OnRegistrarMovimiento;
@@ -65,10 +67,25 @@ public partial class CajaView : UserControl
         var producto = await new SeleccionarProductoWindow { DataContext = viewModel }
             .ShowDialog<Producto?>(ventana);
 
-        if (producto is not null)
-            _viewModel?.AgregarProducto(producto);
+        if (producto is not null && _viewModel is not null)
+            await _viewModel.AgregarProductoAsync(producto);
 
         EnfocarBusqueda();
+    }
+
+    private async Task<decimal?> OnCantidadPesoPreguntada(
+        Producto producto, decimal cantidadInicial)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return null;
+
+        var viewModel = new CantidadPesoViewModel(producto, cantidadInicial);
+
+        var cantidad = await new CantidadPesoWindow { DataContext = viewModel }
+            .ShowDialog<decimal?>(ventana);
+
+        EnfocarBusqueda();
+        return cantidad;
     }
 
     private async void OnEliminarLinea(LineaVentaItem linea)

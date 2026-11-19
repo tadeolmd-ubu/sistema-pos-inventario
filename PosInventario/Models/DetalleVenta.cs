@@ -1,7 +1,12 @@
+using System.Globalization;
+using PosInventario.Models.Enums;
+
 namespace PosInventario.Models;
 
 public class DetalleVenta
 {
+    private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
+
     public int Id { get; set; }
 
     public int IdVenta { get; set; }
@@ -10,12 +15,12 @@ public class DetalleVenta
     public int IdProducto { get; set; }
     public Producto Producto { get; set; } = null!;
 
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
 
     /// <summary>
     /// Unidades ya devueltas de esta línea. No puede superar la cantidad vendida.
     /// </summary>
-    public int CantidadDevuelta { get; set; }
+    public decimal CantidadDevuelta { get; set; }
 
     public decimal PrecioUnitario { get; set; }
 
@@ -31,5 +36,24 @@ public class DetalleVenta
     /// <summary>
     /// Unidades de la línea que aún se pueden devolver.
     /// </summary>
-    public int CantidadPendiente => Cantidad - CantidadDevuelta;
+    public decimal CantidadPendiente => Cantidad - CantidadDevuelta;
+
+    public UnidadMedida Unidad =>
+        Producto?.UnidadMedida ?? UnidadMedida.Pieza;
+
+    public string CantidadTexto => Unidad.Formatear(Cantidad);
+
+    public string CantidadConUnidadTexto =>
+        Unidad.FormatearConUnidad(Cantidad);
+
+    public string CantidadTicketTexto => Unidad.EsPorPeso()
+        ? $"{Unidad.Formatear(Cantidad)} {Unidad.Abreviatura()}"
+        : Unidad.Formatear(Cantidad);
+
+    public string CantidadPendienteTexto =>
+        Unidad.FormatearConUnidad(CantidadPendiente);
+
+    public string PrecioUnitarioTexto => Unidad.EsPorPeso()
+        ? $"{PrecioUnitario.ToString("0.00", Cultura)}/kg"
+        : PrecioUnitario.ToString("0.00", Cultura);
 }

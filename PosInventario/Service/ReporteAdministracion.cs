@@ -59,11 +59,18 @@ public sealed record ReporteProducto(
     int IdProducto,
     string Sku,
     string Nombre,
-    int Cantidad,
+    decimal Cantidad,
     decimal Ventas,
     decimal Costo,
     decimal Utilidad,
-    decimal Proporcion = 0m);
+    decimal Proporcion = 0m,
+    UnidadMedida UnidadMedida = UnidadMedida.Pieza)
+{
+    public string CantidadTexto =>
+        UnidadMedida.FormatearConUnidad(Cantidad);
+
+    public string UnidadTexto => UnidadMedida.Abreviatura();
+}
 
 /// <summary>
 /// Números del período para el dueño: ventas netas, desglose por método,
@@ -202,7 +209,10 @@ public class ReporteService
 
         if (pesoTotal <= 0)
         {
-            var costo = pendientes.Sum(d => d.CostoUnitario * d.CantidadPendiente);
+            var costo = pendientes.Sum(d => Math.Round(
+                d.CostoUnitario * d.CantidadPendiente,
+                2,
+                MidpointRounding.AwayFromZero));
             utilidadPorVenta[venta.Id] = -costo;
             return;
         }
@@ -224,7 +234,10 @@ public class ReporteService
             centavosAsignados += centavos;
 
             var ingreso = centavos / 100m;
-            var costo = detalle.CostoUnitario * detalle.CantidadPendiente;
+            var costo = Math.Round(
+                detalle.CostoUnitario * detalle.CantidadPendiente,
+                2,
+                MidpointRounding.AwayFromZero);
             var utilidad = ingreso - costo;
 
             utilidadVenta += utilidad;
@@ -233,6 +246,7 @@ public class ReporteService
                 detalle.IdProducto,
                 detalle.Producto?.Sku ?? string.Empty,
                 detalle.Producto?.Nombre ?? $"Producto {detalle.IdProducto}",
+                detalle.Producto?.UnidadMedida ?? UnidadMedida.Pieza,
                 detalle.CantidadPendiente,
                 ingreso,
                 costo,
@@ -351,20 +365,22 @@ public class ReporteService
                 Nombre = g.Select(l => l.Nombre)
                           .FirstOrDefault(n => n.Length > 0)
                       ?? $"Producto {g.Key}",
+                UnidadMedida = g.Select(l => l.UnidadMedida)
+                                .FirstOrDefault(),
                 Cantidad = g.Sum(l => l.Cantidad),
                 Ventas = g.Sum(l => l.Ingreso),
                 Costo = g.Sum(l => l.Costo),
                 Utilidad = g.Sum(l => l.Utilidad)
             })
             .Where(p => p.Cantidad > 0)
-            .OrderByDescending(p => p.Cantidad)
-            .ThenByDescending(p => p.Ventas)
+            .OrderByDescending(p => p.Ventas)
+            .ThenByDescending(p => p.Cantidad)
             .Take(topProductos)
             .ToList();
 
         var maximo = productos.Count > 0
-            ? productos.Max(p => p.Cantidad)
-            : 0;
+            ? productos.Max(p => p.Ventas)
+            : 0m;
 
         return productos
             .Select(p => new ReporteProducto(
@@ -375,7 +391,8 @@ public class ReporteService
                 p.Ventas,
                 p.Costo,
                 p.Utilidad,
-                maximo > 0 ? p.Cantidad / (decimal)maximo : 0m))
+                maximo > 0 ? p.Ventas / maximo : 0m,
+                p.UnidadMedida))
             .ToList();
     }
 
@@ -429,7 +446,8 @@ public class ReporteService
         int IdProducto,
         string Sku,
         string Nombre,
-        int Cantidad,
+        UnidadMedida UnidadMedida,
+        decimal Cantidad,
         decimal Ingreso,
         decimal Costo,
         decimal Utilidad);

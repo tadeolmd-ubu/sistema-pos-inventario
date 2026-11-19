@@ -25,10 +25,13 @@ registro de errores.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
-  o se prepara el alta con ese SKU si es nuevo.
+  o se prepara el alta con ese SKU si es nuevo. Cada producto se vende por
+  **pieza** o por **peso (kg)**; los productos por peso admiten cantidades y
+  stock con hasta tres decimales.
 - **Importación:** productos, proveedores y stock inicial desde un CSV
   exportado de Excel, con plantilla descargable, vista previa, validación por
-  fila e importación en una sola transacción.
+  fila e importación en una sola transacción. La columna opcional `unidad`
+  permite dar de alta productos por pieza o por kg.
 - **Inventario:** entradas/salidas con motivo, ajuste de stock e historial de
   movimientos por rango de fechas, paginado y exportable a CSV.
 - **Compras:** registro con proveedor, líneas y actualización de costo/stock;
@@ -36,8 +39,8 @@ registro de errores.
 - **Ventas:** historial global con filtros por fecha, búsqueda, método de pago
   y cajero (todos se combinan), desglose por método de pago, paginación,
   reimpresión de ticket desde el historial o el detalle de una caja cerrada,
-  botón de devolución (checklist por producto o unidad, con reembolso
-  estimado) y exportación a CSV de las ventas filtradas.
+  botón de devolución (checklist por producto/unidad o cantidad en kg, con
+  reembolso estimado) y exportación a CSV de las ventas filtradas.
   Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
   ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
   venta ya quedó registrada y solo se muestra un aviso.
@@ -192,8 +195,8 @@ exactamente las filas de la **página visible** en ese momento:
   cajero seleccionado y la casilla "Ver anuladas". Incluye ticket, fecha,
   cajero, método, estado, subtotal, descuento, total, devuelto y neto.
 - **Inventario:** respeta el rango de fechas y, si hay un producto
-  seleccionado, sus movimientos. Incluye producto, SKU, tipo, cantidad, stock
-  anterior/resultante, referencia, fecha y usuario.
+  seleccionado, sus movimientos. Incluye producto, SKU, unidad, tipo,
+  cantidad, stock anterior/resultante, referencia, fecha y usuario.
 - **Compras:** respeta el rango de fechas. Incluye compra, fecha, proveedor,
   comprobante, estado, artículos, total y usuario.
 
@@ -214,7 +217,7 @@ desde un archivo separado por comas, punto y coma o tabuladores. El botón
 **Descargar plantilla** genera el encabezado esperado:
 
 ```text
-sku,nombre,descripcion,precio_venta,costo,stock_minimo,stock_inicial,
+sku,nombre,unidad,descripcion,precio_venta,costo,stock_minimo,stock_inicial,
 proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
 ```
 
@@ -237,8 +240,8 @@ sin salir de la aplicación:
   devoluciones y utilidad, con una barra comparativa.
 - **Ventas por método:** efectivo, tarjeta y transferencia, descontando los
   reembolsos de cada pago, con monto, cantidad de ventas y porcentaje.
-- **Productos más vendidos:** top 10 por unidades netas de devoluciones, con
-  SKU, ventas y utilidad.
+- **Productos más vendidos:** top 10 por ventas netas de devoluciones, con
+  SKU, cantidad y unidad, ventas y utilidad.
 - **Utilidad:** cada línea aporta `precio de venta - costo`; el descuento de la
   venta y las devoluciones se prorratean por unidad. Para que el histórico no
   cambie cuando se actualiza un producto, cada `DetalleVenta` guarda el

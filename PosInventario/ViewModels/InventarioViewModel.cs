@@ -59,9 +59,18 @@ public partial class InventarioViewModel : OperacionViewModel
 
     public bool EsAjuste => TipoSeleccionado == TipoMovimiento.Ajuste;
 
+    public bool EsPorPeso => SelectedProducto?.EsPorPeso == true;
+
+    public string EtiquetaCantidad =>
+        EsPorPeso ? "Cantidad (kg)" : "Cantidad";
+
+    public string EtiquetaStockContado =>
+        EsPorPeso ? "Stock contado (kg)" : "Stock contado";
+
     public string StockActualTexto => SelectedProducto is null
         ? "Selecciona un producto para mover el stock."
-        : $"Stock actual: {SelectedProducto.Stock} · Mínimo: {SelectedProducto.StockMinimo}";
+        : $"Stock actual: {SelectedProducto.StockTexto} · " +
+          $"Mínimo: {SelectedProducto.StockMinimoTexto}";
 
     public string TituloMovimientos =>
         VerTodosLosMovimientos || SelectedProducto is null
@@ -131,6 +140,9 @@ public partial class InventarioViewModel : OperacionViewModel
     partial void OnSelectedProductoChanged(Producto? value)
     {
         OnPropertyChanged(nameof(StockActualTexto));
+        OnPropertyChanged(nameof(EsPorPeso));
+        OnPropertyChanged(nameof(EtiquetaCantidad));
+        OnPropertyChanged(nameof(EtiquetaStockContado));
         OnPropertyChanged(nameof(TituloMovimientos));
 
         if (!_cargando && !_limpiando)
@@ -159,9 +171,9 @@ public partial class InventarioViewModel : OperacionViewModel
 
         if (EsAjuste)
         {
-            if (!TryParseEntero(StockContadoTexto, out var stockContado))
+            if (!TryParseDecimal(StockContadoTexto, out var stockContado))
             {
-                MensajeOperacion = Notificar("El stock contado debe ser un número entero.");
+                MensajeOperacion = Notificar("El stock contado no es un número válido.");
                 return;
             }
 
@@ -173,9 +185,9 @@ public partial class InventarioViewModel : OperacionViewModel
         }
         else
         {
-            if (!TryParseEntero(CantidadTexto, out var cantidad))
+            if (!TryParseDecimal(CantidadTexto, out var cantidad))
             {
-                MensajeOperacion = Notificar("La cantidad debe ser un número entero.");
+                MensajeOperacion = Notificar("La cantidad no es un número válido.");
                 return;
             }
 
@@ -282,10 +294,10 @@ public partial class InventarioViewModel : OperacionViewModel
         SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == seleccionado);
     }
 
-    private static bool TryParseEntero(string? texto, out int valor)
+    private static bool TryParseDecimal(string? texto, out decimal valor)
     {
-        var limpio = (texto ?? string.Empty).Trim();
-        return int.TryParse(limpio, NumberStyles.Integer, Cultura, out valor);
+        var limpio = (texto ?? string.Empty).Trim().Replace(',', '.');
+        return decimal.TryParse(limpio, NumberStyles.Number, Cultura, out valor);
     }
 
     private static void ReemplazarItems<T>(

@@ -3,6 +3,8 @@ using System.Text;
 using PosInventario.Models;
 using PosInventario.Models.Enums;
 
+
+
 namespace PosInventario.Service;
 
 /// <summary>
@@ -35,8 +37,14 @@ public static class GeneradorTicketTexto
             var nombre = detalle.Producto?.Nombre ?? "Producto";
             AgregarEnvuelto(lineas, nombre, columnas);
 
+            var cantidad = detalle.Unidad.Formatear(detalle.Cantidad);
+            var precio = detalle.PrecioUnitario.ToString("0.00", Cultura);
+            var sufijo = detalle.Unidad.EsPorPeso() ? "/kg" : string.Empty;
+            var unidad = detalle.Unidad.EsPorPeso()
+                ? $" {detalle.Unidad.Abreviatura()}"
+                : string.Empty;
             var izquierda =
-                $"{detalle.Cantidad} x {detalle.PrecioUnitario.ToString("0.00", Cultura)}";
+                $"{cantidad}{unidad} x {precio}{sufijo}";
             var derecha = detalle.Subtotal.ToString("0.00", Cultura);
             AgregarDosColumnas(lineas, izquierda, derecha, columnas);
         }

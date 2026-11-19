@@ -90,7 +90,7 @@
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="1">
                                             <TextBlock Text="{Binding Producto.Nombre}" Classes="caption"/>
-                                            <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}"
+                                            <TextBlock Text="{Binding CantidadTexto, StringFormat='Cant. {0}'}"
                                                        Classes="caption"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="1"
@@ -151,12 +151,12 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="6">
-                                <TextBlock Text="Cantidad" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaCantidad}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Spacing="6">
-                                <TextBlock Text="Costo unitario" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaCosto}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding CostoTexto}" PlaceholderText="Costo unitario"/>
                             </StackPanel>
                         </Grid>
@@ -180,12 +180,12 @@
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}"
+                                                    <TextBlock Text="{Binding CantidadTexto, StringFormat='Cant. {0}'}"
                                                                Classes="caption"/>
-                                                    <TextBlock Text="{Binding CostoUnitario, StringFormat='{}{0:0.00}'}"
+                                                    <TextBlock Text="{Binding CostoUnitarioTexto}"
                                                                Classes="caption"/>
                                                     <TextBlock Text="=" Classes="caption"/>
-                                                    <TextBlock Text="{Binding Subtotal, StringFormat='{}{0:0.00}'}"
+                                                    <TextBlock Text="{Binding SubtotalTexto}"
                                                                Classes="caption"/>
                                                 </StackPanel>
                                             </StackPanel>
