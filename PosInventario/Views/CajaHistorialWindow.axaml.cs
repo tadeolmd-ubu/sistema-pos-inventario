@@ -35,6 +35,16 @@ public partial class CajaHistorialWindow : Window
         }.ShowDialog(ventana);
     }
 
+    private async void ImprimirCorte_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not CajaHistorialViewModel viewModel ||
+            TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        await new CorteCajaWindow { DataContext = viewModel.CrearCorteViewModel() }
+            .ShowDialog(ventana);
+    }
+
     private async void Devolver_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button { DataContext: VentaHistorialItem item } ||

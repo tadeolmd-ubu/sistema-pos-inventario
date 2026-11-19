@@ -18,4 +18,5 @@ public class Usuario
     public ICollection<Caja> Cajas { get; set; } = [];
     public ICollection<MovimientoInventario> MovimientosInventario { get; set; } = [];
     public ICollection<MovimientoCaja> MovimientosCaja { get; set; } = [];
+    public ICollection<Abono> Abonos { get; set; } = [];
 }

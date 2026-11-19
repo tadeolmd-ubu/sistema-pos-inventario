@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:ImportarDatosViewModel"
+        x:Class="PosInventario.Views.ImportarDatosWindow"
+        Title="Importar datos"
+        Width="640"
+        SizeToContent="Height"
+        MaxHeight="640"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="12">
+
+            <TextBlock Text="Importar productos y proveedores" Classes="subsection"/>
+            <TextBlock Text="{Binding ArchivoTexto}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding ResumenTexto}"
+                       TextWrapping="Wrap"/>
+
+            <TextBlock Text="El stock inicial solo se aplica a productos nuevos. Los productos que ya existen se actualizan sin cambiar su stock."
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <Border Background="{StaticResource SurfaceAltBrush}"
+                    CornerRadius="10"
+                    Padding="12"
+                    IsVisible="{Binding HayErrores}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Errores encontrados" Classes="fieldLabel"/>
+                    <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Errores}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               Classes="caption"
+                                               Foreground="{StaticResource ErrorBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,2"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cancelar_Click"/>
+                <Button Content="Importar"
+                        Classes="primary"
+                        IsDefault="True"
+                        IsEnabled="{Binding PuedeImportar}"
+                        Click="Importar_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

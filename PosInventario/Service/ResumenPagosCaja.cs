@@ -7,7 +7,8 @@ public sealed record ResumenPagosCaja(
     int CantidadVentas,
     decimal Efectivo,
     decimal Tarjeta,
-    decimal Transferencia)
+    decimal Transferencia,
+    decimal Credito)
 {
-    public decimal Total => Efectivo + Tarjeta + Transferencia;
+    public decimal Total => Efectivo + Tarjeta + Transferencia + Credito;
 }

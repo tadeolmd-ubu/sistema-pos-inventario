@@ -281,13 +281,21 @@ public class VentaServiceTests
 
         Assert.Single(vm.VentasItems);
         Assert.Equal("100.00", vm.TotalVendidoTexto);
+        Assert.Equal(1, vm.CantidadExportable);
+
+        var csvSinAnuladas = vm.GenerarCsv();
+        Assert.Single(
+            csvSinAnuladas.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Skip(1));
+        Assert.DoesNotContain($"V-{primera.Id:000000}", csvSinAnuladas);
 
         vm.VerAnuladas = true;
+        await vm.CargarAsync();
 
         Assert.Equal(2, vm.VentasItems.Count);
         Assert.Equal(2, vm.CantidadVentas);
         Assert.Equal("100.00", vm.TotalVendidoTexto);
         Assert.Contains(vm.VentasItems, v => v.Estado == EstadoVenta.Anulada);
+        Assert.Contains($"V-{primera.Id:000000}", vm.GenerarCsv());
     }
 
     [Fact]
@@ -1050,13 +1058,204 @@ public class VentaServiceTests
             prueba.CajaService, prueba.VentaService,
             prueba.ProductoService, prueba.Sesion);
 
-        vm.AgregarProducto(producto);
+        await vm.AgregarProductoAsync(producto);
         vm.MontoEfectivoTexto = "100";
 
         await vm.CobrarCommand.ExecuteAsync(null);
 
         Assert.Contains("caja abierta", vm.MensajeOperacion);
         Assert.Equal(0, await prueba.Db.Ventas.CountAsync());
+    }
+
+    [Fact]
+    public async Task HistorialPaginadoDevuelveSoloLaPaginaYElTotal()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("PAG-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var primera = await prueba.VenderAsync(producto);
+        var segunda = await prueba.VenderAsync(producto);
+        var tercera = await prueba.VenderAsync(producto);
+
+        var paginaUno = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: false, pagina: 1, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaUno.TotalRegistros);
+        Assert.Equal(2, paginaUno.Items.Count);
+        Assert.Equal(tercera.Id, paginaUno.Items[0].Id);
+        Assert.Equal(segunda.Id, paginaUno.Items[1].Id);
+        Assert.Equal(300m, paginaUno.Total);
+
+        var paginaDos = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: false, pagina: 2, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaDos.TotalRegistros);
+        Assert.Single(paginaDos.Items);
+        Assert.Equal(primera.Id, paginaDos.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task HistorialPaginadoBuscaPorTicketOCajeroYRespetaAnuladas()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var producto = await prueba.CrearProductoAsync("PAG-002");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var primera = await prueba.VenderAsync(producto);
+        var segunda = await prueba.VenderAsync(producto);
+
+        var anulacion = await prueba.VentaService.AnularAsync(primera.Id);
+        Assert.True(anulacion.Correcta, anulacion.Mensaje);
+
+        var porTicket = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            $"V-{segunda.Id:000000}", incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10);
+
+        Assert.Single(porTicket.Items);
+        Assert.Equal(segunda.Id, porTicket.Items[0].Id);
+
+        var porCajero = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            "Administrador", incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10);
+
+        Assert.Single(porCajero.Items);
+
+        var conAnuladas = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            DateTime.Today.AddDays(-1), DateTime.Today,
+            null, incluirAnuladas: true, pagina: 1, tamanoPagina: 10);
+
+        Assert.Equal(2, conAnuladas.TotalRegistros);
+        Assert.Contains(conAnuladas.Items, v => v.Id == primera.Id);
+    }
+
+    [Fact]
+    public async Task HistorialPaginadoCombinaFiltrosDeMetodoCajeroFechaYBusqueda()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        var admin = await prueba.CrearAdministradorEnSesionAsync();
+        var cajero = await prueba.CrearCajeroAsync("laura");
+        var producto = await prueba.CrearProductoAsync("FIL-001");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var adminEfectivo = await prueba.VenderAsync(producto);
+        var adminMixto = await prueba.VentaService.RegistrarAsync(
+            [new LineaVenta(producto.Id, 1)],
+            [
+                new LineaPago(MetodoPago.Efectivo, 40m, 40m),
+                new LineaPago(MetodoPago.Tarjeta, 60m)
+            ]);
+        Assert.True(adminMixto.Correcta, adminMixto.Mensaje);
+
+        prueba.Sesion.Iniciar(cajero);
+        var cajeroEfectivo = await prueba.VenderAsync(producto);
+        var cajeroTarjeta = await prueba.VenderAsync(producto, MetodoPago.Tarjeta);
+
+        var desde = DateTime.Today.AddDays(-1);
+        var hasta = DateTime.Today;
+
+        var porMetodo = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            desde, hasta, null, incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10,
+            metodo: MetodoPago.Efectivo);
+
+        Assert.Equal(2, porMetodo.TotalRegistros);
+        Assert.Equal(200m, porMetodo.Total);
+        Assert.DoesNotContain(porMetodo.Items, v => v.MetodoPago == MetodoPago.Mixto);
+        Assert.DoesNotContain(porMetodo.Items, v => v.Id == cajeroTarjeta.Id);
+
+        var mixtos = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            desde, hasta, null, incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10,
+            metodo: MetodoPago.Mixto);
+
+        Assert.Single(mixtos.Items);
+        Assert.Equal(adminMixto.Valor!.Id, mixtos.Items[0].Id);
+
+        var porCajero = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            desde, hasta, null, incluirAnuladas: false,
+            pagina: 1, tamanoPagina: 10,
+            idUsuario: cajero.Id);
+
+        Assert.Equal(2, porCajero.TotalRegistros);
+        Assert.All(porCajero.Items, v => Assert.Equal(cajero.Id, v.IdUsuario));
+
+        var combinado = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            desde, hasta, $"V-{cajeroEfectivo.Id:000000}",
+            incluirAnuladas: false, pagina: 1, tamanoPagina: 10,
+            metodo: MetodoPago.Efectivo, idUsuario: cajero.Id);
+
+        Assert.Single(combinado.Items);
+        Assert.Equal(cajeroEfectivo.Id, combinado.Items[0].Id);
+
+        var sinCoincidencia = await prueba.VentaService.ObtenerHistorialPaginadoAsync(
+            desde, hasta, $"V-{adminEfectivo.Id:000000}",
+            incluirAnuladas: false, pagina: 1, tamanoPagina: 10,
+            metodo: MetodoPago.Efectivo, idUsuario: cajero.Id);
+
+        Assert.Empty(sinCoincidencia.Items);
+
+        var cajeros = await prueba.VentaService.ObtenerCajerosConVentasAsync();
+
+        Assert.Equal(2, cajeros.Count);
+        Assert.Contains(cajeros, u => u.Id == admin.Id);
+        Assert.Contains(cajeros, u => u.Id == cajero.Id);
+        Assert.Equal(admin.Id, cajeros[0].Id);
+    }
+
+    [Fact]
+    public async Task VentasViewModelAplicaLosFiltrosDeMetodoYCajero()
+    {
+        await using var prueba = await PruebaVentas.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var cajero = await prueba.CrearCajeroAsync("laura");
+        var producto = await prueba.CrearProductoAsync("FIL-002");
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            producto.Id, 10, "Carga inicial");
+        await prueba.AbrirCajaAsync();
+
+        var efectivoAdmin = await prueba.VenderAsync(producto, MetodoPago.Efectivo);
+
+        prueba.Sesion.Iniciar(cajero);
+        var efectivoCajero = await prueba.VenderAsync(producto, MetodoPago.Efectivo);
+        var tarjeta = await prueba.VenderAsync(producto, MetodoPago.Tarjeta);
+
+        var vm = new VentasViewModel(prueba.VentaService)
+        {
+            Desde = new DateTimeOffset(DateTime.Today.AddDays(-1)),
+            Hasta = new DateTimeOffset(DateTime.Today)
+        };
+
+        await vm.CargarAsync();
+
+        Assert.Equal(3, vm.CantidadVentas);
+        Assert.Contains(vm.Cajeros, c => c.Id == cajero.Id);
+
+        vm.MetodoSeleccionado = "Tarjeta";
+        vm.CajeroSeleccionado = vm.Cajeros.Single(c => c.Id == cajero.Id);
+
+        await vm.CargarAsync();
+
+        Assert.Single(vm.VentasItems);
+        Assert.Equal(tarjeta.Id, vm.VentasItems[0].Id);
+        Assert.Equal("100.00", vm.TotalVendidoTexto);
+
+        var csv = vm.GenerarCsv();
+        Assert.Contains($"V-{tarjeta.Id:000000}", csv);
+        Assert.DoesNotContain($"V-{efectivoAdmin.Id:000000}", csv);
+        Assert.DoesNotContain($"V-{efectivoCajero.Id:000000}", csv);
     }
 
     [Fact]
@@ -1075,6 +1274,7 @@ public class VentaServiceTests
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);
 
         vm.Busqueda = "SEL-001";
+        await vm.CargarAsync();
 
         Assert.NotNull(vm.SelectedProducto);
         Assert.Equal(producto.Id, vm.SelectedProducto!.Id);

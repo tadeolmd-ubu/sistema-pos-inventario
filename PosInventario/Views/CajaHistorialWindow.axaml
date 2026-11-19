@@ -6,13 +6,13 @@
         Title="Detalle de caja"
         Width="560"
         SizeToContent="Height"
-        MaxHeight="780"
+        MaxHeight="640"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource ContentBackgroundBrush}">
 
     <Border Classes="card" Margin="18" Padding="24">
-        <ScrollViewer MaxHeight="660" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="10">
 
                 <TextBlock Text="{Binding Numero}" Classes="subsection"/>
@@ -61,7 +61,7 @@
                         CornerRadius="10"
                         Padding="12">
                     <Grid ColumnDefinitions="*,Auto"
-                          RowDefinitions="Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
                           RowSpacing="3">
                         <TextBlock Grid.Row="0" Text="Efectivo" Classes="caption"/>
                         <TextBlock Grid.Row="0" Grid.Column="1"
@@ -74,6 +74,10 @@
                         <TextBlock Grid.Row="2" Text="Transferencia" Classes="caption"/>
                         <TextBlock Grid.Row="2" Grid.Column="1"
                                    Text="{Binding TotalTransferenciaTexto}"/>
+
+                        <TextBlock Grid.Row="3" Text="Crédito" Classes="caption"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   Text="{Binding TotalCreditoTexto}"/>
                     </Grid>
                 </Border>
 
@@ -151,12 +155,19 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <Button Content="Cerrar"
-                        Classes="primary"
-                        HorizontalAlignment="Stretch"
-                        IsDefault="True"
-                        IsCancel="True"
-                        Click="Cerrar_Click"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Content="Imprimir corte"
+                            Classes="secondary"
+                            HorizontalAlignment="Stretch"
+                            Click="ImprimirCorte_Click"/>
+                    <Button Grid.Column="1"
+                            Content="Cerrar"
+                            Classes="primary"
+                            HorizontalAlignment="Stretch"
+                            IsDefault="True"
+                            IsCancel="True"
+                            Click="Cerrar_Click"/>
+                </Grid>
 
             </StackPanel>
         </ScrollViewer>

@@ -40,7 +40,34 @@ public partial class SeleccionarProductoWindow : Window
 
     private void OnKeyDownTunnel(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Enter || _viewModel is null)
+        if (_viewModel is null)
+            return;
+
+        if (e.Key is Key.Left or Key.Right)
+        {
+            // Con texto en el buscador, las flechas mueven el cursor. Con el
+            // buscador vacío o la lista enfocada, cambian de página.
+            var enLista = ProductosLista.IsKeyboardFocusWithin;
+            var enBusquedaVacia = BusquedaBox.IsKeyboardFocusWithin &&
+                                  string.IsNullOrWhiteSpace(_viewModel.Busqueda);
+
+            if (!enLista && !enBusquedaVacia)
+                return;
+
+            var comando = e.Key == Key.Left
+                ? _viewModel.Paginacion.IrAnteriorCommand
+                : _viewModel.Paginacion.IrSiguienteCommand;
+
+            if (comando.CanExecute(null))
+            {
+                e.Handled = true;
+                comando.Execute(null);
+            }
+
+            return;
+        }
+
+        if (e.Key != Key.Enter)
             return;
 
         if (BusquedaBox.IsKeyboardFocusWithin)

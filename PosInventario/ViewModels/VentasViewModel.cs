@@ -9,22 +9,42 @@ using PosInventario.Service;
 namespace PosInventario.ViewModels;
 
 /// <summary>
+/// Opción del filtro de cajero. <see cref="Id"/> nulo representa "todos".
+/// </summary>
+public sealed record OpcionCajero(int? Id, string Nombre);
+
+/// <summary>
 /// Historial global de ventas para administradores: permite buscar por rango
-/// de fechas, ticket o cajero, y abrir el ticket de cualquier venta.
+/// de fechas, ticket, cajero y método de pago, y abrir el ticket de cualquier
+/// venta.
 /// </summary>
 public partial class VentasViewModel : OperacionViewModel
 {
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
+    private static readonly OpcionCajero TodosLosCajeros =
+        new(null, "Todos los cajeros");
 
     private readonly VentaService? _ventaService;
-    private readonly List<Venta> _cargadas = [];
+    private decimal _totalVendido;
 
-    public VentasViewModel() { }
+    public VentasViewModel()
+    {
+        Paginacion.CambioSolicitado += CargarPaginaActual;
+        Cajeros.Add(TodosLosCajeros);
+        CajeroSeleccionado = TodosLosCajeros;
+    }
 
     public VentasViewModel(VentaService ventaService)
+        : this()
         => _ventaService = ventaService;
 
     public ObservableCollection<Venta> VentasItems { get; } = [];
+    public ObservableCollection<OpcionCajero> Cajeros { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
+
+    public IReadOnlyList<string> OpcionesMetodo { get; } =
+        ["Todos", "Efectivo", "Tarjeta", "Transferencia", "Crédito", "Mixto"];
 
     [ObservableProperty] private DateTimeOffset? desde =
         new(DateTime.Today.AddDays(-7));
@@ -33,6 +53,8 @@ public partial class VentasViewModel : OperacionViewModel
         new(DateTime.Today);
 
     [ObservableProperty] private string busqueda = string.Empty;
+    [ObservableProperty] private string metodoSeleccionado = "Todos";
+    [ObservableProperty] private OpcionCajero? cajeroSeleccionado;
     [ObservableProperty] private bool verAnuladas;
     [ObservableProperty] private Venta? selectedVenta;
 
@@ -40,15 +62,35 @@ public partial class VentasViewModel : OperacionViewModel
 
     public bool SinVentas => !HayVentas;
 
-    public int CantidadVentas => VentasItems.Count;
+    public int CantidadVentas => Paginacion.TotalRegistros;
 
-    public string TotalVendidoTexto =>
-        VentasItems
-            .Where(v => v.Estado == EstadoVenta.Completada)
-            .Sum(v => v.TotalNeto)
-            .ToString("0.00", Cultura);
+    public string TotalVendidoTexto => _totalVendido.ToString("0.00", Cultura);
 
     public bool PuedeVerTicket => SelectedVenta is not null;
+
+    public int CantidadExportable => VentasItems.Count;
+
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo(
+            "ventas", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
+
+    public string GenerarCsv() => ExportadorCsv.Ventas(VentasItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
+    private MetodoPago? MetodoFiltro => MetodoSeleccionado switch
+    {
+        "Efectivo" => MetodoPago.Efectivo,
+        "Tarjeta" => MetodoPago.Tarjeta,
+        "Transferencia" => MetodoPago.Transferencia,
+        "Crédito" => MetodoPago.Credito,
+        "Mixto" => MetodoPago.Mixto,
+        _ => null
+    };
 
     /// <summary>
     /// Solo se puede devolver una venta completada con unidades pendientes.
@@ -75,12 +117,18 @@ public partial class VentasViewModel : OperacionViewModel
             : new DevolverVentaViewModel(_ventaService, venta);
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync() => EjecutarSeguroAsync(
+        () => CargarPaginaAsync(reiniciarPagina: true));
+
+    private void CargarPaginaActual()
+        => _ = EjecutarSeguroAsync(() => CargarPaginaAsync(reiniciarPagina: false));
+
+    private async Task CargarPaginaAsync(bool reiniciarPagina)
     {
         if (_ventaService is null) return;
 
-        var desdeFecha = (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
-        var hastaFecha = (Hasta ?? DateTimeOffset.Now).Date;
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
 
         if (hastaFecha < desdeFecha)
         {
@@ -89,12 +137,52 @@ public partial class VentasViewModel : OperacionViewModel
             return;
         }
 
-        _cargadas.Clear();
-        _cargadas.AddRange(
-            await _ventaService.ObtenerHistorialAsync(desdeFecha, hastaFecha));
+        if (reiniciarPagina)
+        {
+            Paginacion.Reiniciar();
+            await CargarCajerosAsync();
+        }
 
-        Filtrar();
-    });
+        var pagina = await _ventaService.ObtenerHistorialPaginadoAsync(
+            desdeFecha,
+            hastaFecha,
+            Busqueda,
+            VerAnuladas,
+            Paginacion.PaginaActual,
+            Paginacion.TamanoPagina,
+            MetodoFiltro,
+            CajeroSeleccionado?.Id);
+
+        ReemplazarItems(VentasItems, pagina.Items);
+        _totalVendido = pagina.Total;
+        Paginacion.EstablecerTotal(pagina.TotalRegistros);
+
+        if (SelectedVenta is not null && !VentasItems.Contains(SelectedVenta))
+            SelectedVenta = null;
+
+        NotificarResumen();
+    }
+
+    /// <summary>
+    /// Refresca la lista de cajeros con ventas y conserva la selección actual
+    /// cuando el usuario ya había elegido uno.
+    /// </summary>
+    private async Task CargarCajerosAsync()
+    {
+        if (_ventaService is null) return;
+
+        var seleccionado = CajeroSeleccionado?.Id;
+        var usuarios = await _ventaService.ObtenerCajerosConVentasAsync();
+
+        Cajeros.Clear();
+        Cajeros.Add(TodosLosCajeros);
+
+        foreach (var usuario in usuarios)
+            Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+
+        CajeroSeleccionado = Cajeros
+            .FirstOrDefault(c => c.Id == seleccionado) ?? TodosLosCajeros;
+    }
 
     [RelayCommand(CanExecute = nameof(PuedeVerTicket))]
     private void VerTicket()
@@ -110,10 +198,6 @@ public partial class VentasViewModel : OperacionViewModel
             DevolucionSolicitada?.Invoke(SelectedVenta);
     }
 
-    partial void OnBusquedaChanged(string value) => Filtrar();
-
-    partial void OnVerAnuladasChanged(bool value) => Filtrar();
-
     partial void OnSelectedVentaChanged(Venta? value)
     {
         OnPropertyChanged(nameof(PuedeVerTicket));
@@ -126,46 +210,28 @@ public partial class VentasViewModel : OperacionViewModel
     {
         base.LimpiarPantalla();
 
-        _cargadas.Clear();
+        Paginacion.Reiniciar();
         VentasItems.Clear();
+        Cajeros.Clear();
         Busqueda = string.Empty;
+        MetodoSeleccionado = "Todos";
+        CajeroSeleccionado = null;
         VerAnuladas = false;
         SelectedVenta = null;
         Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
         Hasta = new DateTimeOffset(DateTime.Today);
+        _totalVendido = 0m;
 
         NotificarResumen();
     }
 
-    private void Filtrar()
+    private static void ReemplazarItems<T>(
+        ObservableCollection<T> destino, IEnumerable<T> origen)
     {
-        var texto = (Busqueda ?? string.Empty).Trim();
+        destino.Clear();
 
-        IEnumerable<Venta> filtradas = _cargadas;
-
-        if (!VerAnuladas)
-            filtradas = filtradas.Where(v => v.Estado == EstadoVenta.Completada);
-
-        if (texto.Length > 0)
-        {
-            filtradas = filtradas.Where(v =>
-                v.Id.ToString().Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                $"V-{v.Id:000000}".Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                (v.Usuario?.Nombre ?? string.Empty)
-                    .Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                (v.Usuario?.NombreUsuario ?? string.Empty)
-                    .Contains(texto, StringComparison.OrdinalIgnoreCase));
-        }
-
-        VentasItems.Clear();
-
-        foreach (var venta in filtradas)
-            VentasItems.Add(venta);
-
-        if (SelectedVenta is not null && !VentasItems.Contains(SelectedVenta))
-            SelectedVenta = null;
-
-        NotificarResumen();
+        foreach (var item in origen)
+            destino.Add(item);
     }
 
     private void NotificarResumen()

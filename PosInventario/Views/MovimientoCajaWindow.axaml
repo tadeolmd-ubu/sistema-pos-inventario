@@ -7,13 +7,13 @@
         Title="Detalle del movimiento"
         Width="440"
         SizeToContent="Height"
-        MaxHeight="720"
+        MaxHeight="620"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource ContentBackgroundBrush}">
 
     <Border Classes="card" Margin="18" Padding="24">
-        <ScrollViewer MaxHeight="600" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="10">
 
                 <TextBlock Text="Detalle del movimiento" Classes="subsection"/>

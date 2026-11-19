@@ -139,6 +139,27 @@
 
                     <Button Classes="navPill"
                             IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAClientesCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ClientesViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ClientesViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Clientes"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ClientesViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
                             Command="{Binding IrAInventarioCommand}"
                             Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=InventarioViewModel}">
                         <Grid ColumnDefinitions="3,Auto,*">
@@ -197,6 +218,27 @@
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=VentasViewModel}"/>
+                        </Grid>
+                    </Button>
+
+                    <Button Classes="navPill"
+                            IsVisible="{Binding EsAdministrador}"
+                            Command="{Binding IrAReportesCommand}"
+                            Background="{Binding VistaActual, Converter={StaticResource VistaFondo}, ConverterParameter=ReportesViewModel}">
+                        <Grid ColumnDefinitions="3,Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="3" Height="24" CornerRadius="2"
+                                    Background="{StaticResource AccentBarBrush}"
+                                    Opacity="{Binding VistaActual, Converter={StaticResource VistaBarra}, ConverterParameter=ReportesViewModel}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="Reportes"
+                                       Margin="14,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding VistaActual, Converter={StaticResource VistaTexto}, ConverterParameter=ReportesViewModel}"/>
                         </Grid>
                     </Button>
 

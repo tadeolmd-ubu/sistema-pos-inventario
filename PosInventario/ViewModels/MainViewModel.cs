@@ -11,9 +11,11 @@ public partial class MainViewModel : OperacionViewModel
     private readonly CajaViewModel _cajaViewModel;
     private readonly ProductosViewModel _productosViewModel;
     private readonly ProveedoresViewModel _proveedoresViewModel;
+    private readonly ClientesViewModel? _clientesViewModel;
     private readonly InventarioViewModel _inventarioViewModel;
     private readonly ComprasViewModel _comprasViewModel;
     private readonly VentasViewModel _ventasViewModel;
+    private readonly ReportesViewModel _reportesViewModel;
     private readonly UsuariosViewModel _usuariosViewModel;
     private readonly ConfiguracionViewModel _configuracionViewModel;
     private readonly VersionService _versionService;
@@ -28,19 +30,23 @@ public partial class MainViewModel : OperacionViewModel
         InventarioViewModel inventarioViewModel,
         ComprasViewModel comprasViewModel,
         VentasViewModel ventasViewModel,
+        ReportesViewModel reportesViewModel,
         UsuariosViewModel usuariosViewModel,
         ConfiguracionViewModel configuracionViewModel,
         VersionService versionService,
         SesionActual sesion,
-        RespaldoAutomaticoService? respaldoAutomatico = null)
+        RespaldoAutomaticoService? respaldoAutomatico = null,
+        ClientesViewModel? clientesViewModel = null)
     {
         _inicioViewModel = inicioViewModel;
         _cajaViewModel = cajaViewModel;
         _productosViewModel = productosViewModel;
         _proveedoresViewModel = proveedoresViewModel;
+        _clientesViewModel = clientesViewModel;
         _inventarioViewModel = inventarioViewModel;
         _comprasViewModel = comprasViewModel;
         _ventasViewModel = ventasViewModel;
+        _reportesViewModel = reportesViewModel;
         _usuariosViewModel = usuariosViewModel;
         _configuracionViewModel = configuracionViewModel;
         _versionService = versionService;
@@ -51,9 +57,12 @@ public partial class MainViewModel : OperacionViewModel
         _cajaViewModel.MensajeSolicitado += SolicitarMensaje;
         _productosViewModel.MensajeSolicitado += SolicitarMensaje;
         _proveedoresViewModel.MensajeSolicitado += SolicitarMensaje;
+        if (_clientesViewModel is not null)
+            _clientesViewModel.MensajeSolicitado += SolicitarMensaje;
         _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
         _comprasViewModel.MensajeSolicitado += SolicitarMensaje;
         _ventasViewModel.MensajeSolicitado += SolicitarMensaje;
+        _reportesViewModel.MensajeSolicitado += SolicitarMensaje;
         _usuariosViewModel.MensajeSolicitado += SolicitarMensaje;
         _configuracionViewModel.MensajeSolicitado += SolicitarMensaje;
 
@@ -190,6 +199,15 @@ public partial class MainViewModel : OperacionViewModel
     }
 
     [RelayCommand]
+    private async Task IrAClientesAsync()
+    {
+        if (!EsAdministrador || _clientesViewModel is null) return;
+
+        CambiarVista(_clientesViewModel, "Clientes");
+        await _clientesViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
     private async Task IrAInventarioAsync()
     {
         if (!EsAdministrador) return;
@@ -223,6 +241,15 @@ public partial class MainViewModel : OperacionViewModel
 
         CambiarVista(_ventasViewModel, "Ventas");
         await _ventasViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAReportesAsync()
+    {
+        if (!EsAdministrador) return;
+
+        CambiarVista(_reportesViewModel, "Reportes");
+        await _reportesViewModel.CargarAsync();
     }
 
     [RelayCommand]

@@ -17,6 +17,60 @@ namespace PosInventario.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("PosInventario.Models.Abono", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("fecha");
+
+                    b.Property<int>("IdCliente")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idCliente");
+
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idUsuario");
+
+                    b.Property<int>("IdVenta")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idVenta");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("metodo");
+
+                    b.Property<decimal>("Monto")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("monto");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("referencia");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUsuario");
+
+                    b.HasIndex("IdVenta");
+
+                    b.HasIndex("IdCliente", "Fecha");
+
+                    b.ToTable("Abono", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Abono_metodo", "metodo IN ('Efectivo', 'Tarjeta', 'Transferencia')");
+
+                            t.HasCheckConstraint("CK_Abono_monto", "monto > 0");
+                        });
+                });
+
             modelBuilder.Entity("PosInventario.Models.Caja", b =>
                 {
                     b.Property<int>("Id")
@@ -89,6 +143,62 @@ namespace PosInventario.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PosInventario.Models.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Activo")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("direccion");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("fechaCreacion");
+
+                    b.Property<DateTime>("FechaModificacion")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("fechaModificacion");
+
+                    b.Property<decimal>("LimiteCredito")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("limiteCredito");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("nombre");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("telefono");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Activo");
+
+                    b.HasIndex("Nombre");
+
+                    b.ToTable("Cliente", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Cliente_limiteCredito", "limiteCredito >= 0");
+                        });
+                });
+
             modelBuilder.Entity("PosInventario.Models.Compra", b =>
                 {
                     b.Property<int>("Id")
@@ -156,7 +266,7 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
@@ -199,15 +309,19 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
-                    b.Property<int>("CantidadDevuelta")
+                    b.Property<long>("CantidadDevuelta")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(0)
+                        .HasDefaultValue(0L)
                         .HasColumnName("cantidadDevuelta");
+
+                    b.Property<decimal>("CostoUnitario")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("costoUnitario");
 
                     b.Property<int>("IdProducto")
                         .HasColumnType("INTEGER")
@@ -236,6 +350,8 @@ namespace PosInventario.Migrations
                             t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
 
                             t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
+
+                            t.HasCheckConstraint("CK_DetalleVenta_costoUnitario", "costoUnitario >= 0");
 
                             t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
 
@@ -302,7 +418,7 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("Cantidad")
+                    b.Property<long>("Cantidad")
                         .HasColumnType("INTEGER")
                         .HasColumnName("cantidad");
 
@@ -331,11 +447,11 @@ namespace PosInventario.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("referencia");
 
-                    b.Property<int>("StockAnterior")
+                    b.Property<long>("StockAnterior")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockAnterior");
 
-                    b.Property<int>("StockResultante")
+                    b.Property<long>("StockResultante")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockResultante");
 
@@ -455,13 +571,21 @@ namespace PosInventario.Migrations
                         .HasColumnName("sku")
                         .UseCollation("NOCASE");
 
-                    b.Property<int>("Stock")
+                    b.Property<long>("Stock")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stock");
 
-                    b.Property<int>("StockMinimo")
+                    b.Property<long>("StockMinimo")
                         .HasColumnType("INTEGER")
                         .HasColumnName("stockMinimo");
+
+                    b.Property<string>("UnidadMedida")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Pieza")
+                        .HasColumnName("unidadMedida");
 
                     b.HasKey("Id");
 
@@ -616,6 +740,10 @@ namespace PosInventario.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("idCaja");
 
+                    b.Property<int?>("IdCliente")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("idCliente");
+
                     b.Property<int>("IdUsuario")
                         .HasColumnType("INTEGER")
                         .HasColumnName("idUsuario");
@@ -637,6 +765,14 @@ namespace PosInventario.Migrations
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("subtotal");
+
+                    b.Property<string>("TipoVenta")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Contado")
+                        .HasColumnName("tipoVenta");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(12,2)")
@@ -660,9 +796,13 @@ namespace PosInventario.Migrations
 
                     b.HasIndex("IdCaja");
 
+                    b.HasIndex("IdCliente");
+
                     b.HasIndex("IdUsuario");
 
                     b.HasIndex("IdUsuarioAnulacion");
+
+                    b.HasIndex("TipoVenta");
 
                     b.ToTable("Venta", null, t =>
                         {
@@ -678,6 +818,33 @@ namespace PosInventario.Migrations
 
                             t.HasCheckConstraint("CK_Venta_vuelto", "vuelto >= 0");
                         });
+                });
+
+            modelBuilder.Entity("PosInventario.Models.Abono", b =>
+                {
+                    b.HasOne("PosInventario.Models.Cliente", "Cliente")
+                        .WithMany("Abonos")
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PosInventario.Models.Usuario", "Usuario")
+                        .WithMany("Abonos")
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PosInventario.Models.Venta", "Venta")
+                        .WithMany("Abonos")
+                        .HasForeignKey("IdVenta")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Usuario");
+
+                    b.Navigation("Venta");
                 });
 
             modelBuilder.Entity("PosInventario.Models.Caja", b =>
@@ -836,6 +1003,11 @@ namespace PosInventario.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("PosInventario.Models.Cliente", "Cliente")
+                        .WithMany("Ventas")
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PosInventario.Models.Usuario", "Usuario")
                         .WithMany("Ventas")
                         .HasForeignKey("IdUsuario")
@@ -849,12 +1021,21 @@ namespace PosInventario.Migrations
 
                     b.Navigation("Caja");
 
+                    b.Navigation("Cliente");
+
                     b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("PosInventario.Models.Caja", b =>
                 {
                     b.Navigation("Movimientos");
+
+                    b.Navigation("Ventas");
+                });
+
+            modelBuilder.Entity("PosInventario.Models.Cliente", b =>
+                {
+                    b.Navigation("Abonos");
 
                     b.Navigation("Ventas");
                 });
@@ -882,6 +1063,8 @@ namespace PosInventario.Migrations
 
             modelBuilder.Entity("PosInventario.Models.Usuario", b =>
                 {
+                    b.Navigation("Abonos");
+
                     b.Navigation("Cajas");
 
                     b.Navigation("Compras");
@@ -895,6 +1078,8 @@ namespace PosInventario.Migrations
 
             modelBuilder.Entity("PosInventario.Models.Venta", b =>
                 {
+                    b.Navigation("Abonos");
+
                     b.Navigation("Detalles");
 
                     b.Navigation("Movimientos");

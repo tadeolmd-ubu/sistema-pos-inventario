@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 using PosInventario.Service;
 
 namespace PosInventario.ViewModels;
@@ -12,13 +13,19 @@ public partial class ProductosViewModel : OperacionViewModel
     private static readonly CultureInfo Cultura = CultureInfo.InvariantCulture;
 
     private readonly ProductoService? _productoService;
+    private readonly ImportacionDatosService? _importacionService;
     private readonly List<Producto> _cargados = [];
     private bool _limpiando;
 
     public ProductosViewModel() { }
 
-    public ProductosViewModel(ProductoService productoService)
-        => _productoService = productoService;
+    public ProductosViewModel(
+        ProductoService productoService,
+        ImportacionDatosService? importacionService = null)
+    {
+        _productoService = productoService;
+        _importacionService = importacionService;
+    }
 
     public ObservableCollection<Producto> ProductosItems { get; } = [];
 
@@ -28,9 +35,26 @@ public partial class ProductosViewModel : OperacionViewModel
     [ObservableProperty] private string sku = string.Empty;
     [ObservableProperty] private string nombre = string.Empty;
     [ObservableProperty] private string descripcion = string.Empty;
+    [ObservableProperty] private UnidadMedida unidadMedidaSeleccionada =
+        UnidadMedida.Pieza;
     [ObservableProperty] private string precioVentaTexto = string.Empty;
     [ObservableProperty] private string costoTexto = string.Empty;
     [ObservableProperty] private string stockMinimoTexto = string.Empty;
+
+    public IReadOnlyList<UnidadMedida> Unidades { get; } =
+        [UnidadMedida.Pieza, UnidadMedida.Kilogramo];
+
+    public bool EsPorPeso =>
+        UnidadMedidaSeleccionada == UnidadMedida.Kilogramo;
+
+    public string EtiquetaPrecio =>
+        EsPorPeso ? "Precio por kg" : "Precio de venta";
+
+    public string EtiquetaCosto =>
+        EsPorPeso ? "Costo por kg" : "Costo";
+
+    public string EtiquetaStockMinimo =>
+        EsPorPeso ? "Stock mínimo (kg)" : "Stock mínimo";
 
     public bool EsModoCreacion => SelectedProducto is null;
 
@@ -45,7 +69,7 @@ public partial class ProductosViewModel : OperacionViewModel
 
     public string StockActual => SelectedProducto is null
         ? "El stock inicial es 0 y se carga desde Inventario."
-        : $"Stock actual: {SelectedProducto.Stock}";
+        : $"Stock actual: {SelectedProducto.StockTexto}";
 
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
@@ -62,6 +86,38 @@ public partial class ProductosViewModel : OperacionViewModel
         Filtrar();
     }
 
+    /// <summary>
+    /// Valida el archivo sin modificar la base y devuelve la ventana de vista
+    /// previa. Devuelve null cuando el archivo no se puede leer.
+    /// </summary>
+    public async Task<ImportarDatosViewModel?> PrepararImportacionAsync(string ruta)
+    {
+        if (_importacionService is null)
+            return null;
+
+        var lectura = await _importacionService.LeerAsync(ruta);
+
+        if (!lectura.Correcta || lectura.Valor is null)
+        {
+            MensajeOperacion = Notificar(lectura.Mensaje);
+            return null;
+        }
+
+        return new ImportarDatosViewModel(_importacionService, lectura.Valor);
+    }
+
+    public static string GenerarPlantillaImportacion()
+        => ImportadorCsv.Plantilla;
+
+    public void NotificarPlantillaGuardada(string ruta)
+        => MensajeOperacion = $"Plantilla guardada en:\n{ruta}";
+
+    public async Task RecargarTrasImportacionAsync(string mensaje)
+    {
+        MensajeOperacion = mensaje;
+        await CargarDatosAsync();
+    }
+
     partial void OnVerArchivadosChanged(bool value)
     {
         if (!_limpiando)
@@ -70,14 +126,24 @@ public partial class ProductosViewModel : OperacionViewModel
 
     partial void OnBusquedaChanged(string value) => Filtrar();
 
+    partial void OnUnidadMedidaSeleccionadaChanged(UnidadMedida value)
+    {
+        OnPropertyChanged(nameof(EsPorPeso));
+        OnPropertyChanged(nameof(EtiquetaPrecio));
+        OnPropertyChanged(nameof(EtiquetaCosto));
+        OnPropertyChanged(nameof(EtiquetaStockMinimo));
+    }
+
     partial void OnSelectedProductoChanged(Producto? value)
     {
         Sku = value?.Sku ?? string.Empty;
         Nombre = value?.Nombre ?? string.Empty;
         Descripcion = value?.Descripcion ?? string.Empty;
+        UnidadMedidaSeleccionada = value?.UnidadMedida ?? UnidadMedida.Pieza;
         PrecioVentaTexto = (value?.PrecioVenta ?? 0).ToString("0.00", Cultura);
         CostoTexto = (value?.Costo ?? 0).ToString("0.00", Cultura);
-        StockMinimoTexto = (value?.StockMinimo ?? 0).ToString(Cultura);
+        StockMinimoTexto = UnidadMedidaSeleccionada.Formatear(
+            value?.StockMinimo ?? 0m);
 
         OnPropertyChanged(nameof(EsModoCreacion));
         OnPropertyChanged(nameof(PuedeGuardar));
@@ -93,6 +159,7 @@ public partial class ProductosViewModel : OperacionViewModel
         Sku = string.Empty;
         Nombre = string.Empty;
         Descripcion = string.Empty;
+        UnidadMedidaSeleccionada = UnidadMedida.Pieza;
         PrecioVentaTexto = string.Empty;
         CostoTexto = string.Empty;
         StockMinimoTexto = string.Empty;
@@ -115,9 +182,9 @@ public partial class ProductosViewModel : OperacionViewModel
             return;
         }
 
-        if (!TryParseEntero(StockMinimoTexto, out var stockMinimo))
+        if (!TryParseDecimal(StockMinimoTexto, out var stockMinimo))
         {
-            MensajeOperacion = Notificar("El stock mínimo debe ser un número entero.");
+            MensajeOperacion = Notificar("El stock mínimo no es un número válido.");
             return;
         }
 
@@ -127,7 +194,8 @@ public partial class ProductosViewModel : OperacionViewModel
         if (EsModoCreacion)
         {
             var resultado = await _productoService.AgregarAsync(
-                Sku, Nombre, Descripcion, precioVenta, costo, stockMinimo);
+                Sku, Nombre, Descripcion, precioVenta, costo, stockMinimo,
+                UnidadMedidaSeleccionada);
 
             correcta = resultado.Correcta;
             mensaje = resultado.Mensaje;
@@ -136,7 +204,7 @@ public partial class ProductosViewModel : OperacionViewModel
         {
             var resultado = await _productoService.ActualizarAsync(
                 SelectedProducto!.Id, Sku, Nombre, Descripcion,
-                precioVenta, costo, stockMinimo);
+                precioVenta, costo, stockMinimo, UnidadMedidaSeleccionada);
 
             correcta = resultado.Correcta;
             mensaje = resultado.Mensaje;
@@ -260,12 +328,6 @@ public partial class ProductosViewModel : OperacionViewModel
     {
         var limpio = (texto ?? string.Empty).Trim().Replace(',', '.');
         return decimal.TryParse(limpio, NumberStyles.Number, Cultura, out valor);
-    }
-
-    private static bool TryParseEntero(string? texto, out int valor)
-    {
-        var limpio = (texto ?? string.Empty).Trim();
-        return int.TryParse(limpio, NumberStyles.Integer, Cultura, out valor);
     }
 
     private static void ReemplazarItems<T>(

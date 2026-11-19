@@ -1,6 +1,6 @@
 # Pendientes para llevar el sistema a un negocio real
 
-> Estado base: v1 funcional en `dev` (noviembre 2026), 147 tests pasando.
+> Estado base: v1 funcional en `dev` (noviembre 2026), 178 tests pasando.
 > Este documento ordena lo que falta de forma cronológica: primero lo que
 > desbloquea decisiones, después lo que permite operar, luego lo que da
 > confianza, y al final lo que convierte la app en un producto vendible.
@@ -27,12 +27,19 @@
 - [x] Ventas con stock, efectivo/tarjeta/transferencia, ticket en pantalla y anulación.
 - [x] Descuento sobre el subtotal.
 - [x] Búsqueda y alta por SKU en Caja (compatible con lector de código de barras).
-- [x] Historial global de ventas con filtros y reimpresión de ticket.
+- [x] Historial global de ventas con filtros por fecha, búsqueda, método y
+  cajero, y reimpresión de ticket.
+- [x] Reportes de administración: ventas por período y método, productos más
+  vendidos y utilidad neta de devoluciones.
 - [x] Desglose por método de pago en cierre e historial de caja.
 - [x] Devoluciones totales y parciales de ventas, con reembolso en efectivo
   desde la caja abierta y sin recalcular cajas cerradas.
 - [x] Respaldos manuales y automáticos, con verificación de integridad,
   retención configurable y restauración desde la app.
+- [x] Importación de productos, proveedores y stock inicial desde CSV con
+  vista previa, validación por fila y plantilla descargable.
+- [x] Instalador de Windows por usuario con Inno Setup, adjunto a la release
+  y validado en CI con instalación y desinstalación silenciosa.
 - [x] Manejo global de errores y logs en archivo.
 - [x] Instancia única con bloqueo de archivo.
 - [x] Textos en español de México.
@@ -42,15 +49,16 @@
 
 - Una sola PC y una sola base SQLite local.
 - Una sola caja abierta a la vez.
-- Cantidades y stock enteros.
+- Los productos por pieza usan cantidades enteras; los productos por peso
+  usan kilogramos con hasta tres decimales.
 - Una sola forma de pago por venta.
 - El reembolso en efectivo de una devolución requiere una caja abierta; con
   tarjeta o transferencia la devolución se registra de todos modos.
-- Ticket solo en pantalla.
+- Impresión por la cola del sistema (API de Windows o CUPS); sin ESC/POS
+  directo ni apertura de cajón.
 - La restauración reemplaza toda la base actual y reinicia la aplicación; no
   combina datos de dos bases.
 - Sin facturación ni impuestos.
-- Sin clientes ni ventas a crédito.
 
 ---
 
@@ -238,48 +246,82 @@
 
 ## Fase 3 — Administración y reportes
 
-- [ ] **3.1 Corte de caja imprimible**
+- [x] **3.1 Corte de caja imprimible**
   - **Qué:** imprimir el resumen de cierre con ventas, métodos, esperado,
     contado y diferencia.
   - **Depende de:** 1.1.
   - **Criterio:** el dueño se lleva el corte en papel.
+  - **Hecho en:** rama `feat/corte-caja-imprimible` (d2870c3): al cerrar la
+    caja se abre `CorteCajaWindow` con el resumen en 58/80 mm y botón
+    Imprimir; también se reimprime desde el detalle de una caja cerrada.
   - **Tamaño:** M.
 
-- [ ] **3.2 Exportar a CSV**
+- [x] **3.2 Exportar a CSV**
   - **Qué:** ventas, inventario y compras en un rango de fechas.
   - **Criterio:** el archivo abre en Excel y coincide con lo mostrado.
+  - **Hecho en:** rama `feat/exportar-csv` (300f36f): botón "Exportar CSV" en
+    cada módulo, con rango de fechas en Inventario y Compras. Exporta las filas
+    visibles, con UTF-8 con BOM, coma decimal y escape de comas, comillas y
+    fórmulas; las pruebas están en 7174b3b. Con la paginación del ítem 3.3,
+    exporta exactamente la página visible.
   - **Tamaño:** M.
 
-- [ ] **3.3 Reportes de administración**
+- [x] **3.3 Paginación reutilizable en los historiales**
+  - **Qué:** consultar Ventas, Inventario, Compras y el selector de productos
+    de Caja por páginas en la base en lugar de cargar todos los registros en
+    memoria.
+  - **Criterio:** selector de 10/25/50 registros (inicio en 10), navegación
+    Primera/Anterior/Siguiente/Última, total de registros visible y filtros
+    aplicados en la consulta. La exportación CSV incluye solo la página
+    seleccionada y el selector de Caja conserva la búsqueda por SKU/nombre.
+  - **Hecho en:** rama `feat/paginacion-listados` (fd725e9 y c110e0e): control
+    reutilizable `Paginador` + `PaginacionViewModel`, métodos paginados con
+    `Skip`/`Take` y `Count` en los servicios, selector de productos de Caja
+    paginado y exportación de la página actual.
+  - **Tamaño:** M.
+
+- [x] **3.4 Reportes de administración**
   - **Qué:** ventas por período, por método, productos más vendidos y utilidad
     (precio de venta menos costo).
   - **Criterio:** el dueño puede ver sus números sin exportar a otro sistema.
+  - **Hecho en:** rama `feat/reportes-administracion` (821fee7 y pruebas en
+    5e5167e): módulo Reportes solo para administrador con rango de fechas,
+    agrupación por día/semana/mes, atajos de hoy/7 días/mes actual/mes
+    anterior, ventas netas de devoluciones, desglose por método, top 10 de
+    productos y utilidad. Cada detalle de venta guarda su costo al momento
+    del cobro (migración `AddCostoDetalleVenta`, e8577c6) para que la
+    utilidad histórica no cambie al actualizar el producto.
   - **Tamaño:** L.
-
-- [ ] **3.4 Paginación o carga progresiva del historial de ventas**
-  - **Qué:** hoy hay un límite de 500 ventas por consulta; agregar páginas o
-    “cargar más”.
-  - **Criterio:** se puede consultar un año completo sin truncar datos.
-  - **Tamaño:** S/M.
 
 - [ ] **3.5 Persistencia de tamaño y posición de la ventana**
   - **Criterio:** la app abre donde y como se cerró.
   - **Tamaño:** S.
 
-- [ ] **3.6 Filtros adicionales en el historial de ventas**
+- [x] **3.6 Filtros adicionales en el historial de ventas**
   - **Qué:** filtrar por método de pago y por cajero.
   - **Criterio:** los filtros se combinan con fecha y búsqueda.
+  - **Hecho en:** rama `feat/filtros-historial-ventas` (d3c09a4): selector de
+    método (incluye Mixto) y de cajero con las personas que tienen ventas;
+    ambos se aplican en la consulta paginada junto con fecha, búsqueda y
+    anuladas. La exportación CSV y el total vendido respetan los filtros.
   - **Tamaño:** S.
 
 ---
 
 ## Fase 4 — Distribución y producto vendible
 
-- [ ] **4.1 Instalador para Windows**
+- [x] **4.1 Instalador para Windows**
   - **Qué:** Inno Setup o MSIX; acceso directo, desinstalador y datos en
     `LocalApplicationData`.
   - **Criterio:** una instalación limpia en Windows funciona sin pasar por la
     terminal.
+  - **Hecho en:** rama `feat/instalador-windows` (3c011c4 y docs en 9fc90ff):
+    `installer/PosInventario.iss` instala por usuario sin UAC, crea accesos
+    directos y desinstalador, y deja intacta la carpeta
+    `%LOCALAPPDATA%\SistemaInventario`. El workflow compila el instalador y
+    hace una instalación/desinstalación silenciosa en CI, verificando que el
+    desinstalador no borre los datos. Falta la prueba visual en un Windows
+    real antes de entregar al cliente.
   - **Tamaño:** M.
 
 - [ ] **4.2 Firma de código**
@@ -288,15 +330,26 @@
   - **Criterio:** Windows no muestra “editor desconocido”.
   - **Tamaño:** S (requiere comprar certificado).
 
-- [ ] **4.3 Release con instalador adjunto**
+- [x] **4.3 Release con instalador adjunto**
   - **Qué:** que el workflow publique el instalador y no solo el ZIP.
   - **Criterio:** cada release tiene un único archivo instalable.
+  - **Hecho en:** rama `ci/release-instalador-unico` (sobre `dev`): la release
+    adjunta solo `PosInventario-<versión>-win-x64-installer.exe` y el workflow
+    verifica que exista un único instalador en `dist/`. El ZIP portable queda
+    como artefacto del workflow para pruebas. Los pull requests compilan y
+    prueban, pero no crean release.
   - **Tamaño:** S.
 
-- [ ] **4.4 Manual de usuario**
+- [x] **4.4 Manual de usuario**
   - **Qué:** guía de instalación, apertura de caja, venta, cierre, respaldos y
     recuperación.
   - **Criterio:** una persona nueva puede operar sin acompañamiento.
+  - **Hecho en:** rama `chore/manual-usuario` (2a2a0b6): `MANUAL-USUARIO.md`
+    cubre instalación, primer administrador, roles, apertura y cierre de caja,
+    venta con todos los métodos de pago, devoluciones, movimientos de efectivo,
+    catálogos, inventario, compras, historial, reportes, usuarios, respaldos,
+    recuperación, atajos, problemas comunes y rutina diaria. `README.md`
+    enlaza el manual.
   - **Tamaño:** M.
 
 - [ ] **4.5 Licenciamiento o modelo de cobro**
@@ -315,25 +368,53 @@
   - **Qué:** distintas resoluciones, escalado DPI y versiones de Windows.
   - **Criterio:** la interfaz no se rompe en 1366x768 ni en 1920x1080 con 125%
     de escala.
+  - **Preparado en:** rama `chore/matriz-pruebas-windows` (6591ad0):
+    `PRUEBAS-WINDOWS.md` define entornos Windows 10/11, resoluciones
+    1366x768 y 1920x1080 al 100 %/125 %, y casos para todos los módulos,
+    diálogos, tickets, cortes y cambios de DPI. La ventana principal se
+    maximiza cuando su tamaño de diseño no cabe en el área de trabajo;
+    **Ventas** ahora tiene desplazamiento vertical y los diálogos altos
+    limitan su altura. `AjusteVentanaTests` cubre el cálculo.
+  - **Pendiente:** ejecutar la matriz en Windows real, adjuntar capturas y
+    registrar los resultados. No se marca terminado hasta validar la interfaz
+    en 1366x768 y 1920x1080 al 125 %.
   - **Tamaño:** M.
 
-- [ ] **4.8 Migración de datos desde Excel u otro sistema**
+- [x] **4.8 Migración de datos desde Excel u otro sistema**
   - **Qué:** importar productos, proveedores y stock inicial.
   - **Criterio:** un negocio nuevo arranca sin cargar todo a mano.
+  - **Hecho en:** rama `feat/importacion-datos` (4cc2ef5):
+    `ImportacionDatosService` lee CSV exportado de Excel (coma, punto y coma
+    o tabulador; UTF-8 o Latin-1), valida cada fila y muestra una vista previa
+    antes de escribir. **Productos → Importar CSV...** crea productos y
+    proveedores, actualiza los SKU existentes sin tocar su stock y registra el
+    stock inicial como movimiento de inventario; **Descargar plantilla**
+    genera el encabezado esperado. La importación es atómica: si hay errores,
+    no guarda nada. Cubierto por `ImportacionDatosServiceTests` (216 pruebas
+    en total) y documentado en `MANUAL-USUARIO.md` y `README.md`.
   - **Tamaño:** M.
 
 ---
 
 ## Fase 5 — Módulos según el cliente (no universales)
 
-- [ ] **5.1 Productos por peso o unidades decimales**
+- [x] **5.1 Productos por peso o unidades decimales**
   - **Qué:** cantidades y stock decimales, precios por kg.
   - **Cuándo:** carnicería, frutería, abarrotes a granel.
+  - **Hecho en:** rama `feat/productos-por-peso` (01e6118): unidad de venta
+    `Pieza`/`Kilogramo`, cantidades y stock con 3 decimales guardados en
+    milésimas, captura de peso en Caja, compras, inventario, devoluciones,
+    ticket, reportes, CSV/Excel e importación con columna `unidad`.
   - **Tamaño:** L.
 
-- [ ] **5.2 Clientes y ventas a crédito**
+- [x] **5.2 Clientes y ventas a crédito**
   - **Qué:** clientes, límite de crédito, cuenta por cobrar y abonos.
   - **Cuándo:** el negocio fía.
+  - **Hecho en:** rama `feat/clientes-credito` (df25552): catálogo de clientes,
+    venta opcional con cliente (sin cliente queda **Público**), ventas a
+    crédito con validación de límite, cuenta por cobrar por venta, abonos en
+    efectivo/tarjeta/transferencia y devoluciones que reducen el saldo. Los
+    abonos en efectivo entran a la caja y el corte separa crédito.
   - **Tamaño:** L.
 
 - [ ] **5.3 IVA y facturación (CFDI)**
@@ -353,6 +434,9 @@
 - [x] **6.1 Actualizar documentación**
   - **Qué:** README, `ARQUITECTURA-BASE.md` y `COLABORACION.md` con los módulos,
     logs, instancia única y el repositorio correcto.
+  - **Hecho en:** rama `chore/actualizar-documentacion` (f0d73c4): módulos de
+    clientes y crédito, rutas de logs y respaldos, bloqueo de instancia única,
+    repositorio remoto, comandos de migración pendiente y 240 pruebas.
   - **Tamaño:** S.
 
 - [ ] **6.2 Limpiar ramas y datos de prueba**
@@ -360,8 +444,13 @@
     pruebas.
   - **Tamaño:** S.
 
-- [ ] **6.3 Checklist de entrega al cliente**
+- [x] **6.3 Checklist de entrega al cliente**
   - **Qué:** instalación, respaldo inicial, capacitación y contacto de soporte.
+  - **Hecho en:** rama `chore/checklist-entrega` (7cbdc88):
+    `ENTREGA-CLIENTE.md` con datos de la entrega, instalación, respaldo
+    inicial, configuración, capacitación, pruebas de aceptación, soporte,
+    recomendaciones y firma; enlazado desde `README.md` y
+    `MANUAL-USUARIO.md`.
   - **Tamaño:** S.
 
 ---

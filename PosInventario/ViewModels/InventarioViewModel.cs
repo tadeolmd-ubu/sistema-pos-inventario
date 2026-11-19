@@ -21,6 +21,7 @@ public partial class InventarioViewModel : OperacionViewModel
     public InventarioViewModel()
     {
         MotivoSeleccionado = MotivosInventario.Entrada[0];
+        Paginacion.CambioSolicitado += CargarPaginaActual;
     }
 
     public InventarioViewModel(
@@ -34,6 +35,8 @@ public partial class InventarioViewModel : OperacionViewModel
     public ObservableCollection<Producto> ProductosItems { get; } = [];
     public ObservableCollection<MovimientoInventario> MovimientosItems { get; } = [];
 
+    public PaginacionViewModel Paginacion { get; } = new();
+
     public IReadOnlyList<TipoMovimiento> Tipos { get; } =
         [TipoMovimiento.Entrada, TipoMovimiento.Salida, TipoMovimiento.Ajuste];
 
@@ -45,22 +48,59 @@ public partial class InventarioViewModel : OperacionViewModel
     [ObservableProperty] private string stockContadoTexto = string.Empty;
     [ObservableProperty] private bool verTodosLosMovimientos;
 
+    [ObservableProperty] private DateTimeOffset? desde =
+        new(DateTime.Today.AddDays(-7));
+
+    [ObservableProperty] private DateTimeOffset? hasta =
+        new(DateTime.Today);
+
     public IReadOnlyList<string> MotivosDisponibles =>
         MotivosInventario.Para(TipoSeleccionado);
 
     public bool EsAjuste => TipoSeleccionado == TipoMovimiento.Ajuste;
 
+    public bool EsPorPeso => SelectedProducto?.EsPorPeso == true;
+
+    public string EtiquetaCantidad =>
+        EsPorPeso ? "Cantidad (kg)" : "Cantidad";
+
+    public string EtiquetaStockContado =>
+        EsPorPeso ? "Stock contado (kg)" : "Stock contado";
+
     public string StockActualTexto => SelectedProducto is null
         ? "Selecciona un producto para mover el stock."
-        : $"Stock actual: {SelectedProducto.Stock} · Mínimo: {SelectedProducto.StockMinimo}";
+        : $"Stock actual: {SelectedProducto.StockTexto} · " +
+          $"Mínimo: {SelectedProducto.StockMinimoTexto}";
 
     public string TituloMovimientos =>
         VerTodosLosMovimientos || SelectedProducto is null
             ? "Últimos movimientos"
             : $"Movimientos de {SelectedProducto.Nombre}";
 
+    public bool SinMovimientos => Paginacion.TotalRegistros == 0;
+
+    public int CantidadExportable => MovimientosItems.Count;
+
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo(
+            "inventario", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
+
+    public string GenerarCsv() => ExportadorCsv.Inventario(MovimientosItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
     [RelayCommand]
     public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+
+    [RelayCommand]
+    private Task BuscarMovimientosAsync() => CargarMovimientosAsync();
+
+    private void CargarPaginaActual()
+        => _ = CargarMovimientosAsync(reiniciarPagina: false);
 
     private async Task CargarDatosAsync()
     {
@@ -100,6 +140,9 @@ public partial class InventarioViewModel : OperacionViewModel
     partial void OnSelectedProductoChanged(Producto? value)
     {
         OnPropertyChanged(nameof(StockActualTexto));
+        OnPropertyChanged(nameof(EsPorPeso));
+        OnPropertyChanged(nameof(EtiquetaCantidad));
+        OnPropertyChanged(nameof(EtiquetaStockContado));
         OnPropertyChanged(nameof(TituloMovimientos));
 
         if (!_cargando && !_limpiando)
@@ -128,9 +171,9 @@ public partial class InventarioViewModel : OperacionViewModel
 
         if (EsAjuste)
         {
-            if (!TryParseEntero(StockContadoTexto, out var stockContado))
+            if (!TryParseDecimal(StockContadoTexto, out var stockContado))
             {
-                MensajeOperacion = Notificar("El stock contado debe ser un número entero.");
+                MensajeOperacion = Notificar("El stock contado no es un número válido.");
                 return;
             }
 
@@ -142,9 +185,9 @@ public partial class InventarioViewModel : OperacionViewModel
         }
         else
         {
-            if (!TryParseEntero(CantidadTexto, out var cantidad))
+            if (!TryParseDecimal(CantidadTexto, out var cantidad))
             {
-                MensajeOperacion = Notificar("La cantidad debe ser un número entero.");
+                MensajeOperacion = Notificar("La cantidad no es un número válido.");
                 return;
             }
 
@@ -184,21 +227,50 @@ public partial class InventarioViewModel : OperacionViewModel
         _cargados.Clear();
         ProductosItems.Clear();
         MovimientosItems.Clear();
+        Paginacion.Reiniciar();
+        OnPropertyChanged(nameof(SinMovimientos));
+        OnPropertyChanged(nameof(CantidadExportable));
         Busqueda = string.Empty;
+        Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
+        Hasta = new DateTimeOffset(DateTime.Today);
         LimpiarFormulario();
         _limpiando = false;
     }
 
-    private async Task CargarMovimientosAsync()
+    private async Task CargarMovimientosAsync(bool reiniciarPagina = true)
     {
         if (_inventarioService is null) return;
+
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion =
+                "La fecha hasta no puede ser anterior a la fecha desde.";
+            return;
+        }
+
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
 
         try
         {
             var idProducto = VerTodosLosMovimientos ? null : SelectedProducto?.Id;
 
-            var movimientos = await _inventarioService.ObtenerMovimientosAsync(idProducto);
-            ReemplazarItems(MovimientosItems, movimientos);
+            var pagina = await _inventarioService
+                .ObtenerMovimientosPorRangoPaginadosAsync(
+                    desdeFecha,
+                    hastaFecha,
+                    idProducto,
+                    Paginacion.PaginaActual,
+                    Paginacion.TamanoPagina);
+
+            ReemplazarItems(MovimientosItems, pagina.Items);
+            Paginacion.EstablecerTotal(pagina.TotalRegistros);
+
+            OnPropertyChanged(nameof(SinMovimientos));
+            OnPropertyChanged(nameof(CantidadExportable));
         }
         catch (Exception ex)
         {
@@ -222,10 +294,10 @@ public partial class InventarioViewModel : OperacionViewModel
         SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == seleccionado);
     }
 
-    private static bool TryParseEntero(string? texto, out int valor)
+    private static bool TryParseDecimal(string? texto, out decimal valor)
     {
-        var limpio = (texto ?? string.Empty).Trim();
-        return int.TryParse(limpio, NumberStyles.Integer, Cultura, out valor);
+        var limpio = (texto ?? string.Empty).Trim().Replace(',', '.');
+        return decimal.TryParse(limpio, NumberStyles.Number, Cultura, out valor);
     }
 
     private static void ReemplazarItems<T>(

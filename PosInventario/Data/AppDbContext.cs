@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.Data;
 
@@ -7,6 +8,8 @@ public class AppDbContext : DbContext
 {
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Abono> Abonos => Set<Abono>();
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<Compra> Compras => Set<Compra>();
     public DbSet<DetalleCompra> DetallesCompra => Set<DetalleCompra>();
@@ -61,12 +64,17 @@ public class AppDbContext : DbContext
                 .HasMaxLength(100).IsRequired();
             e.Property(x => x.Descripcion).HasColumnName("descripcion")
                 .HasMaxLength(500);
+            e.Property(x => x.UnidadMedida).HasColumnName("unidadMedida")
+                .HasConversion<string>().HasMaxLength(15).IsRequired()
+                .HasDefaultValue(UnidadMedida.Pieza);
             e.Property(x => x.PrecioVenta).HasColumnName("precioVenta")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Costo).HasColumnName("costo")
                 .HasColumnType("decimal(12,2)").IsRequired();
-            e.Property(x => x.Stock).HasColumnName("stock").IsRequired();
-            e.Property(x => x.StockMinimo).HasColumnName("stockMinimo").IsRequired();
+            e.Property(x => x.Stock).HasColumnName("stock")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockMinimo).HasColumnName("stockMinimo")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.FechaArchivado).HasColumnName("fechaArchivado");
             e.Property(x => x.FechaCreacion).HasColumnName("fechaCreacion").IsRequired();
             e.Property(x => x.FechaModificacion).HasColumnName("fechaModificacion").IsRequired();
@@ -74,6 +82,28 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.Sku).IsUnique();
             e.HasIndex(x => x.Nombre);
             e.HasIndex(x => x.FechaArchivado);
+        });
+
+        modelBuilder.Entity<Cliente>(e =>
+        {
+            e.ToTable("Cliente", t =>
+                t.HasCheckConstraint("CK_Cliente_limiteCredito", "limiteCredito >= 0"));
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Nombre).HasColumnName("nombre")
+                .HasMaxLength(100).IsRequired();
+            e.Property(x => x.Telefono).HasColumnName("telefono").HasMaxLength(30);
+            e.Property(x => x.Email).HasColumnName("email").HasMaxLength(120);
+            e.Property(x => x.Direccion).HasColumnName("direccion").HasMaxLength(200);
+            e.Property(x => x.LimiteCredito).HasColumnName("limiteCredito")
+                .HasColumnType("decimal(12,2)").IsRequired();
+            e.Property(x => x.Activo).HasColumnName("activo").IsRequired();
+            e.Property(x => x.FechaCreacion).HasColumnName("fechaCreacion").IsRequired();
+            e.Property(x => x.FechaModificacion).HasColumnName("fechaModificacion").IsRequired();
+
+            e.HasIndex(x => x.Nombre);
+            e.HasIndex(x => x.Activo);
         });
 
         modelBuilder.Entity<Proveedor>(e =>
@@ -148,7 +178,8 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.IdCompra).HasColumnName("idCompra").IsRequired();
             e.Property(x => x.IdProducto).HasColumnName("idProducto").IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.CostoUnitario).HasColumnName("costoUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")
@@ -186,9 +217,12 @@ public class AppDbContext : DbContext
             e.Property(x => x.IdUsuario).HasColumnName("idUsuario").IsRequired();
             e.Property(x => x.Tipo).HasColumnName("tipo")
                 .HasConversion<string>().HasMaxLength(20).IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
-            e.Property(x => x.StockAnterior).HasColumnName("stockAnterior").IsRequired();
-            e.Property(x => x.StockResultante).HasColumnName("stockResultante").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockAnterior).HasColumnName("stockAnterior")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
+            e.Property(x => x.StockResultante).HasColumnName("stockResultante")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.Referencia).HasColumnName("referencia").HasMaxLength(100);
             e.Property(x => x.IdVenta).HasColumnName("idVenta");
             e.Property(x => x.IdCompra).HasColumnName("idCompra");
@@ -317,6 +351,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.IdUsuario).HasColumnName("idUsuario").IsRequired();
             e.Property(x => x.IdCaja).HasColumnName("idCaja").IsRequired();
+            e.Property(x => x.IdCliente).HasColumnName("idCliente");
+            e.Property(x => x.TipoVenta).HasColumnName("tipoVenta")
+                .HasConversion<string>().HasMaxLength(15).IsRequired()
+                .HasDefaultValue(TipoVenta.Contado);
             e.Property(x => x.Fecha).HasColumnName("fecha").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")
                 .HasColumnType("decimal(12,2)").IsRequired();
@@ -347,6 +385,11 @@ public class AppDbContext : DbContext
                 .HasForeignKey(x => x.IdCaja)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            e.HasOne(x => x.Cliente)
+                .WithMany(c => c.Ventas)
+                .HasForeignKey(x => x.IdCliente)
+                .OnDelete(DeleteBehavior.Restrict);
+
             e.HasOne<Usuario>()
                 .WithMany()
                 .HasForeignKey(x => x.IdUsuarioAnulacion)
@@ -356,6 +399,49 @@ public class AppDbContext : DbContext
             e.HasIndex(x => x.IdCaja);
             e.HasIndex(x => x.Estado);
             e.HasIndex(x => x.IdUsuario);
+            e.HasIndex(x => x.IdCliente);
+            e.HasIndex(x => x.TipoVenta);
+        });
+
+        modelBuilder.Entity<Abono>(e =>
+        {
+            e.ToTable("Abono", t =>
+            {
+                t.HasCheckConstraint("CK_Abono_monto", "monto > 0");
+                t.HasCheckConstraint(
+                    "CK_Abono_metodo",
+                    "metodo IN ('Efectivo', 'Tarjeta', 'Transferencia')");
+            });
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.IdCliente).HasColumnName("idCliente").IsRequired();
+            e.Property(x => x.IdVenta).HasColumnName("idVenta").IsRequired();
+            e.Property(x => x.Monto).HasColumnName("monto")
+                .HasColumnType("decimal(12,2)").IsRequired();
+            e.Property(x => x.Metodo).HasColumnName("metodo")
+                .HasConversion<string>().HasMaxLength(15).IsRequired();
+            e.Property(x => x.Referencia).HasColumnName("referencia").HasMaxLength(100);
+            e.Property(x => x.Fecha).HasColumnName("fecha").IsRequired();
+            e.Property(x => x.IdUsuario).HasColumnName("idUsuario").IsRequired();
+
+            e.HasOne(x => x.Cliente)
+                .WithMany(c => c.Abonos)
+                .HasForeignKey(x => x.IdCliente)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.Venta)
+                .WithMany(v => v.Abonos)
+                .HasForeignKey(x => x.IdVenta)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.Usuario)
+                .WithMany(u => u.Abonos)
+                .HasForeignKey(x => x.IdUsuario)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(x => new { x.IdCliente, x.Fecha });
+            e.HasIndex(x => x.IdVenta);
         });
 
         modelBuilder.Entity<PagoVenta>(e =>
@@ -396,6 +482,7 @@ public class AppDbContext : DbContext
                 t.HasCheckConstraint("CK_DetalleVenta_cantidad", "cantidad > 0");
                 t.HasCheckConstraint("CK_DetalleVenta_cantidadDevuelta", "cantidadDevuelta >= 0 AND cantidadDevuelta <= cantidad");
                 t.HasCheckConstraint("CK_DetalleVenta_precioUnitario", "precioUnitario >= 0");
+                t.HasCheckConstraint("CK_DetalleVenta_costoUnitario", "costoUnitario >= 0");
                 t.HasCheckConstraint("CK_DetalleVenta_subtotal", "subtotal >= 0");
             });
             e.HasKey(x => x.Id);
@@ -403,10 +490,14 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.IdVenta).HasColumnName("idVenta").IsRequired();
             e.Property(x => x.IdProducto).HasColumnName("idProducto").IsRequired();
-            e.Property(x => x.Cantidad).HasColumnName("cantidad").IsRequired();
+            e.Property(x => x.Cantidad).HasColumnName("cantidad")
+                .HasConversion(CantidadesConvertidor.Instancia).IsRequired();
             e.Property(x => x.CantidadDevuelta).HasColumnName("cantidadDevuelta")
-                .IsRequired().HasDefaultValue(0);
+                .HasConversion(CantidadesConvertidor.Instancia)
+                .IsRequired().HasDefaultValue(0m);
             e.Property(x => x.PrecioUnitario).HasColumnName("precioUnitario")
+                .HasColumnType("decimal(12,2)").IsRequired();
+            e.Property(x => x.CostoUnitario).HasColumnName("costoUnitario")
                 .HasColumnType("decimal(12,2)").IsRequired();
             e.Property(x => x.Subtotal).HasColumnName("subtotal")
                 .HasColumnType("decimal(12,2)").IsRequired();

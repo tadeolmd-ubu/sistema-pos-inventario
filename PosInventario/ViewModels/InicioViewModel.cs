@@ -43,6 +43,7 @@ public partial class InicioViewModel : OperacionViewModel
     [ObservableProperty] private decimal totalEfectivo;
     [ObservableProperty] private decimal totalTarjeta;
     [ObservableProperty] private decimal totalTransferencia;
+    [ObservableProperty] private decimal totalCredito;
 
     [ObservableProperty] private bool cajaAbierta;
     [ObservableProperty] private string estadoCajaTexto = "Cerrada";
@@ -63,6 +64,8 @@ public partial class InicioViewModel : OperacionViewModel
     public string TotalTarjetaTexto => TotalTarjeta.ToString("0.00", Cultura);
 
     public string TotalTransferenciaTexto => TotalTransferencia.ToString("0.00", Cultura);
+
+    public string TotalCreditoTexto => TotalCredito.ToString("0.00", Cultura);
 
     public string EfectivoEsperadoTexto => EfectivoEsperado.ToString("0.00", Cultura);
 
@@ -86,6 +89,9 @@ public partial class InicioViewModel : OperacionViewModel
 
     partial void OnTotalTransferenciaChanged(decimal value)
         => OnPropertyChanged(nameof(TotalTransferenciaTexto));
+
+    partial void OnTotalCreditoChanged(decimal value)
+        => OnPropertyChanged(nameof(TotalCreditoTexto));
 
     partial void OnEfectivoEsperadoChanged(decimal value)
         => OnPropertyChanged(nameof(EfectivoEsperadoTexto));
@@ -115,6 +121,9 @@ public partial class InicioViewModel : OperacionViewModel
         TotalTransferencia = pagos
             .Where(p => p.Metodo == MetodoPago.Transferencia)
             .Sum(p => p.Monto - p.MontoDevuelto);
+        TotalCredito = ventasHoy
+            .Where(v => v.EsCredito)
+            .Sum(v => v.TotalNeto);
 
         TicketPromedio = VentasDelDia > 0
             ? TotalDelDia / VentasDelDia
@@ -175,6 +184,7 @@ public partial class InicioViewModel : OperacionViewModel
         TotalEfectivo = 0;
         TotalTarjeta = 0;
         TotalTransferencia = 0;
+        TotalCredito = 0;
 
         CajaAbierta = false;
         EstadoCajaTexto = "Cerrada";

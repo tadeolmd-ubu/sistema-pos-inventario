@@ -40,10 +40,10 @@
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="{Binding Sku}" Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding Stock, StringFormat='Stock {0}'}"
+                                        <TextBlock Text="{Binding StockTexto, StringFormat='Stock {0}'}"
                                                    Classes="caption"/>
                                         <TextBlock Text="·" Classes="caption"/>
-                                        <TextBlock Text="{Binding StockMinimo, StringFormat='mín. {0}'}"
+                                        <TextBlock Text="{Binding StockMinimoTexto, StringFormat='mín. {0}'}"
                                                    Classes="caption"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -92,12 +92,12 @@
                             </Grid>
 
                             <StackPanel Spacing="6" IsVisible="{Binding !EsAjuste}">
-                                <TextBlock Text="Cantidad" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaCantidad}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding CantidadTexto}" PlaceholderText="Cantidad"/>
                             </StackPanel>
 
                             <StackPanel Spacing="6" IsVisible="{Binding EsAjuste}">
-                                <TextBlock Text="Stock contado" Classes="fieldLabel"/>
+                                <TextBlock Text="{Binding EtiquetaStockContado}" Classes="fieldLabel"/>
                                 <TextBox Text="{Binding StockContadoTexto}" PlaceholderText="Stock contado"/>
                             </StackPanel>
 
@@ -127,6 +127,36 @@
                                           IsChecked="{Binding VerTodosLosMovimientos}"/>
                             </Grid>
 
+                            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Desde" Classes="fieldLabel"/>
+                                    <DatePicker SelectedDate="{Binding Desde}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                                    <DatePicker SelectedDate="{Binding Hasta}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2"
+                                            Orientation="Horizontal"
+                                            Spacing="10"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom">
+                                    <Button Content="Buscar"
+                                            Classes="primary"
+                                            Command="{Binding BuscarMovimientosCommand}"/>
+                                    <Button Content="Exportar CSV"
+                                            Classes="secondary"
+                                            ToolTip.Tip="Exporta solo la página visible"
+                                            Click="Exportar_Click"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="No hay movimientos en el rango seleccionado."
+                                       Classes="caption"
+                                       IsVisible="{Binding SinMovimientos}"/>
+
                             <ListBox ItemsSource="{Binding MovimientosItems}"
                                      MaxHeight="320"
                                      Classes="entityList">
@@ -140,10 +170,10 @@
                                                            Classes="caption"/>
                                             </Grid>
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding Cantidad, StringFormat='Cant. {0}'}" Classes="caption"/>
-                                                <TextBlock Text="{Binding StockAnterior}" Classes="caption"/>
+                                                <TextBlock Text="{Binding CantidadTexto, StringFormat='Cant. {0}'}" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockAnteriorTexto}" Classes="caption"/>
                                                 <TextBlock Text="→" Classes="caption"/>
-                                                <TextBlock Text="{Binding StockResultante}" Classes="caption"/>
+                                                <TextBlock Text="{Binding StockResultanteTexto}" Classes="caption"/>
                                                 <TextBlock Text="·" Classes="caption"/>
                                                 <TextBlock Text="{Binding Referencia}" Classes="caption"/>
                                             </StackPanel>
@@ -157,6 +187,8 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
+
+                            <controls:Paginador DataContext="{Binding Paginacion}"/>
 
                         </StackPanel>
                     </Border>

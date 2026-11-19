@@ -16,12 +16,16 @@ public partial class ComprasViewModel : OperacionViewModel
     private readonly ProveedorService? _proveedorService;
     private readonly ProductoService? _productoService;
 
-    public ComprasViewModel() { }
+    public ComprasViewModel()
+    {
+        Paginacion.CambioSolicitado += CargarPaginaActual;
+    }
 
     public ComprasViewModel(
         CompraService compraService,
         ProveedorService proveedorService,
         ProductoService productoService)
+        : this()
     {
         _compraService = compraService;
         _proveedorService = proveedorService;
@@ -29,6 +33,8 @@ public partial class ComprasViewModel : OperacionViewModel
     }
 
     public ObservableCollection<Compra> ComprasItems { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
     public ObservableCollection<Proveedor> ProveedoresItems { get; } = [];
     public ObservableCollection<Producto> ProductosItems { get; } = [];
     public ObservableCollection<LineaCompraItem> LineasItems { get; } = [];
@@ -41,37 +47,111 @@ public partial class ComprasViewModel : OperacionViewModel
     [ObservableProperty] private string cantidadTexto = string.Empty;
     [ObservableProperty] private string costoTexto = string.Empty;
 
+    [ObservableProperty] private DateTimeOffset? desde =
+        new(DateTime.Today.AddDays(-7));
+
+    [ObservableProperty] private DateTimeOffset? hasta =
+        new(DateTime.Today);
+
     public decimal Total => LineasItems.Sum(l => l.Subtotal);
 
     public string TotalTexto => Total.ToString("0.00", Cultura);
 
     public bool HayLineas => LineasItems.Count > 0;
 
+    public bool EsPorPeso => SelectedProducto?.EsPorPeso == true;
+
+    public string EtiquetaCantidad =>
+        EsPorPeso ? "Cantidad (kg)" : "Cantidad";
+
+    public string EtiquetaCosto =>
+        EsPorPeso ? "Costo por kg" : "Costo unitario";
+
     public bool PuedeAnular =>
         SelectedCompra is not null && SelectedCompra.Estado == EstadoCompra.Completada;
 
-    [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(CargarDatosAsync);
+    public int CantidadExportable => ComprasItems.Count;
 
-    private async Task CargarDatosAsync()
+    public string NombreArchivoExportacion =>
+        ExportadorCsv.NombreArchivo(
+            "compras", DesdeFecha, HastaFecha, Paginacion.PaginaActual);
+
+    public string GenerarCsv() => ExportadorCsv.Compras(ComprasItems);
+
+    private DateTime DesdeFecha =>
+        (Desde ?? DateTimeOffset.Now.AddDays(-7)).Date;
+
+    private DateTime HastaFecha =>
+        (Hasta ?? DateTimeOffset.Now).Date;
+
+    [RelayCommand]
+    public Task CargarAsync() => EjecutarSeguroAsync(
+        () => CargarDatosAsync(reiniciarPagina: true));
+
+    private void CargarPaginaActual()
+        => _ = EjecutarSeguroAsync(
+            () => CargarComprasAsync(reiniciarPagina: false));
+
+    private async Task CargarDatosAsync(bool reiniciarPagina = true)
     {
         if (_compraService is null || _proveedorService is null || _productoService is null)
             return;
 
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion = Notificar(
+                "La fecha hasta no puede ser anterior a la fecha desde.");
+            return;
+        }
+
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
         var idProveedor = SelectedProveedor?.Id;
         var idProducto = SelectedProducto?.Id;
-        var idCompra = SelectedCompra?.Id;
 
         var proveedores = await _proveedorService.ObtenerActivosAsync();
         var productos = await _productoService.ObtenerTodosAsync();
-        var compras = await _compraService.ObtenerRecientesAsync();
 
         ReemplazarItems(ProveedoresItems, proveedores);
         ReemplazarItems(ProductosItems, productos);
-        ReemplazarItems(ComprasItems, compras);
 
         SelectedProveedor = ProveedoresItems.FirstOrDefault(p => p.Id == idProveedor);
         SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == idProducto);
+
+        await CargarComprasAsync(reiniciarPagina: false);
+    }
+
+    private async Task CargarComprasAsync(bool reiniciarPagina = true)
+    {
+        if (_compraService is null) return;
+
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
+        var desdeFecha = DesdeFecha;
+        var hastaFecha = HastaFecha;
+
+        if (hastaFecha < desdeFecha)
+        {
+            MensajeOperacion = Notificar(
+                "La fecha hasta no puede ser anterior a la fecha desde.");
+            return;
+        }
+
+        var idCompra = SelectedCompra?.Id;
+
+        var pagina = await _compraService.ObtenerPorRangoPaginadoAsync(
+            desdeFecha,
+            hastaFecha,
+            Paginacion.PaginaActual,
+            Paginacion.TamanoPagina);
+
+        ReemplazarItems(ComprasItems, pagina.Items);
+        Paginacion.EstablecerTotal(pagina.TotalRegistros);
         SelectedCompra = ComprasItems.FirstOrDefault(c => c.Id == idCompra);
     }
 
@@ -80,6 +160,10 @@ public partial class ComprasViewModel : OperacionViewModel
 
     partial void OnSelectedProductoChanged(Producto? value)
     {
+        OnPropertyChanged(nameof(EsPorPeso));
+        OnPropertyChanged(nameof(EtiquetaCantidad));
+        OnPropertyChanged(nameof(EtiquetaCosto));
+
         if (value is null) return;
 
         CostoTexto = value.Costo.ToString("0.00", Cultura);
@@ -94,9 +178,24 @@ public partial class ComprasViewModel : OperacionViewModel
             return;
         }
 
-        if (!TryParseEntero(CantidadTexto, out var cantidad) || cantidad <= 0)
+        if (!TryParseDecimal(CantidadTexto, out var cantidad) || cantidad <= 0)
         {
-            MensajeOperacion = Notificar("La cantidad debe ser un número entero mayor que 0.");
+            MensajeOperacion = Notificar("La cantidad debe ser un número mayor que 0.");
+            return;
+        }
+
+        if (SelectedProducto.UnidadMedida == UnidadMedida.Pieza &&
+            !Cantidades.EsEntera(cantidad))
+        {
+            MensajeOperacion = Notificar(
+                "Para productos por pieza, la cantidad debe ser un número entero.");
+            return;
+        }
+
+        if (Cantidades.TieneDemasiadosDecimales(cantidad))
+        {
+            MensajeOperacion = Notificar(
+                "La cantidad no puede tener más de 3 decimales.");
             return;
         }
 
@@ -203,6 +302,9 @@ public partial class ComprasViewModel : OperacionViewModel
         ComprasItems.Clear();
         ProveedoresItems.Clear();
         ProductosItems.Clear();
+        Paginacion.Reiniciar();
+        Desde = new DateTimeOffset(DateTime.Today.AddDays(-7));
+        Hasta = new DateTimeOffset(DateTime.Today);
         LimpiarFormulario();
     }
 
@@ -217,12 +319,6 @@ public partial class ComprasViewModel : OperacionViewModel
     {
         var limpio = (texto ?? string.Empty).Trim().Replace(',', '.');
         return decimal.TryParse(limpio, NumberStyles.Number, Cultura, out valor);
-    }
-
-    private static bool TryParseEntero(string? texto, out int valor)
-    {
-        var limpio = (texto ?? string.Empty).Trim();
-        return int.TryParse(limpio, NumberStyles.Integer, Cultura, out valor);
     }
 
     private static void ReemplazarItems<T>(

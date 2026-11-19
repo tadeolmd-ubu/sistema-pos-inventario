@@ -28,6 +28,13 @@ public abstract partial class OperacionViewModel : ObservableObject
         return mensaje;
     }
 
+    /// <summary>
+    /// Muestra el resultado de una exportación y deja el mensaje en la
+    /// pantalla del módulo.
+    /// </summary>
+    public void NotificarExportacion(string mensaje, bool correcta = true)
+        => MensajeOperacion = Notificar(mensaje, correcta);
+
     protected async Task EjecutarSeguroAsync(Func<Task> operacion)
     {
         if (IsBusy) return;

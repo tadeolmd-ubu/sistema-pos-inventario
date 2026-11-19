@@ -82,12 +82,19 @@ public partial class CajaHistorialViewModel : OperacionViewModel
         .Where(p => p.Metodo == MetodoPago.Transferencia)
         .Sum(p => p.Monto - p.MontoDevuelto);
 
+    public decimal TotalCredito => VentasCompletadas
+        .Where(i => i.Venta.EsCredito)
+        .Sum(i => i.Venta.TotalNeto);
+
     public string TotalEfectivoTexto => TotalEfectivo.ToString("0.00", Cultura);
 
     public string TotalTarjetaTexto => TotalTarjeta.ToString("0.00", Cultura);
 
     public string TotalTransferenciaTexto =>
         TotalTransferencia.ToString("0.00", Cultura);
+
+    public string TotalCreditoTexto =>
+        TotalCredito.ToString("0.00", Cultura);
 
     public string TotalVentasTexto =>
         VentasCompletadas.Sum(i => i.Venta.TotalNeto).ToString("0.00", Cultura);
@@ -107,6 +114,19 @@ public partial class CajaHistorialViewModel : OperacionViewModel
     /// reimprimirlo, incluso si la caja ya está cerrada.
     /// </summary>
     public TicketViewModel CrearTicketViewModel(Venta venta) => new(venta);
+
+    /// <summary>
+    /// Crea el corte imprimible de esta caja cerrada con los totales actuales
+    /// netos de devoluciones.
+    /// </summary>
+    public CorteCajaViewModel CrearCorteViewModel() => new(
+        _caja,
+        new ResumenPagosCaja(
+            CantidadVentas,
+            TotalEfectivo,
+            TotalTarjeta,
+            TotalTransferencia,
+            TotalCredito));
 
     /// <summary>
     /// Vuelve a leer las ventas de la caja; la ventana lo llama después de
@@ -146,9 +166,11 @@ public partial class CajaHistorialViewModel : OperacionViewModel
         OnPropertyChanged(nameof(TotalEfectivo));
         OnPropertyChanged(nameof(TotalTarjeta));
         OnPropertyChanged(nameof(TotalTransferencia));
+        OnPropertyChanged(nameof(TotalCredito));
         OnPropertyChanged(nameof(TotalEfectivoTexto));
         OnPropertyChanged(nameof(TotalTarjetaTexto));
         OnPropertyChanged(nameof(TotalTransferenciaTexto));
+        OnPropertyChanged(nameof(TotalCreditoTexto));
         OnPropertyChanged(nameof(TotalVentasTexto));
     }
 }

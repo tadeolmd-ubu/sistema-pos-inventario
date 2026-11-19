@@ -45,25 +45,105 @@ public class InventarioService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Movimientos entre dos fechas (inclusive), sin límite de filas, para el
+    /// historial filtrado y la exportación a CSV.
+    /// </summary>
+    public async Task<List<MovimientoInventario>> ObtenerMovimientosPorRangoAsync(
+        DateTime desde, DateTime hasta, int? idProducto = null)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        var query = _db.MovimientosInventario
+            .AsNoTracking()
+            .Include(m => m.Producto)
+            .Include(m => m.Usuario)
+            .Where(m => m.Fecha >= inicio && m.Fecha < fin);
+
+        if (idProducto is not null)
+            query = query.Where(m => m.IdProducto == idProducto);
+
+        return await query
+            .OrderByDescending(m => m.Fecha)
+            .ThenByDescending(m => m.Id)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Movimientos paginados entre dos fechas (inclusive), opcionalmente de un
+    /// producto. Devuelve solo las filas de la página y el total de
+    /// coincidencias.
+    /// </summary>
+    public async Task<PaginaResultado<MovimientoInventario>>
+        ObtenerMovimientosPorRangoPaginadosAsync(
+            DateTime desde,
+            DateTime hasta,
+            int? idProducto,
+            int pagina,
+            int tamanoPagina)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.MovimientosInventario
+            .AsNoTracking()
+            .Where(m => m.Fecha >= inicio && m.Fecha < fin);
+
+        if (idProducto is not null)
+            query = query.Where(m => m.IdProducto == idProducto);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var items = await query
+            .Include(m => m.Producto)
+            .Include(m => m.Usuario)
+            .OrderByDescending(m => m.Fecha)
+            .ThenByDescending(m => m.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<MovimientoInventario>(
+            items, totalRegistros);
+    }
+
     public Task<Resultado<MovimientoInventario>> RegistrarEntradaAsync(
-        int idProducto, int cantidad, string referencia)
+        int idProducto, decimal cantidad, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Entrada, cantidad, referencia, esAjuste: false);
 
     public Task<Resultado<MovimientoInventario>> RegistrarSalidaAsync(
-        int idProducto, int cantidad, string referencia)
+        int idProducto, decimal cantidad, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Salida, cantidad, referencia, esAjuste: false);
 
     public Task<Resultado<MovimientoInventario>> RegistrarAjusteAsync(
-        int idProducto, int stockContado, string referencia)
+        int idProducto, decimal stockContado, string referencia)
         => RegistrarManualAsync(
             idProducto, TipoMovimiento.Ajuste, stockContado, referencia, esAjuste: true);
 
     private async Task<Resultado<MovimientoInventario>> RegistrarManualAsync(
         int idProducto,
         TipoMovimiento tipo,
-        int valor,
+        decimal valor,
         string referencia,
         bool esAjuste)
     {
@@ -104,9 +184,24 @@ public class InventarioService
             return new Resultado<MovimientoInventario>(
                 false, "El producto está archivado.", null);
 
+        if (Cantidades.TieneDemasiadosDecimales(valor))
+            return new Resultado<MovimientoInventario>(
+                false, "La cantidad no puede tener más de 3 decimales.", null);
+
+        if (producto.UnidadMedida == UnidadMedida.Pieza &&
+            !Cantidades.EsEntera(valor))
+        {
+            return new Resultado<MovimientoInventario>(
+                false,
+                "Para productos por pieza, la cantidad debe ser un número entero.",
+                null);
+        }
+
+        valor = Cantidades.Normalizar(valor);
+
         var stockAnterior = producto.Stock;
-        int stockResultante;
-        int cantidadMovimiento;
+        decimal stockResultante;
+        decimal cantidadMovimiento;
 
         switch (tipo)
         {

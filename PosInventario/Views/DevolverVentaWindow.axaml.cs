@@ -44,7 +44,7 @@ public partial class DevolverVentaWindow : Window
 
         var confirmacion = new ConfirmacionWindow(
             "Devolver venta",
-            $"¿Registrar la devolución de {_viewModel.UnidadesTexto} unidad(es) " +
+            $"¿Registrar la devolución de {_viewModel.CantidadTexto} " +
             $"por {_viewModel.ReembolsoTexto}? Se regresa el stock al inventario.");
 
         if (await confirmacion.ShowDialog<bool>(ventana))

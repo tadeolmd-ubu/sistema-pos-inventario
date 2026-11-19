@@ -9,14 +9,21 @@ namespace PosInventario.ViewModels;
 public partial class SeleccionarProductoViewModel : OperacionViewModel
 {
     private readonly ProductoService? _productoService;
-    private readonly List<Producto> _cargados = [];
+    private CancellationTokenSource? _busquedaPendiente;
+    private int _version;
 
-    public SeleccionarProductoViewModel() { }
+    public SeleccionarProductoViewModel()
+    {
+        Paginacion.CambioSolicitado += CargarPaginaActual;
+    }
 
     public SeleccionarProductoViewModel(ProductoService productoService)
+        : this()
         => _productoService = productoService;
 
     public ObservableCollection<Producto> ProductosItems { get; } = [];
+
+    public PaginacionViewModel Paginacion { get; } = new();
 
     [ObservableProperty] private Producto? selectedProducto;
     [ObservableProperty] private string busqueda = string.Empty;
@@ -27,17 +34,76 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
     public event Action<Producto>? ProductoSeleccionado;
 
     [RelayCommand]
-    public Task CargarAsync() => EjecutarSeguroAsync(async () =>
+    public Task CargarAsync()
     {
-        if (_productoService is null) return;
+        _busquedaPendiente?.Cancel();
+        return CargarPaginaAsync(reiniciarPagina: true);
+    }
 
-        _cargados.Clear();
-        _cargados.AddRange((await _productoService.ObtenerTodosAsync())
-            .Where(p => p.Stock > 0));
-        Filtrar();
-    });
+    private void CargarPaginaActual() => _ = CargarPaginaAsync(false);
 
-    partial void OnBusquedaChanged(string value) => Filtrar();
+    partial void OnBusquedaChanged(string value)
+    {
+        if (_productoService is null)
+            return;
+
+        // Espera un momento antes de consultar para no lanzar una búsqueda
+        // por cada tecla; una búsqueda nueva cancela la anterior.
+        _busquedaPendiente?.Cancel();
+        _busquedaPendiente?.Dispose();
+        _busquedaPendiente = new CancellationTokenSource();
+
+        _ = BuscarConRetrasoAsync(_busquedaPendiente.Token);
+    }
+
+    private async Task BuscarConRetrasoAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(200, token);
+            await CargarPaginaAsync(reiniciarPagina: true);
+        }
+        catch (OperationCanceledException)
+        {
+            // Otra búsqueda reemplazó a esta.
+        }
+    }
+
+    private async Task CargarPaginaAsync(bool reiniciarPagina)
+    {
+        if (_productoService is null)
+            return;
+
+        if (reiniciarPagina)
+            Paginacion.Reiniciar();
+
+        var version = ++_version;
+        var idAnterior = SelectedProducto?.Id;
+
+        try
+        {
+            var pagina = await _productoService.ObtenerConStockPaginadoAsync(
+                Busqueda, Paginacion.PaginaActual, Paginacion.TamanoPagina);
+
+            // Si mientras se consultaba se lanzó otra búsqueda, se descarta
+            // este resultado para no mostrar datos viejos.
+            if (version != _version)
+                return;
+
+            ReemplazarItems(ProductosItems, pagina.Items);
+            Paginacion.EstablecerTotal(pagina.TotalRegistros);
+
+            SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == idAnterior)
+                ?? ProductosItems.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            if (version != _version)
+                return;
+
+            MensajeOperacion = $"No se pudieron cargar los productos: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
     private void Seleccionar()
@@ -55,23 +121,6 @@ public partial class SeleccionarProductoViewModel : OperacionViewModel
         }
 
         ProductoSeleccionado?.Invoke(SelectedProducto);
-    }
-
-    private void Filtrar()
-    {
-        var texto = (Busqueda ?? string.Empty).Trim();
-
-        var filtrados = string.IsNullOrWhiteSpace(texto)
-            ? _cargados
-            : _cargados.Where(p =>
-                p.Sku.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase));
-
-        var seleccionado = SelectedProducto?.Id;
-
-        ReemplazarItems(ProductosItems, filtrados);
-        SelectedProducto = ProductosItems.FirstOrDefault(p => p.Id == seleccionado)
-            ?? ProductosItems.FirstOrDefault();
     }
 
     private static void ReemplazarItems<T>(

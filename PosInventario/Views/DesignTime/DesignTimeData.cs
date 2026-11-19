@@ -1,5 +1,6 @@
 using PosInventario.Models;
 using PosInventario.Models.Enums;
+using PosInventario.Service;
 using PosInventario.ViewModels;
 
 namespace PosInventario.Views.DesignTime;
@@ -10,11 +11,44 @@ public sealed class DesignTimeData
     public static readonly CajaDesignTime Caja = new();
     public static readonly ProductosDesignTime Productos = new();
     public static readonly ProveedoresDesignTime Proveedores = new();
+    public static readonly ClientesDesignTime Clientes = new();
     public static readonly InventarioDesignTime Inventario = new();
     public static readonly ComprasDesignTime Compras = new();
     public static readonly VentasDesignTime Ventas = new();
+    public static readonly ReportesDesignTime Reportes = new();
     public static readonly UsuariosDesignTime Usuarios = new();
     public static readonly ConfiguracionDesignTime Configuracion = new();
+}
+
+public sealed class ClientesDesignTime : ClientesViewModel
+{
+    public ClientesDesignTime()
+    {
+        var cliente = new Cliente
+        {
+            Id = 1,
+            Nombre = "María López",
+            Telefono = "555-123-4567",
+            Email = "maria@example.com",
+            LimiteCredito = 5000m,
+            SaldoActual = 1250m
+        };
+
+        ClientesItems.Add(cliente);
+        SelectedCliente = cliente;
+
+        VentasPendientes.Add(new VentaCreditoResumen(
+            12, DateTime.Now.AddDays(-2), 1250m, 0m, 0m));
+
+        AbonosItems.Add(new Abono
+        {
+            Id = 1,
+            IdVenta = 12,
+            Monto = 500m,
+            Fecha = DateTime.Now.AddDays(-1),
+            Metodo = MetodoPago.Efectivo
+        });
+    }
 }
 
 public sealed class ConfiguracionDesignTime : ConfiguracionViewModel
@@ -219,7 +253,7 @@ public sealed class CajaDesignTime : CajaViewModel
         };
 
         LineasVentaItems.Add(new LineaVentaItem(
-            producto, 2, _ => { }, _ => { }, _ => { }));
+            producto, 2, _ => { }, _ => { }, _ => { }, _ => Task.CompletedTask));
 
         MetodoPagoSeleccionado = MetodoPago.Efectivo;
         MontoEfectivoTexto = "3500.00";
@@ -337,6 +371,8 @@ public sealed class InventarioDesignTime : InventarioViewModel
             Referencia = "Carga inicial",
             Fecha = DateTime.Now
         });
+
+        Paginacion.EstablecerTotal(MovimientosItems.Count);
     }
 }
 
@@ -410,6 +446,7 @@ public sealed class ComprasDesignTime : ComprasViewModel
         SelectedCompra = compra;
 
         LineasItems.Add(new LineaCompraItem(producto, 2, 900.00m));
+        Paginacion.EstablecerTotal(ComprasItems.Count);
     }
 }
 
@@ -443,6 +480,48 @@ public sealed class UsuariosDesignTime : UsuariosViewModel
     }
 }
 
+public sealed class ReportesDesignTime : ReportesViewModel
+{
+    public ReportesDesignTime()
+    {
+        CantidadVentas = 12;
+        VentasBrutas = 16200.00m;
+        Devoluciones = 800.00m;
+        VentasNetas = 15400.00m;
+        Costo = 9000.00m;
+        Utilidad = 6400.00m;
+        Margen = 0.4156m;
+        TicketPromedio = 1283.33m;
+
+        Periodos.Add(new ReportePeriodo(
+            "10/11/2026", new DateTime(2026, 11, 10),
+            new DateTime(2026, 11, 11), 5, 6200.00m, 200.00m, 2500.00m, 1m));
+        Periodos.Add(new ReportePeriodo(
+            "11/11/2026", new DateTime(2026, 11, 11),
+            new DateTime(2026, 11, 12), 4, 5200.00m, 600.00m, 2100.00m, 0.84m));
+        Periodos.Add(new ReportePeriodo(
+            "12/11/2026", new DateTime(2026, 11, 12),
+            new DateTime(2026, 11, 13), 3, 4000.00m, 0m, 1800.00m, 0.65m));
+
+        Metodos.Add(new ReporteMetodo(
+            MetodoPago.Efectivo, 8200.00m, 6, 0.5325m));
+        Metodos.Add(new ReporteMetodo(
+            MetodoPago.Tarjeta, 5200.00m, 4, 0.3377m));
+        Metodos.Add(new ReporteMetodo(
+            MetodoPago.Transferencia, 2000.00m, 2, 0.1298m));
+
+        Productos.Add(new ReporteProducto(
+            1, "ABC-001", "Producto de ejemplo", 18,
+            9000.00m, 5400.00m, 3600.00m, 1m));
+        Productos.Add(new ReporteProducto(
+            2, "ABC-002", "Otro producto", 11,
+            4400.00m, 2500.00m, 1900.00m, 0.61m));
+        Productos.Add(new ReporteProducto(
+            3, "ABC-003", "Producto complementario", 6,
+            2000.00m, 1100.00m, 900.00m, 0.33m));
+    }
+}
+
 public sealed class VentasDesignTime : VentasViewModel
 {
     public VentasDesignTime()
@@ -456,6 +535,10 @@ public sealed class VentasDesignTime : VentasViewModel
             Activo = 1,
             FechaCreacion = DateTime.Now
         };
+
+        Cajeros.Add(new OpcionCajero(null, "Todos los cajeros"));
+        Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+        CajeroSeleccionado = Cajeros[0];
 
         VentasItems.Add(new Venta
         {
@@ -488,5 +571,6 @@ public sealed class VentasDesignTime : VentasViewModel
         });
 
         SelectedVenta = VentasItems[0];
+        Paginacion.EstablecerTotal(VentasItems.Count);
     }
 }

@@ -13,9 +13,9 @@ public class MovimientoInventario
     public Usuario Usuario { get; set; } = null!;
 
     public TipoMovimiento Tipo { get; set; }
-    public int Cantidad { get; set; }
-    public int StockAnterior { get; set; }
-    public int StockResultante { get; set; }
+    public decimal Cantidad { get; set; }
+    public decimal StockAnterior { get; set; }
+    public decimal StockResultante { get; set; }
     public string? Referencia { get; set; }
 
     public int? IdVenta { get; set; }
@@ -25,4 +25,15 @@ public class MovimientoInventario
     public Compra? Compra { get; set; }
 
     public DateTime Fecha { get; set; } = DateTime.Now;
+
+    public UnidadMedida Unidad =>
+        Producto?.UnidadMedida ?? UnidadMedida.Pieza;
+
+    public string CantidadTexto => Unidad.FormatearConUnidad(Cantidad);
+
+    public string StockAnteriorTexto =>
+        Unidad.FormatearConUnidad(StockAnterior);
+
+    public string StockResultanteTexto =>
+        Unidad.FormatearConUnidad(StockResultante);
 }

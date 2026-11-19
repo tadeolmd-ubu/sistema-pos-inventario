@@ -36,6 +36,77 @@ public class CompraService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Compras entre dos fechas (inclusive), sin límite de filas, para el
+    /// historial filtrado y la exportación a CSV.
+    /// </summary>
+    public async Task<List<Compra>> ObtenerPorRangoAsync(
+        DateTime desde, DateTime hasta)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        return await _db.Compras
+            .AsNoTracking()
+            .Include(c => c.Proveedor)
+            .Include(c => c.Usuario)
+            .Include(c => c.Detalles)
+                .ThenInclude(d => d.Producto)
+            .Where(c => c.Fecha >= inicio && c.Fecha < fin)
+            .OrderByDescending(c => c.Fecha)
+            .ThenByDescending(c => c.Id)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Compras paginadas entre dos fechas (inclusive). Devuelve solo las filas
+    /// de la página solicitada y el total de coincidencias.
+    /// </summary>
+    public async Task<PaginaResultado<Compra>> ObtenerPorRangoPaginadoAsync(
+        DateTime desde, DateTime hasta, int pagina, int tamanoPagina)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Compras
+            .AsNoTracking()
+            .Where(c => c.Fecha >= inicio && c.Fecha < fin);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var total = await query.SumAsync(c => (decimal?)c.Total) ?? 0m;
+
+        var items = await query
+            .Include(c => c.Proveedor)
+            .Include(c => c.Usuario)
+            .Include(c => c.Detalles)
+                .ThenInclude(d => d.Producto)
+            .OrderByDescending(c => c.Fecha)
+            .ThenByDescending(c => c.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Compra>(items, totalRegistros, total);
+    }
+
     public async Task<Compra?> ObtenerPorIdAsync(int id)
         => await _db.Compras
             .AsNoTracking()
@@ -100,6 +171,24 @@ public class CompraService
             return new Resultado<Compra>(
                 false, "No se pueden comprar productos archivados.", null);
 
+        foreach (var linea in lineas)
+        {
+            var producto = productos.First(p => p.Id == linea.IdProducto);
+
+            if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                return new Resultado<Compra>(
+                    false, "La cantidad no puede tener más de 3 decimales.", null);
+
+            if (producto.UnidadMedida == UnidadMedida.Pieza &&
+                !Cantidades.EsEntera(linea.Cantidad))
+            {
+                return new Resultado<Compra>(
+                    false,
+                    $"Para {producto.Nombre}, la cantidad debe ser un número entero.",
+                    null);
+            }
+        }
+
         var compra = new Compra
         {
             IdProveedor = proveedor.Id,
@@ -115,19 +204,23 @@ public class CompraService
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
-            var subtotal = linea.Cantidad * linea.CostoUnitario;
+            var cantidad = Cantidades.Normalizar(linea.Cantidad);
+            var subtotal = Math.Round(
+                cantidad * linea.CostoUnitario,
+                2,
+                MidpointRounding.AwayFromZero);
             total += subtotal;
 
             var stockAnterior = producto.Stock;
 
-            producto.Stock += linea.Cantidad;
+            producto.Stock += cantidad;
             producto.Costo = linea.CostoUnitario;
             producto.FechaModificacion = compra.Fecha;
 
             compra.Detalles.Add(new DetalleCompra
             {
                 IdProducto = producto.Id,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 CostoUnitario = linea.CostoUnitario,
                 Subtotal = subtotal
             });
@@ -137,7 +230,7 @@ public class CompraService
                 IdProducto = producto.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimiento.Compra,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 StockAnterior = stockAnterior,
                 StockResultante = producto.Stock,
                 Referencia = referencia,

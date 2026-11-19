@@ -38,27 +38,38 @@ PosInventario.sln
 PosInventario/
 ├── .config/dotnet-tools.json
 ├── Assets/
-├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane
-├── Data/                      AppDbContext, AppDbContextFactory
+├── Controls/                  ResponsiveColumnsGrid, ResponsiveTwoPane,
+│                              Paginador (navegación de páginas)
+├── Data/                      AppDbContext, AppDbContextFactory,
+│                              CantidadesConvertidor
 ├── Migrations/                generadas con dotnet-ef (InitialCreate)
-├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
+├── Models/                    Usuario, Producto, Proveedor, Cliente, Abono,
+│                              Compra, Venta, Caja, enums
 ├── Service/                   Resultado, RespaldoService,
 │                              RespaldoAutomaticoService, ConfiguracionAppService,
 │                              RegistroApp, InstanciaUnica, SesionActual,
 │                              VersionService, Usuario/Producto/Proveedor/
-│                              Inventario/Compra/Caja/VentaService, Linea*,
-│                              ResumenPagosCaja
+│                              Cliente/Inventario/Compra/Caja/Venta/ReporteService,
+│                              Linea*, ResumenPagosCaja, GeneradorTicketTexto,
+│                              GeneradorCorteCajaTexto, ExportadorCsv,
+│                              ExportadorReporteExcel, Cantidades,
+│                              PaginaResultado<T>, ReporteAdministracion
 ├── Styles/                    Styles.axaml, Converters.cs
 ├── ViewModels/                MainViewModel + uno por módulo (Inicio, Caja,
-│                              Productos, Proveedores, Inventario, Compras,
-│                              Ventas, Usuarios, Configuración, Login, Setup,
-│                              Ticket, CancelarVenta, CerrarCaja, CajaHistorial,
-│                              MovimientoCaja, RestablecerContrasena,
-│                              SeleccionarProducto) e ítems de líneas
+│                              Productos, Proveedores, Clientes, Inventario,
+│                              Compras, Ventas, Reportes, Usuarios,
+│                              Configuración, Login, Setup, Ticket, CorteCaja,
+│                              CancelarVenta, CerrarCaja, Abono,
+│                              CantidadPeso, CajaHistorial, MovimientoCaja,
+│                              RestablecerContrasena, SeleccionarProducto,
+│                              PaginacionViewModel, OpcionCliente) e ítems de
+│                              líneas
 ├── Views/                     vistas por módulo + SidebarView, LoginWindow,
-│                              SetupWindow, TicketWindow, CancelarVentaWindow,
-│                              CerrarCajaWindow, CajaHistorialWindow,
-│                              MovimientoCajaWindow, RegistrarMovimientoCajaWindow,
+│                              SetupWindow, TicketWindow, CorteCajaWindow,
+│                              CancelarVentaWindow, CerrarCajaWindow,
+│                              AbonoWindow, CantidadPesoWindow,
+│                              CajaHistorialWindow, MovimientoCajaWindow,
+│                              RegistrarMovimientoCajaWindow,
 │                              RestablecerContrasenaWindow, SeleccionarProductoWindow,
 │                              ConfirmacionWindow, MensajeWindow, DesignTime/
 ├── App.axaml(.cs)
@@ -66,7 +77,7 @@ PosInventario/
 ├── Program.cs
 └── app.manifest
 PosInventario.Tests/           pruebas de servicios, respaldo, instancia,
-                               registro, ViewModels de caja/inicio y despliegue
+                               registro, ViewModels, paginación y despliegue
 ```
 
 ## Dependencias entre capas
@@ -116,7 +127,7 @@ Views → ViewModels → Service → Data + Models
 - `SesionActual` guarda el `Usuario` activo; `EsAdministrador` se consulta
   desde ViewModels y servicios.
 - `MainViewModel` bloquea los comandos de módulos administrativos
-  (Productos, Proveedores, Inventario, Compras, Ventas, Usuarios,
+  (Productos, Proveedores, Clientes, Inventario, Compras, Ventas, Usuarios,
   Configuración); la caja está disponible para ambos roles.
 - Los servicios también validan rol en operaciones sensibles (respaldos,
   cancelaciones) además de la UI.
@@ -191,7 +202,7 @@ MovimientoCaja Venta          DetalleVenta
 
 ## Próximo paso
 
-La base está estable y sus 147 pruebas pasan. El trabajo pendiente (reportes,
+La base está estable y sus 178 pruebas pasan. El trabajo pendiente (reportes,
 instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
 
 ## Invariantes
@@ -232,15 +243,65 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   también el código de barras: al escanear y presionar Enter se carga el
   producto existente o se prepara el alta con ese SKU (`EscanearCodigoAsync`).
   En Caja el mismo código agrega el producto a la venta.
-- Compras: `CompraService` con líneas y actualización de stock.
-- Historial de ventas: `VentasViewModel` con filtros y reimpresión. El detalle
-  de una caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con
-  el botón "Ver ticket" o doble clic, incluidas las canceladas.
+- Unidades de venta: `Producto.UnidadMedida` distingue `Pieza` de `Kilogramo`.
+  Las cantidades de peso usan hasta tres decimales y se guardan en SQLite como
+  enteros en milésimas mediante `Cantidades.Convertidor`; así las consultas
+  que comparan u ordenan stock siguen funcionando. Los productos por pieza
+  rechazan cantidades decimales en ventas, compras e inventario. En Caja, un
+  producto por peso abre `CantidadPesoWindow` antes de agregarse al carrito.
+- Compras: `CompraService` con líneas y actualización de stock; acepta
+  cantidades decimales para productos por peso.
+- Clientes y crédito: `ClienteService` administra el catálogo, calcula el
+  saldo pendiente a partir de ventas a crédito, devoluciones y abonos, y
+  registra abonos. `Venta.IdCliente` es opcional; sin cliente la venta queda a
+  **Público**. `Venta.TipoVenta` distingue contado de crédito. Una venta a
+  crédito no genera pagos ni efectivo de caja: crea una deuda y se liquida con
+  abonos. Los abonos en efectivo entran como ingreso a la caja abierta.
+- Historial de ventas: `VentasViewModel` con filtros por fecha, búsqueda,
+  método de pago y cajero (se combinan en la misma consulta), paginación y
+  reimpresión. `VentaService.ObtenerHistorialPaginadoAsync` recibe el método y
+  el `IdUsuario` opcionales, y `ObtenerCajerosConVentasAsync` alimenta el
+  selector con los usuarios que realmente tienen ventas. El detalle de una
+  caja cerrada (`CajaHistorialWindow`) abre el ticket de cada venta con el
+  botón "Ver ticket" o doble clic, incluidas las canceladas. La exportación
+  CSV respeta todos los filtros activos.
+- Reportes: `ReporteService` calcula ventas netas, devoluciones, utilidad,
+  ticket promedio, ventas por método y top de productos. `ReportesViewModel`
+  maneja el rango de fechas, los atajos (hoy, 7 días, mes actual/anterior) y
+  la agrupación por día, semana o mes; `ReportesView` solo presenta el
+  resultado. Cada línea de venta guarda `CostoUnitario` al momento del cobro
+  (migración `AddCostoDetalleVenta`) para que la utilidad histórica no cambie
+  cuando se actualiza el costo del producto. El servicio exige rol
+  administrador y excluye las ventas totalmente anuladas. El descuento y las
+  devoluciones se prorratean por unidad, y las sumas por método y producto se
+  muestran netas. Solo lectura: no modifica caja, inventario ni ventas.
+  `ExportadorReporteExcel` convierte el reporte cargado en un libro `.xlsx`
+  con una hoja Resumen (total vendido neto y utilidad) y hojas de detalle por
+  período, método y producto; `ExportadorExcelArchivo` solo abre el selector
+  de archivos y escribe el resultado.
+- Paginación: `PaginacionViewModel` concentra página actual, tamaño
+  (10/25/50, inicio en 10), total y comandos de navegación; `Paginador` es el
+  control XAML reutilizable. Los servicios `VentaService`,
+  `InventarioService`, `CompraService` y `ProductoService` (selector de Caja)
+  exponen consultas paginadas que aplican filtros en la base, hacen `Count` y
+  devuelven un `PaginaResultado<T>` con solo las filas de la página
+  (`Skip`/`Take`). El selector de productos busca por SKU o nombre con un
+  pequeño retardo para no consultar en cada tecla.
+- Exportación CSV: `ExportadorCsv` convierte las filas de la página visible en
+  Ventas, Inventario y Compras (con su rango de fechas y filtros aplicados) a
+  CSV con coma, punto decimal, fin de línea `\r\n` y UTF-8 con BOM. Escapa
+  comas, comillas y saltos de línea, y neutraliza textos que Excel podría
+  interpretar como fórmulas. Las vistas abren el selector de archivos y
+  escriben el contenido; la generación queda fuera de la UI para poder
+  probarla. Desde la página 2 el nombre del archivo incluye `_paginaN`.
 - Impresión: `GeneradorTicketTexto` arma el ticket en 32 columnas (58 mm) o 48
-  (80 mm); `ImpresoraSistema` lo envía a la impresora predeterminada (API de
-  Windows con tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como
-  `Resultado` y se avisa en la ventana del ticket; la venta ya registrada no se
-  pierde y la aplicación no se bloquea.
+  (80 mm); `GeneradorCorteCajaTexto` arma el corte de caja con el mismo formato.
+  `ImpresoraSistema` los envía a la impresora predeterminada (API de Windows con
+  tamaño de papel o CUPS en Linux/macOS). Un fallo se devuelve como `Resultado`
+  y se avisa en la ventana correspondiente; la venta o el cierre ya registrados
+  no se pierden y la aplicación no se bloquea. Al cerrar la caja se abre
+  `CorteCajaWindow` para imprimir el corte; también se puede reimprimir desde el
+  detalle de una caja cerrada en el historial.
 - Atajos y foco: `CajaView` captura F1–F10, Esc, Ctrl+Enter, Delete y +/-;
   al entrar a Caja enfoca la búsqueda y la restaura al cerrar diálogos. F2/F4
   se capturan en fase Tunnel para que ComboBox/DataGrid no los consuman; Esc
@@ -260,6 +321,23 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   restauración de un archivo validado, con respaldo de seguridad previo y
   reinicio automático de la aplicación. Los respaldos automáticos se activan o
   desactivan y su retención se configura desde la misma pantalla.
+
+## Distribución en Windows
+
+- `installer/PosInventario.iss` compila el instalador con Inno Setup 6. Se
+  instala por usuario (`PrivilegesRequired=lowest`), sin UAC, en
+  `%LOCALAPPDATA%\Programs\Sistema de inventario`; crea accesos directos y
+  desinstalador, y deja intacta la carpeta de datos
+  `%LOCALAPPDATA%\SistemaInventario` al desinstalar.
+- `.github/workflows/deploy.yml` publica `win-x64` self-contained, compila el
+  instalador con `ISCC.exe` y adjunta a la release únicamente el `.exe`
+  instalable. El ZIP portable se genera como artefacto de CI para pruebas. En
+  pull requests ejecuta pruebas, publish e instalación silenciosa de prueba,
+  pero no crea release.
+- La prueba de CI instala, verifica el ejecutable y el desinstalador, y
+  desinstala; antes crea un archivo marcador en `%LOCALAPPDATA%\SistemaInventario`
+  para comprobar que el desinstalador no borra datos del negocio.
+- La firma de código (SmartScreen) queda pendiente en el ítem 4.2.
 
 ## Módulos opcionales (no incluidos)
 

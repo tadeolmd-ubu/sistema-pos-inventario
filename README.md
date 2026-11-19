@@ -20,19 +20,41 @@ registro de errores.
   abierta; en ventas mixtas el reembolso se reparte entre los métodos
   originales) y movimientos de entrada/salida de efectivo. Al cerrar, si el
   monto contado difiere del esperado, muestra el faltante o sobrante y pide
-  confirmación antes de cerrar.
+  confirmación antes de cerrar; después abre el **corte de caja imprimible**
+  con las ventas, el desglose por método y la comparación de efectivo.
 - **Catálogos:** productos y proveedores (solo administrador). El campo
   **SKU es también el código de barras**: al escanear (o escribir) un código
   en Productos y presionar Enter se cargan los datos del producto si existe,
-  o se prepara el alta con ese SKU si es nuevo.
-- **Inventario:** entradas/salidas con motivo y ajuste de stock.
-- **Compras:** registro con proveedor, líneas y actualización de costo/stock.
-- **Ventas:** historial global con filtros por fecha y búsqueda, desglose por
-  método de pago, reimpresión de ticket desde el historial o el detalle de una
-  caja cerrada y botón de devolución (checklist por producto o unidad, con
-  reembolso estimado). Cada venta muestra su total neto y, si aplica, cuánto se
-  le ha devuelto. El ticket se puede imprimir en papel de 58 mm u 80 mm; si no
-  hay impresora, la venta ya quedó registrada y solo se muestra un aviso.
+  o se prepara el alta con ese SKU si es nuevo. Cada producto se vende por
+  **pieza** o por **peso (kg)**; los productos por peso admiten cantidades y
+  stock con hasta tres decimales.
+- **Clientes:** catálogo con límite de crédito, estado de cuenta, ventas a
+  crédito y abonos. Una venta sin cliente se registra como **Público**.
+- **Importación:** productos, proveedores y stock inicial desde un CSV
+  exportado de Excel, con plantilla descargable, vista previa, validación por
+  fila e importación en una sola transacción. La columna opcional `unidad`
+  permite dar de alta productos por pieza o por kg.
+- **Inventario:** entradas/salidas con motivo, ajuste de stock e historial de
+  movimientos por rango de fechas, paginado y exportable a CSV.
+- **Compras:** registro con proveedor, líneas y actualización de costo/stock;
+  historial por rango de fechas paginado y exportable a CSV.
+- **Ventas:** historial global con filtros por fecha, búsqueda, método de pago
+  y cajero (todos se combinan), cliente, desglose por método de pago,
+  paginación, reimpresión de ticket desde el historial o el detalle de una caja
+  cerrada, botón de devolución (checklist por producto/unidad o cantidad en
+  kg, con reembolso estimado) y exportación a CSV de las ventas filtradas.
+  Las ventas pueden ser de contado o a crédito; las de crédito quedan
+  pendientes en la cuenta del cliente y no entran al efectivo de la caja.
+  Cada venta muestra su total neto y, si aplica, cuánto se le ha devuelto. El
+  ticket se puede imprimir en papel de 58 mm u 80 mm; si no hay impresora, la
+  venta ya quedó registrada y solo se muestra un aviso.
+- **Reportes:** (solo administrador) ventas por período agrupadas por día,
+  semana o mes, desglose por método de pago, productos más vendidos y utilidad
+  (venta neta menos costo). Incluye rangos rápidos (hoy, últimos 7 días, mes
+  actual y mes anterior), muestra los números dentro de la app y permite
+  exportarlos a un libro `.xlsx` con resumen, períodos, métodos y productos.
+  Las devoluciones se descuentan por unidad y la utilidad usa el costo guardado
+  al momento de cada venta. El desglose por método incluye crédito.
 - **Usuarios:** alta, edición, activación/desactivación y restablecimiento de
   contraseña.
 - **Configuración:** respaldos manuales con `BackupDatabase` de SQLite y
@@ -43,11 +65,15 @@ registro de errores.
 - **Operación:** instancia única con bloqueo de archivo, manejo global de
   errores, logs en `LocalApplicationData/SistemaInventario/logs` y textos en
   español de México.
-- **Tests:** 147 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria y
-  en disco); build de Windows en CI.
+- **Tests:** 240 pruebas xUnit sobre servicios y ViewModels (SQLite en memoria
+  y en disco); build de Windows en CI.
 
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
-`PENDIENTES.md`.
+`PENDIENTES.md`. Para instalar y operar el sistema paso a paso, consulta
+[`MANUAL-USUARIO.md`](MANUAL-USUARIO.md); la matriz de pruebas de interfaz en
+Windows está en [`PRUEBAS-WINDOWS.md`](PRUEBAS-WINDOWS.md). Para instalar y
+entregar el sistema a un cliente, usa el
+[`ENTREGA-CLIENTE.md`](ENTREGA-CLIENTE.md).
 
 ## Requisitos
 
@@ -127,34 +153,166 @@ listado completo.
 | **Delete** | Quitar la línea seleccionada | Corregir el carrito con el teclado |
 | **+ / -** | Cambiar cantidad de la línea seleccionada | Ajustar unidades sin botones |
 | **↑/↓ + Enter** (selector de productos) | Navegar y agregar | Elegir un producto sin mouse |
-| **Ctrl+P** (ticket) | Imprimir | Imprimir o reimprimir el ticket |
+| **←/→** (selector de productos) | Cambiar de página | Recorrer el catálogo sin mouse |
+| **Ctrl+P** (ticket o corte) | Imprimir | Imprimir o reimprimir el documento |
 | **Tab / Shift+Tab** | Navegar entre controles | Operar toda la caja sin mouse |
 
 Si el foco está en un campo de texto con contenido, **Esc** limpia primero ese
 campo; si está vacío, limpia la venta (con confirmación cuando hay productos).
 En el selector de productos, el primer resultado queda seleccionado al filtrar
-y **Enter** lo agrega.
+y **Enter** lo agrega. Las flechas **←/→** cambian de página cuando la lista
+tiene el foco o el buscador está vacío; los botones **◀/▶** están arriba a la
+derecha de la lista.
 
-## Impresión de tickets
+## Impresión de tickets y corte de caja
 
-El ticket tiene un selector de 58 u 80 mm y un botón **Imprimir**. En Windows
-se usa la impresora predeterminada y la app fija el tamaño del papel; en
-Linux/macOS se envía a CUPS con `lp` o `lpr`. Si no hay impresora o falla, la
-venta queda registrada y el ticket solo muestra un aviso, sin bloquear la
-aplicación. La impresión ESC/POS directa y la apertura del cajón quedan para
-una etapa posterior.
+El ticket y el corte de caja tienen un selector de 58 u 80 mm y un botón
+**Imprimir**. En Windows se usa la impresora predeterminada y la app fija el
+tamaño del papel; en Linux/macOS se envía a CUPS con `lp` o `lpr`. Si no hay
+impresora o falla, la operación ya quedó registrada y solo se muestra un aviso,
+sin bloquear la aplicación.
+
+Al cerrar una caja se abre el corte con las ventas, el desglose por método de
+pago, el efectivo esperado y contado y la diferencia (faltante, sobrante o sin
+diferencia). El corte se puede reimprimir desde el detalle de una caja cerrada
+en el historial. La impresión ESC/POS directa y la apertura del cajón quedan
+para una etapa posterior.
+
+## Paginación
+
+Ventas, Inventario, Compras y el selector de productos de Caja consultan la
+base por páginas: no cargan todo el historial en memoria. El control
+reutilizable `Paginador` muestra el rango visible, permite elegir **10, 25 o
+50** registros por página (inicia en 10) y navega con
+Primera/Anterior/Siguiente/Última. La consulta usa `Skip`/`Take` y un `Count`
+para conocer el total; los filtros de fecha, búsqueda, producto y estado se
+aplican en la misma consulta. El estado compartido vive en
+`PaginacionViewModel`, de modo que otros listados pueden reutilizarlo.
+
+El selector de productos de Caja usa la misma paginación, busca por SKU o
+nombre directamente en la base y espera 200 ms tras la última tecla para no
+lanzar una consulta por cada pulsación.
+
+## Exportación a CSV
+
+Ventas, Inventario y Compras tienen un botón **Exportar CSV** que guarda
+exactamente las filas de la **página visible** en ese momento:
+
+- **Ventas:** respeta el rango de fechas, la búsqueda, el método de pago, el
+  cajero seleccionado y la casilla "Ver anuladas". Incluye ticket, fecha,
+  cajero, cliente, método, estado, subtotal, descuento, total, devuelto y neto.
+- **Inventario:** respeta el rango de fechas y, si hay un producto
+  seleccionado, sus movimientos. Incluye producto, SKU, unidad, tipo,
+  cantidad, stock anterior/resultante, referencia, fecha y usuario.
+- **Compras:** respeta el rango de fechas. Incluye compra, fecha, proveedor,
+  comprobante, estado, artículos, total y usuario.
+
+El resumen del módulo cuenta todos los registros del filtro, mientras que el
+CSV contiene solo la página actual. Desde la segunda página el nombre del
+archivo agrega `_paginaN` para no sobrescribir exportaciones anteriores.
+
+Los archivos se guardan en UTF-8 con BOM y usan coma como separador y punto
+decimal, de modo que Excel los abre con acentos y columnas correctas. Los
+campos con comas, comillas o saltos de línea se escapan, y los textos que
+empiezan con `=`, `+`, `-` o `@` se neutralizan para evitar fórmulas. Si no hay
+filas en el rango, el archivo solo contiene el encabezado.
+
+## Importación desde Excel o CSV
+
+**Productos → Importar CSV...** carga productos, proveedores y stock inicial
+desde un archivo separado por comas, punto y coma o tabuladores. El botón
+**Descargar plantilla** genera el encabezado esperado:
+
+```text
+sku,nombre,unidad,descripcion,precio_venta,costo,stock_minimo,stock_inicial,
+proveedor,proveedor_telefono,proveedor_email,proveedor_direccion
+```
+
+La lectura no modifica la base: primero muestra una vista previa con productos
+nuevos, actualizaciones, proveedores y errores por fila. Si hay un error, no se
+importa nada. Al confirmar, todo se guarda en una sola transacción. El stock
+inicial solo se aplica a productos nuevos y deja un movimiento de inventario
+con referencia **Importación inicial**; los productos existentes se actualizan
+sin tocar su stock. Los archivos `.xlsx` deben guardarse como **CSV UTF-8**
+desde Excel. El detalle de columnas y reglas está en el
+[manual de usuario](MANUAL-USUARIO.md#103-importar-productos-y-proveedores-desde-excel).
+
+## Reportes de administración
+
+El módulo **Reportes** (solo administrador) responde las preguntas del dueño
+sin salir de la aplicación:
+
+- **Ventas por período:** se elige un rango de fechas y se agrupa por día,
+  semana (inicio en lunes) o mes. Cada fila muestra tickets, ventas netas,
+  devoluciones y utilidad, con una barra comparativa.
+- **Ventas por método:** efectivo, tarjeta, transferencia y crédito,
+  descontando los reembolsos de cada pago, con monto, cantidad de ventas y
+  porcentaje.
+- **Productos más vendidos:** top 10 por ventas netas de devoluciones, con
+  SKU, cantidad y unidad, ventas y utilidad.
+- **Utilidad:** cada línea aporta `precio de venta - costo`; el descuento de la
+  venta y las devoluciones se prorratean por unidad. Para que el histórico no
+  cambie cuando se actualiza un producto, cada `DetalleVenta` guarda el
+  `CostoUnitario` vigente al momento de la venta. Las ventas totalmente
+  anuladas no se cuentan.
+- **Exportar Excel:** genera un libro `.xlsx` con el reporte mostrado. La hoja
+  **Resumen** incluye el **total vendido (neto)** y la **utilidad**; después
+  vienen las hojas de períodos, métodos de pago y productos.
+
+El cálculo vive en `ReporteService` y las vistas solo presentan el resultado.
+Los importes son netos de devoluciones y se muestran con dos decimales.
 
 ## Publicación
 
 El workflow `.github/workflows/deploy.yml` ejecuta las pruebas, publica
-`win-x64` self-contained y crea una release en cada push a `main`
-(repositorio `tadeolmd-ubu/sistema-pos-inventario`).
+`win-x64` self-contained, compila el instalador con Inno Setup y crea una
+release en cada push a `main` (repositorio
+`tadeolmd-ubu/sistema-pos-inventario`). En los pull requests solo compila y
+prueba, sin publicar release.
+
+Cada release publica un único archivo instalable:
+
+- `PosInventario-<versión>-win-x64-installer.exe`: instalador recomendado.
+
+El ZIP portable se genera en cada ejecución del workflow y queda como
+artefacto de CI (`PosInventario-<versión>-win-x64`) para pruebas; no se
+adjunta a la release.
+
+## Instalador de Windows
+
+El instalador vive en `installer/PosInventario.iss`. Es **por usuario**, así
+que no pide permisos de administrador:
+
+- instala en `%LOCALAPPDATA%\Programs\Sistema de inventario`,
+- crea el acceso directo en el menú Inicio y, opcionalmente, en el escritorio,
+- registra el desinstalador en Configuración → Aplicaciones,
+- no necesita abrir una terminal después de instalarse.
+
+La base, los respaldos y los logs siguen en
+`%LOCALAPPDATA%\SistemaInventario`. Desinstalar **no borra** esa carpeta: los
+datos del negocio sobreviven a una reinstalación. El workflow de CI hace una
+instalación y desinstalación silenciosa en Windows y verifica que el
+desinstalador no elimine esos datos.
+
+Para compilarlo localmente en Windows:
+
+```powershell
+dotnet publish PosInventario/PosInventario.csproj -c Release -r win-x64 --self-contained true -p:PublishTrimmed=false -o publish
+& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\PosInventario.iss
+```
+
+El `.exe` queda en `dist/`. Para cambiar la versión o la carpeta publicada:
+
+```powershell
+& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=1.0.5 /DSourceDir=C:\ruta\publish installer\PosInventario.iss
+```
 
 ## Estructura
 
 ```text
 PosInventario/          aplicación (Models, Data, Migrations, Service, ViewModels, Views, Controls, Styles)
 PosInventario.Tests/    pruebas xUnit sobre SQLite en memoria y en disco
+installer/              script de Inno Setup para el instalador de Windows
 ```
 
 Reglas de capas y convenciones: ver `ARQUITECTURA-BASE.md` y `COLABORACION.md`.

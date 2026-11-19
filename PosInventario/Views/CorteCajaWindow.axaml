@@ -1,0 +1,177 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:service="using:PosInventario.Service"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:CorteCajaViewModel"
+        x:Class="PosInventario.Views.CorteCajaWindow"
+        Title="Corte de caja"
+        Width="460"
+        SizeToContent="Height"
+        MaxHeight="640"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <DockPanel LastChildFill="True">
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,14,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Ancho del papel" Classes="fieldLabel"/>
+                    <ComboBox ItemsSource="{Binding AnchosTicket}"
+                              SelectedItem="{Binding AnchoSeleccionado}"
+                              IsEnabled="{Binding !Imprimiendo}"
+                              Width="130"
+                              HorizontalAlignment="Left">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="service:AnchoTicketOpcion">
+                                <TextBlock Text="{Binding Etiqueta}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Content="Imprimir corte"
+                            Classes="primary"
+                            ToolTip.Tip="Ctrl+P"
+                            Command="{Binding ImprimirCommand}"
+                            IsEnabled="{Binding !Imprimiendo}"
+                            HorizontalAlignment="Stretch"/>
+                    <Button Grid.Column="1"
+                            Content="Cerrar"
+                            Classes="secondary"
+                            IsDefault="True"
+                            IsCancel="True"
+                            ToolTip.Tip="Esc"
+                            HorizontalAlignment="Stretch"
+                            Click="Cerrar_Click"/>
+                </Grid>
+
+                <TextBlock Text="{Binding MensajeImpresion}"
+                           Classes="caption"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding EsMensajeExito}"
+                           Foreground="{StaticResource SuccessBrush}"/>
+                <TextBlock Text="{Binding MensajeImpresion}"
+                           Classes="caption"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding EsMensajeError}"
+                           Foreground="{StaticResource ErrorBrush}"/>
+            </StackPanel>
+
+            <ScrollViewer MaxHeight="460" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+
+                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                        <TextBlock Text="Sistema de inventario"
+                                   FontSize="18"
+                                   FontWeight="ExtraBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding Numero}"
+                                   Classes="caption"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="1">
+                        <TextBlock Text="{Binding FechaApertura, StringFormat='Apertura: {0}'}"
+                                   Classes="caption"/>
+                        <TextBlock Text="{Binding FechaCierre, StringFormat='Cierre: {0}'}"
+                                   Classes="caption"/>
+                        <TextBlock Text="{Binding UsuarioApertura, StringFormat='Abrió: {0}'}"
+                                   Classes="caption"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}"/>
+
+                    <Border Background="{StaticResource SurfaceAltBrush}"
+                            CornerRadius="10"
+                            Padding="14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Ventas de la caja" Classes="fieldLabel"/>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="3">
+                                <TextBlock Grid.Row="0" Text="Cantidad" Classes="caption"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding CantidadVentasTexto}"/>
+
+                                <TextBlock Grid.Row="1" Text="Efectivo" Classes="caption"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                           Text="{Binding TotalEfectivoTexto}"/>
+
+                                <TextBlock Grid.Row="2" Text="Tarjeta" Classes="caption"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                           Text="{Binding TotalTarjetaTexto}"/>
+
+                                <TextBlock Grid.Row="3" Text="Transferencia" Classes="caption"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                           Text="{Binding TotalTransferenciaTexto}"/>
+
+                                <TextBlock Grid.Row="4" Text="Crédito" Classes="caption"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1"
+                                           Text="{Binding TotalCreditoTexto}"/>
+
+                                <TextBlock Grid.Row="5" Text="Total vendido" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1"
+                                           Text="{Binding TotalVentasTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="{StaticResource SurfaceAltBrush}"
+                            CornerRadius="10"
+                            Padding="14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Efectivo" Classes="fieldLabel"/>
+
+                            <Grid ColumnDefinitions="*,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto"
+                                  RowSpacing="3">
+                                <TextBlock Grid.Row="0" Text="Monto inicial" Classes="caption"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding MontoInicialTexto}"/>
+
+                                <TextBlock Grid.Row="1" Text="Esperado" Classes="caption"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                           Text="{Binding MontoEsperadoTexto}"/>
+
+                                <TextBlock Grid.Row="2" Text="Contado" Classes="caption"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                           Text="{Binding MontoContadoTexto}"/>
+
+                                <TextBlock Grid.Row="3" Text="Diferencia" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                           Text="{Binding DiferenciaTexto}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+
+                            <TextBlock Text="{Binding FaltanteTexto}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource ErrorBrush}"
+                                       IsVisible="{Binding HayFaltante}"/>
+                            <TextBlock Text="{Binding SobranteTexto}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource ErrorBrush}"
+                                       IsVisible="{Binding HaySobrante}"/>
+                            <TextBlock Text="Sin diferencia"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource SuccessBrush}"
+                                       IsVisible="{Binding SinDiferencia}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Observaciones" Classes="fieldLabel"/>
+                        <TextBlock Text="{Binding Observaciones}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>

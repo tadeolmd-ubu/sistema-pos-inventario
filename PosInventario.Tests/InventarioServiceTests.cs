@@ -318,6 +318,87 @@ public class InventarioServiceTests
     }
 
     [Fact]
+    public async Task ObtenerMovimientosPorRangoFiltraFechasYProducto()
+    {
+        await using var prueba = await PruebaInventario.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var productoA = await prueba.CrearProductoAsync("ABC-001", "Producto A");
+        var productoB = await prueba.CrearProductoAsync("ABC-002", "Producto B");
+
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoA.Id, 5, MotivoEntrada);
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoB.Id, 8, MotivoEntrada);
+
+        var movimientos = await prueba.Db.MovimientosInventario
+            .OrderBy(m => m.Id)
+            .ToListAsync();
+
+        movimientos[0].Fecha = new DateTime(2026, 1, 10, 9, 0, 0);
+        movimientos[1].Fecha = new DateTime(2026, 2, 10, 9, 0, 0);
+        await prueba.Db.SaveChangesAsync();
+
+        var febrero = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoAsync(
+                new DateTime(2026, 2, 1), new DateTime(2026, 2, 28));
+
+        Assert.Single(febrero);
+        Assert.Equal(productoB.Id, febrero[0].IdProducto);
+        Assert.NotNull(febrero[0].Producto);
+        Assert.NotNull(febrero[0].Usuario);
+
+        var deAEnEnero = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoAsync(
+                new DateTime(2026, 1, 1),
+                new DateTime(2026, 1, 31),
+                productoA.Id);
+
+        Assert.Single(deAEnEnero);
+        Assert.Equal(productoA.Id, deAEnEnero[0].IdProducto);
+    }
+
+    [Fact]
+    public async Task MovimientosPaginadosFiltranFechasProductoYDevuelvenTotal()
+    {
+        await using var prueba = await PruebaInventario.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+        var productoA = await prueba.CrearProductoAsync("PAG-001", "Producto A");
+        var productoB = await prueba.CrearProductoAsync("PAG-002", "Producto B");
+
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoA.Id, 10, MotivoEntrada);
+        await prueba.InventarioService.RegistrarSalidaAsync(
+            productoA.Id, 2, MotivoSalida);
+        await prueba.InventarioService.RegistrarEntradaAsync(
+            productoB.Id, 8, MotivoEntrada);
+
+        var paginaUno = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: null, pagina: 1, tamanoPagina: 2);
+
+        Assert.Equal(3, paginaUno.TotalRegistros);
+        Assert.Equal(2, paginaUno.Items.Count);
+        Assert.NotNull(paginaUno.Items[0].Producto);
+        Assert.NotNull(paginaUno.Items[0].Usuario);
+
+        var paginaDos = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: null, pagina: 2, tamanoPagina: 2);
+
+        Assert.Single(paginaDos.Items);
+
+        var soloA = await prueba.InventarioService
+            .ObtenerMovimientosPorRangoPaginadosAsync(
+                DateTime.Today.AddDays(-1), DateTime.Today,
+                idProducto: productoA.Id, pagina: 1, tamanoPagina: 10);
+
+        Assert.Equal(2, soloA.TotalRegistros);
+        Assert.All(soloA.Items, m => Assert.Equal(productoA.Id, m.IdProducto));
+    }
+
+    [Fact]
     public async Task RegistroFallidoNoCambiaStockNiCreaMovimiento()
     {
         await using var prueba = await PruebaInventario.CrearAsync();

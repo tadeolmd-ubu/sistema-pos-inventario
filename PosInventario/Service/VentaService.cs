@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
 using PosInventario.Models;
@@ -9,17 +10,21 @@ public class VentaService
 {
     private readonly AppDbContext _db;
     private readonly SesionActual _sesion;
+    private readonly ClienteService _clienteService;
 
-    public VentaService(AppDbContext db, SesionActual sesion)
+    public VentaService(
+        AppDbContext db, SesionActual sesion, ClienteService? clienteService = null)
     {
         _db = db;
         _sesion = sesion;
+        _clienteService = clienteService ?? new ClienteService(db, sesion);
     }
 
     public async Task<List<Venta>> ObtenerPorCajaAsync(int idCaja)
         => await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -36,6 +41,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Where(v => v.Estado == EstadoVenta.Completada &&
                         v.Fecha >= desde && v.Fecha < hasta)
@@ -52,6 +58,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -80,6 +87,7 @@ public class VentaService
         return await _db.Ventas
             .AsNoTracking()
             .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
             .Include(v => v.Pagos)
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
@@ -90,10 +98,130 @@ public class VentaService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// Usuarios que tienen al menos una venta registrada. Se usa para el
+    /// filtro por cajero del historial, sin listar usuarios que nunca vendieron.
+    /// </summary>
+    public async Task<List<Usuario>> ObtenerCajerosConVentasAsync()
+    {
+        var ids = await _db.Ventas
+            .AsNoTracking()
+            .Select(v => v.IdUsuario)
+            .Distinct()
+            .ToListAsync();
+
+        return await _db.Usuarios
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .OrderBy(u => u.Nombre)
+            .ThenBy(u => u.NombreUsuario)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Historial paginado entre dos fechas (inclusive). La búsqueda se aplica
+    /// en la base: acepta el número de ticket (con o sin prefijo "V-") o el
+    /// nombre del cajero. Los filtros de método y cajero se combinan con la
+    /// fecha, la búsqueda y las anuladas. Devuelve solo las filas de la página
+    /// y el total de coincidencias para calcular la navegación.
+    /// </summary>
+    public async Task<PaginaResultado<Venta>> ObtenerHistorialPaginadoAsync(
+        DateTime desde,
+        DateTime hasta,
+        string? busqueda,
+        bool incluirAnuladas,
+        int pagina,
+        int tamanoPagina,
+        MetodoPago? metodo = null,
+        int? idUsuario = null)
+    {
+        var inicio = desde.Date;
+        var fin = hasta.Date.AddDays(1);
+
+        if (fin <= inicio)
+            fin = inicio.AddDays(1);
+
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Ventas
+            .AsNoTracking()
+            .Where(v => v.Fecha >= inicio && v.Fecha < fin);
+
+        if (!incluirAnuladas)
+            query = query.Where(v => v.Estado == EstadoVenta.Completada);
+
+        if (metodo is { } metodoFiltro)
+            query = query.Where(v => v.MetodoPago == metodoFiltro);
+
+        if (idUsuario is { } usuarioFiltro)
+            query = query.Where(v => v.IdUsuario == usuarioFiltro);
+
+        query = AplicarBusqueda(query, busqueda);
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var totalVendido = await query
+            .Where(v => v.Estado == EstadoVenta.Completada)
+            .SumAsync(v => (decimal?)(v.Total - v.TotalDevuelto)) ?? 0m;
+
+        var items = await query
+            .Include(v => v.Usuario)
+            .Include(v => v.Cliente)
+            .Include(v => v.Pagos)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .OrderByDescending(v => v.Fecha)
+            .ThenByDescending(v => v.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Venta>(
+            items, totalRegistros, totalVendido);
+    }
+
+    private static IQueryable<Venta> AplicarBusqueda(
+        IQueryable<Venta> query, string? busqueda)
+    {
+        var texto = (busqueda ?? string.Empty).Trim();
+
+        if (texto.Length == 0)
+            return query;
+
+        var numero = texto.StartsWith("V-", StringComparison.OrdinalIgnoreCase)
+            ? texto[2..]
+            : texto;
+
+        if (int.TryParse(
+                numero, NumberStyles.None, CultureInfo.InvariantCulture,
+                out var id))
+        {
+            return query.Where(v =>
+                v.Id == id ||
+                v.Usuario.Nombre.Contains(texto) ||
+                v.Usuario.NombreUsuario.Contains(texto));
+        }
+
+        return query.Where(v =>
+            v.Usuario.Nombre.Contains(texto) ||
+            v.Usuario.NombreUsuario.Contains(texto));
+    }
+
     public async Task<Resultado<Venta>> RegistrarAsync(
         IReadOnlyList<LineaVenta> lineas,
         IReadOnlyList<LineaPago> pagos,
-        decimal descuento = 0m)
+        decimal descuento = 0m,
+        int? idCliente = null,
+        TipoVenta tipoVenta = TipoVenta.Contado)
     {
         if (!_sesion.Iniciada)
             return new Resultado<Venta>(false, "La sesión no está iniciada.", null);
@@ -136,17 +264,42 @@ public class VentaService
             return new Resultado<Venta>(
                 false, "No se pueden vender productos archivados.", null);
 
-        var subtotal = 0m;
+        var cantidades = new Dictionary<int, decimal>();
 
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
 
-            if (producto.Stock < linea.Cantidad)
+            if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                return new Resultado<Venta>(
+                    false, "La cantidad no puede tener más de 3 decimales.", null);
+
+            if (producto.UnidadMedida == UnidadMedida.Pieza &&
+                !Cantidades.EsEntera(linea.Cantidad))
+            {
+                return new Resultado<Venta>(
+                    false,
+                    $"Para {producto.Nombre}, la cantidad debe ser un número entero.",
+                    null);
+            }
+
+            var cantidad = Cantidades.Normalizar(linea.Cantidad);
+            cantidades[producto.Id] = cantidad;
+
+            if (producto.Stock < cantidad)
                 return new Resultado<Venta>(
                     false, $"No hay stock suficiente de {producto.Nombre}.", null);
+        }
 
-            subtotal += producto.PrecioVenta * linea.Cantidad;
+        var subtotal = 0m;
+
+        foreach (var linea in lineas)
+        {
+            var producto = productos.First(p => p.Id == linea.IdProducto);
+            subtotal += Math.Round(
+                producto.PrecioVenta * cantidades[producto.Id],
+                2,
+                MidpointRounding.AwayFromZero);
         }
 
         if (descuento < 0)
@@ -159,20 +312,79 @@ public class VentaService
 
         var total = subtotal - descuento;
 
-        var pagosNormalizados = NormalizarPagos(pagos, total, out var errorPagos);
+        Cliente? cliente = null;
 
-        if (errorPagos is not null)
-            return new Resultado<Venta>(false, errorPagos, null);
+        if (idCliente is not null)
+        {
+            cliente = await _db.Clientes
+                .FirstOrDefaultAsync(c => c.Id == idCliente.Value && c.Activo == 1);
 
-        var efectivoAplicado = pagosNormalizados
-            .Where(p => p.Metodo == MetodoPago.Efectivo)
-            .Sum(p => p.Monto);
+            if (cliente is null)
+            {
+                return new Resultado<Venta>(
+                    false, "El cliente no existe o está inactivo.", null);
+            }
+        }
 
-        var efectivoRecibido = pagosNormalizados
-            .Where(p => p.Metodo == MetodoPago.Efectivo)
-            .Sum(p => p.MontoRecibido ?? 0m);
+        if (tipoVenta == TipoVenta.Credito)
+        {
+            if (cliente is null)
+            {
+                return new Resultado<Venta>(
+                    false,
+                    "Selecciona un cliente para registrar una venta a crédito.",
+                    null);
+            }
 
-        var vuelto = efectivoRecibido - efectivoAplicado;
+            if (pagos.Count > 0)
+            {
+                return new Resultado<Venta>(
+                    false, "Una venta a crédito no lleva pagos.", null);
+            }
+
+            var saldo = await _clienteService.ObtenerSaldoAsync(cliente.Id);
+            var disponible = cliente.LimiteCredito - saldo;
+
+            if (total > disponible)
+            {
+                return new Resultado<Venta>(
+                    false,
+                    $"El cliente no tiene crédito suficiente. " +
+                    $"Disponible: {disponible.ToString("0.00", CultureInfo.InvariantCulture)}.",
+                    null);
+            }
+        }
+
+        List<LineaPago> pagosNormalizados;
+        decimal efectivoAplicado;
+        decimal efectivoRecibido;
+        decimal vuelto;
+
+        if (tipoVenta == TipoVenta.Credito)
+        {
+            pagosNormalizados = [];
+            efectivoAplicado = 0m;
+            efectivoRecibido = 0m;
+            vuelto = 0m;
+        }
+        else
+        {
+            pagosNormalizados = NormalizarPagos(pagos, total, out var errorPagos);
+
+            if (errorPagos is not null)
+                return new Resultado<Venta>(false, errorPagos, null);
+
+            efectivoAplicado = pagosNormalizados
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.Monto);
+
+            efectivoRecibido = pagosNormalizados
+                .Where(p => p.Metodo == MetodoPago.Efectivo)
+                .Sum(p => p.MontoRecibido ?? 0m);
+
+            vuelto = efectivoRecibido - efectivoAplicado;
+        }
+
         var momento = DateTime.Now;
 
         var venta = new Venta
@@ -180,52 +392,67 @@ public class VentaService
             IdUsuario = _sesion.IdUsuario,
             Usuario = _sesion.Usuario!,
             IdCaja = caja.Id,
+            IdCliente = cliente?.Id,
+            Cliente = cliente,
             Fecha = momento,
             Subtotal = subtotal,
             Descuento = descuento,
             Total = total,
-            MetodoPago = pagosNormalizados.Count switch
-            {
-                0 => MetodoPago.Efectivo,
-                1 => pagosNormalizados[0].Metodo,
-                _ => MetodoPago.Mixto
-            },
-            MontoRecibido = total + vuelto,
+            TipoVenta = tipoVenta,
+            MetodoPago = tipoVenta == TipoVenta.Credito
+                ? MetodoPago.Credito
+                : pagosNormalizados.Count switch
+                {
+                    0 => MetodoPago.Efectivo,
+                    1 => pagosNormalizados[0].Metodo,
+                    _ => MetodoPago.Mixto
+                },
+            MontoRecibido = tipoVenta == TipoVenta.Credito
+                ? total
+                : total + vuelto,
             Vuelto = vuelto,
             Estado = EstadoVenta.Completada
         };
 
-        foreach (var pago in pagosNormalizados)
+        if (tipoVenta == TipoVenta.Contado)
         {
-            // El efectivo con monto 0 se usa solo para calcular el cambio
-            // cuando tarjeta/transferencia ya cubrieron el total.
-            if (pago.Monto <= 0)
-                continue;
-
-            venta.Pagos.Add(new PagoVenta
+            foreach (var pago in pagosNormalizados)
             {
-                Metodo = pago.Metodo,
-                Monto = pago.Monto,
-                MontoDevuelto = 0m
-            });
+                // El efectivo con monto 0 se usa solo para calcular el cambio
+                // cuando tarjeta/transferencia ya cubrieron el total.
+                if (pago.Monto <= 0)
+                    continue;
+
+                venta.Pagos.Add(new PagoVenta
+                {
+                    Metodo = pago.Metodo,
+                    Monto = pago.Monto,
+                    MontoDevuelto = 0m
+                });
+            }
         }
 
         foreach (var linea in lineas)
         {
             var producto = productos.First(p => p.Id == linea.IdProducto);
+            var cantidad = cantidades[producto.Id];
             var precioUnitario = producto.PrecioVenta;
-            var subtotalLinea = precioUnitario * linea.Cantidad;
+            var subtotalLinea = Math.Round(
+                precioUnitario * cantidad,
+                2,
+                MidpointRounding.AwayFromZero);
 
             var stockAnterior = producto.Stock;
-            producto.Stock -= linea.Cantidad;
+            producto.Stock -= cantidad;
             producto.FechaModificacion = momento;
 
             venta.Detalles.Add(new DetalleVenta
             {
                 IdProducto = producto.Id,
                 Producto = producto,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 PrecioUnitario = precioUnitario,
+                CostoUnitario = producto.Costo,
                 Subtotal = subtotalLinea
             });
 
@@ -234,7 +461,7 @@ public class VentaService
                 IdProducto = producto.Id,
                 IdUsuario = _sesion.IdUsuario,
                 Tipo = TipoMovimiento.Venta,
-                Cantidad = linea.Cantidad,
+                Cantidad = cantidad,
                 StockAnterior = stockAnterior,
                 StockResultante = producto.Stock,
                 Referencia = "Venta",
@@ -382,6 +609,8 @@ public class VentaService
         if (venta.Estado == EstadoVenta.Anulada)
             return new Resultado(false, "La venta ya está anulada.");
 
+        var esCredito = venta.TipoVenta == TipoVenta.Credito;
+
         if (!_sesion.EsAdministrador && venta.IdUsuario != _sesion.IdUsuario)
             return new Resultado(
                 false, "Solo quien realizó la venta o un administrador puede hacer la devolución.");
@@ -393,7 +622,7 @@ public class VentaService
         }
 
         // Sin líneas se devuelven todas las unidades pendientes (anulación).
-        Dictionary<int, int> cantidades;
+        Dictionary<int, decimal> cantidades;
 
         if (lineas is null)
         {
@@ -427,17 +656,31 @@ public class VentaService
                     return new Resultado(
                         false, "La cantidad a devolver debe ser mayor que 0.");
 
-                if (linea.Cantidad > detalle.CantidadPendiente)
-                    return new Resultado(false,
-                        $"No se pueden devolver más unidades de {detalle.Producto!.Nombre} de las vendidas.");
+                if (Cantidades.TieneDemasiadosDecimales(linea.Cantidad))
+                    return new Resultado(
+                        false, "La cantidad a devolver no puede tener más de 3 decimales.");
 
-                cantidades[detalle.Id] = linea.Cantidad;
+                if (detalle.Producto!.UnidadMedida == UnidadMedida.Pieza &&
+                    !Cantidades.EsEntera(linea.Cantidad))
+                {
+                    return new Resultado(
+                        false,
+                        $"Para {detalle.Producto.Nombre}, la cantidad a devolver debe ser un número entero.");
+                }
+
+                var cantidad = Cantidades.Normalizar(linea.Cantidad);
+
+                if (cantidad > detalle.CantidadPendiente)
+                    return new Resultado(false,
+                        $"No se puede devolver más de {detalle.Producto.Nombre} de lo vendido.");
+
+                cantidades[detalle.Id] = cantidad;
             }
         }
 
         // Compatibilidad: una venta anterior a la migración de pagos podría
         // no tener filas. Se crea una con su método y saldo original.
-        if (venta.Pagos.Count == 0 && venta.Total > 0)
+        if (!esCredito && venta.Pagos.Count == 0 && venta.Total > 0)
         {
             var metodo = venta.MetodoPago == MetodoPago.Mixto
                 ? MetodoPago.Efectivo
@@ -452,9 +695,11 @@ public class VentaService
         }
 
         var reembolso = CalcularReembolso(venta, lineas);
-        var reembolsos = RepartirReembolso(venta.Pagos.ToList(), reembolso);
+        IReadOnlyList<ReembolsoPago> reembolsos = esCredito
+            ? []
+            : RepartirReembolso(venta.Pagos.ToList(), reembolso);
 
-        if (reembolsos.Sum(r => r.Monto) != reembolso)
+        if (!esCredito && reembolsos.Sum(r => r.Monto) != reembolso)
             return new Resultado(false,
                 "No se pudo distribuir el reembolso entre los métodos de pago.");
 
@@ -467,7 +712,7 @@ public class VentaService
         // fue 100% electrónica, no se necesita caja.
         Caja? cajaReembolso = null;
 
-        if (reembolsoEfectivo > 0)
+        if (!esCredito && reembolsoEfectivo > 0)
         {
             if (venta.Caja is not null && venta.Caja.Estado == EstadoCaja.Abierta)
             {
@@ -567,9 +812,13 @@ public class VentaService
         if (cantidadPendiente <= 0)
             return 0;
 
-        var unidadesADevolver = lineas?.Sum(l => l.Cantidad) ?? cantidadPendiente;
+        var devolucionTotal = lineas is null || venta.Detalles
+            .Where(d => d.CantidadPendiente > 0)
+            .All(d => lineas.Any(l =>
+                l.IdDetalleVenta == d.Id &&
+                Cantidades.Normalizar(l.Cantidad) == d.CantidadPendiente));
 
-        if (unidadesADevolver == cantidadPendiente)
+        if (devolucionTotal)
             return totalPendiente;
 
         var factor = venta.Subtotal > 0 ? venta.Total / venta.Subtotal : 1m;
@@ -584,7 +833,9 @@ public class VentaService
                 continue;
 
             reembolso += Math.Round(
-                detalle.PrecioUnitario * linea.Cantidad * factor, 2);
+                detalle.PrecioUnitario * linea.Cantidad * factor,
+                2,
+                MidpointRounding.AwayFromZero);
         }
 
         return Math.Min(reembolso, totalPendiente);

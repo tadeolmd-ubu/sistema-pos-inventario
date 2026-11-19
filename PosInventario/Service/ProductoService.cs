@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PosInventario.Data;
 using PosInventario.Models;
+using PosInventario.Models.Enums;
 
 namespace PosInventario.Service;
 
@@ -48,6 +49,58 @@ public class ProductoService
             .ThenBy(p => p.Nombre)
             .ToListAsync();
 
+    /// <summary>
+    /// Productos vigentes con stock disponible, paginados y filtrados en la
+    /// base. Lo usa el selector de productos de Caja para no cargar todo el
+    /// catálogo cuando hay muchos artículos.
+    /// </summary>
+    public async Task<PaginaResultado<Producto>> ObtenerConStockPaginadoAsync(
+        string? busqueda, int pagina, int tamanoPagina)
+    {
+        if (pagina <= 0)
+            pagina = 1;
+
+        if (tamanoPagina <= 0)
+            tamanoPagina = 10;
+
+        var query = _db.Productos
+            .AsNoTracking()
+            .Where(p => p.FechaArchivado == null && p.Stock > 0);
+
+        var texto = (busqueda ?? string.Empty).Trim();
+
+        if (texto.Length > 0)
+        {
+            var patron = $"%{EscaparLike(texto)}%";
+
+            query = query.Where(p =>
+                EF.Functions.Like(p.Sku, patron, "\\") ||
+                EF.Functions.Like(p.Nombre, patron, "\\"));
+        }
+
+        var totalRegistros = await query.CountAsync();
+        var totalPaginas = Math.Max(
+            1, (int)Math.Ceiling(totalRegistros / (double)tamanoPagina));
+
+        if (pagina > totalPaginas)
+            pagina = totalPaginas;
+
+        var items = await query
+            .OrderBy(p => p.Nombre)
+            .ThenBy(p => p.Id)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .ToListAsync();
+
+        return new PaginaResultado<Producto>(items, totalRegistros);
+    }
+
+    private static string EscaparLike(string texto)
+        => texto
+            .Replace("\\", "\\\\")
+            .Replace("%", "\\%")
+            .Replace("_", "\\_");
+
     public async Task<Producto?> ObtenerPorIdAsync(int id)
         => await _db.Productos
             .AsNoTracking()
@@ -76,13 +129,15 @@ public class ProductoService
 
     public async Task<Resultado<Producto>> AgregarAsync(
         string sku, string nombre, string? descripcion,
-        decimal precioVenta, decimal costo, int stockMinimo)
+        decimal precioVenta, decimal costo, decimal stockMinimo,
+        UnidadMedida unidad = UnidadMedida.Pieza)
     {
         var autorizacion = ValidarAdministrador();
         if (autorizacion is not null)
             return new Resultado<Producto>(false, autorizacion.Mensaje, null);
 
-        var error = ValidarCampos(sku, nombre, descripcion, precioVenta, costo, stockMinimo);
+        var error = ValidarCampos(
+            sku, nombre, descripcion, precioVenta, costo, stockMinimo, unidad);
         if (error is not null)
             return new Resultado<Producto>(false, error, null);
 
@@ -97,10 +152,11 @@ public class ProductoService
             Sku = skuNormalizado,
             Nombre = nombre.Trim(),
             Descripcion = NormalizarOpcional(descripcion),
+            UnidadMedida = unidad,
             PrecioVenta = precioVenta,
             Costo = costo,
-            Stock = 0,
-            StockMinimo = stockMinimo,
+            Stock = 0m,
+            StockMinimo = Cantidades.Normalizar(stockMinimo),
             FechaCreacion = DateTime.Now,
             FechaModificacion = DateTime.Now
         };
@@ -113,7 +169,8 @@ public class ProductoService
 
     public async Task<Resultado> ActualizarAsync(
         int id, string sku, string nombre, string? descripcion,
-        decimal precioVenta, decimal costo, int stockMinimo)
+        decimal precioVenta, decimal costo, decimal stockMinimo,
+        UnidadMedida unidad = UnidadMedida.Pieza)
     {
         var autorizacion = ValidarAdministrador();
         if (autorizacion is not null)
@@ -127,9 +184,22 @@ public class ProductoService
         if (producto.FechaArchivado is not null)
             return new Resultado(false, "Restaura el producto antes de editarlo.");
 
-        var error = ValidarCampos(sku, nombre, descripcion, precioVenta, costo, stockMinimo);
+        var error = ValidarCampos(
+            sku, nombre, descripcion, precioVenta, costo, stockMinimo, unidad);
         if (error is not null)
             return new Resultado(false, error);
+
+        if (producto.UnidadMedida != unidad &&
+            (producto.Stock != 0m ||
+             await _db.DetallesVenta.AnyAsync(d => d.IdProducto == id) ||
+             await _db.DetallesCompra.AnyAsync(d => d.IdProducto == id) ||
+             await _db.MovimientosInventario.AnyAsync(m => m.IdProducto == id)))
+        {
+            return new Resultado(
+                false,
+                "No se puede cambiar la unidad de venta de un producto con " +
+                "stock o historial de movimientos.");
+        }
 
         var skuNormalizado = NormalizarSku(sku);
 
@@ -140,9 +210,10 @@ public class ProductoService
         producto.Sku = skuNormalizado;
         producto.Nombre = nombre.Trim();
         producto.Descripcion = NormalizarOpcional(descripcion);
+        producto.UnidadMedida = unidad;
         producto.PrecioVenta = precioVenta;
         producto.Costo = costo;
-        producto.StockMinimo = stockMinimo;
+        producto.StockMinimo = Cantidades.Normalizar(stockMinimo);
         producto.FechaModificacion = DateTime.Now;
 
         await _db.SaveChangesAsync();
@@ -164,7 +235,7 @@ public class ProductoService
         if (producto.FechaArchivado is not null)
             return new Resultado(false, "El producto ya está archivado.");
 
-        if (producto.Stock != 0)
+        if (producto.Stock != 0m)
             return new Resultado(
                 false, "No se puede archivar un producto con stock. Ajusta el inventario a 0 primero.");
 
@@ -210,7 +281,8 @@ public class ProductoService
 
     private static string? ValidarCampos(
         string? sku, string? nombre, string? descripcion,
-        decimal precioVenta, decimal costo, int stockMinimo)
+        decimal precioVenta, decimal costo, decimal stockMinimo,
+        UnidadMedida unidad)
     {
         if (string.IsNullOrWhiteSpace(sku))
             return "El SKU es obligatorio.";
@@ -245,6 +317,15 @@ public class ProductoService
 
         if (stockMinimo < 0)
             return "El stock mínimo no puede ser negativo.";
+
+        if (Cantidades.TieneDemasiadosDecimales(stockMinimo))
+            return "El stock mínimo no puede tener más de 3 decimales.";
+
+        if (unidad == UnidadMedida.Pieza &&
+            !Cantidades.EsEntera(stockMinimo))
+        {
+            return "El stock mínimo debe ser un número entero para productos por pieza.";
+        }
 
         return null;
     }
