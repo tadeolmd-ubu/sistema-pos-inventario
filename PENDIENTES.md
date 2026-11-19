@@ -444,8 +444,13 @@
     pruebas.
   - **Tamaño:** S.
 
-- [ ] **6.3 Checklist de entrega al cliente**
+- [x] **6.3 Checklist de entrega al cliente**
   - **Qué:** instalación, respaldo inicial, capacitación y contacto de soporte.
+  - **Hecho en:** rama `chore/checklist-entrega` (7cbdc88):
+    `ENTREGA-CLIENTE.md` con datos de la entrega, instalación, respaldo
+    inicial, configuración, capacitación, pruebas de aceptación, soporte,
+    recomendaciones y firma; enlazado desde `README.md` y
+    `MANUAL-USUARIO.md`.
   - **Tamaño:** S.
 
 ---
