@@ -44,7 +44,7 @@ public partial class VentasViewModel : OperacionViewModel
     public PaginacionViewModel Paginacion { get; } = new();
 
     public IReadOnlyList<string> OpcionesMetodo { get; } =
-        ["Todos", "Efectivo", "Tarjeta", "Transferencia", "Mixto"];
+        ["Todos", "Efectivo", "Tarjeta", "Transferencia", "Crédito", "Mixto"];
 
     [ObservableProperty] private DateTimeOffset? desde =
         new(DateTime.Today.AddDays(-7));
@@ -87,6 +87,7 @@ public partial class VentasViewModel : OperacionViewModel
         "Efectivo" => MetodoPago.Efectivo,
         "Tarjeta" => MetodoPago.Tarjeta,
         "Transferencia" => MetodoPago.Transferencia,
+        "Crédito" => MetodoPago.Credito,
         "Mixto" => MetodoPago.Mixto,
         _ => null
     };

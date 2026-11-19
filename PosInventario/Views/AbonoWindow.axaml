@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PosInventario.ViewModels"
+        x:DataType="vm:AbonoViewModel"
+        x:Class="PosInventario.Views.AbonoWindow"
+        Title="Registrar abono"
+        Width="470"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="12">
+
+            <TextBlock Text="Registrar abono" Classes="subsection"/>
+            <TextBlock Text="{Binding ClienteNombre, StringFormat='Cliente: {0}'}" />
+            <TextBlock Text="{Binding Ticket, StringFormat='Venta: {0}'}" Classes="caption"/>
+            <TextBlock Text="{Binding PendienteTexto, StringFormat='Saldo pendiente: {0}'}"
+                       Classes="caption"/>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Monto del abono" Classes="fieldLabel"/>
+                <TextBox x:Name="MontoBox"
+                         Text="{Binding MontoTexto}"
+                         PlaceholderText="0.00"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Método" Classes="fieldLabel"/>
+                <ComboBox ItemsSource="{Binding Metodos}"
+                          SelectedItem="{Binding MetodoSeleccionado}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Referencia (opcional)" Classes="fieldLabel"/>
+                <TextBox Text="{Binding Referencia}"
+                         PlaceholderText="Nota o referencia del abono"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MensajeOperacion}"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+                <Button Content="Cancelar"
+                        Classes="secondary"
+                        IsCancel="True"
+                        Click="Cerrar_Click"/>
+                <Button Content="Registrar abono"
+                        Classes="primary"
+                        Command="{Binding ConfirmarCommand}"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

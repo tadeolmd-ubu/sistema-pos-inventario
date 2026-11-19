@@ -45,6 +45,8 @@ public static class GeneradorCorteCajaTexto
             lineas, "Tarjeta", Dinero(resumen.Tarjeta), columnas);
         AgregarDosColumnas(
             lineas, "Transferencia", Dinero(resumen.Transferencia), columnas);
+        AgregarDosColumnas(
+            lineas, "Crédito", Dinero(resumen.Credito), columnas);
 
         lineas.Add(new string('-', columnas));
         AgregarCentrado(lineas, "EFECTIVO", columnas);

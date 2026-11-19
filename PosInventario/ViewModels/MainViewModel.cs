@@ -11,6 +11,7 @@ public partial class MainViewModel : OperacionViewModel
     private readonly CajaViewModel _cajaViewModel;
     private readonly ProductosViewModel _productosViewModel;
     private readonly ProveedoresViewModel _proveedoresViewModel;
+    private readonly ClientesViewModel? _clientesViewModel;
     private readonly InventarioViewModel _inventarioViewModel;
     private readonly ComprasViewModel _comprasViewModel;
     private readonly VentasViewModel _ventasViewModel;
@@ -34,12 +35,14 @@ public partial class MainViewModel : OperacionViewModel
         ConfiguracionViewModel configuracionViewModel,
         VersionService versionService,
         SesionActual sesion,
-        RespaldoAutomaticoService? respaldoAutomatico = null)
+        RespaldoAutomaticoService? respaldoAutomatico = null,
+        ClientesViewModel? clientesViewModel = null)
     {
         _inicioViewModel = inicioViewModel;
         _cajaViewModel = cajaViewModel;
         _productosViewModel = productosViewModel;
         _proveedoresViewModel = proveedoresViewModel;
+        _clientesViewModel = clientesViewModel;
         _inventarioViewModel = inventarioViewModel;
         _comprasViewModel = comprasViewModel;
         _ventasViewModel = ventasViewModel;
@@ -54,6 +57,8 @@ public partial class MainViewModel : OperacionViewModel
         _cajaViewModel.MensajeSolicitado += SolicitarMensaje;
         _productosViewModel.MensajeSolicitado += SolicitarMensaje;
         _proveedoresViewModel.MensajeSolicitado += SolicitarMensaje;
+        if (_clientesViewModel is not null)
+            _clientesViewModel.MensajeSolicitado += SolicitarMensaje;
         _inventarioViewModel.MensajeSolicitado += SolicitarMensaje;
         _comprasViewModel.MensajeSolicitado += SolicitarMensaje;
         _ventasViewModel.MensajeSolicitado += SolicitarMensaje;
@@ -191,6 +196,15 @@ public partial class MainViewModel : OperacionViewModel
 
         CambiarVista(_proveedoresViewModel, "Proveedores");
         await _proveedoresViewModel.CargarAsync();
+    }
+
+    [RelayCommand]
+    private async Task IrAClientesAsync()
+    {
+        if (!EsAdministrador || _clientesViewModel is null) return;
+
+        CambiarVista(_clientesViewModel, "Clientes");
+        await _clientesViewModel.CargarAsync();
     }
 
     [RelayCommand]

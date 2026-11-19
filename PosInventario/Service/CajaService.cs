@@ -111,11 +111,20 @@ public class CajaService
             .Select(p => new { p.Metodo, Neto = p.Monto - p.MontoDevuelto })
             .ToListAsync();
 
+        var credito = await _db.Ventas
+            .AsNoTracking()
+            .Where(v => v.IdCaja == idCaja &&
+                        v.Estado == EstadoVenta.Completada &&
+                        v.TipoVenta == TipoVenta.Credito)
+            .Select(v => new { v.Total, v.TotalDevuelto })
+            .ToListAsync();
+
         return new ResumenPagosCaja(
             cantidadVentas,
             pagos.Where(p => p.Metodo == MetodoPago.Efectivo).Sum(p => p.Neto),
             pagos.Where(p => p.Metodo == MetodoPago.Tarjeta).Sum(p => p.Neto),
-            pagos.Where(p => p.Metodo == MetodoPago.Transferencia).Sum(p => p.Neto));
+            pagos.Where(p => p.Metodo == MetodoPago.Transferencia).Sum(p => p.Neto),
+            credito.Sum(v => v.Total - v.TotalDevuelto));
     }
 
     public async Task<Resultado<Caja>> AbrirAsync(decimal montoInicial)

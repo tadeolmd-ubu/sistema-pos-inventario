@@ -87,6 +87,13 @@
                     <StackPanel Spacing="1">
                         <TextBlock Text="{Binding Fecha, StringFormat='Fecha: {0}'}" Classes="caption"/>
                         <TextBlock Text="{Binding Cajero, StringFormat='Cajero: {0}'}" Classes="caption"/>
+                        <TextBlock Text="{Binding Cliente, StringFormat='Cliente: {0}'}"
+                                   Classes="caption"
+                                   IsVisible="{Binding TieneCliente}"/>
+                        <TextBlock Text="Venta a crédito"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource WarningBrush}"
+                                   IsVisible="{Binding EsCredito}"/>
                     </StackPanel>
 
                     <Border Height="1" Background="{StaticResource BorderBrush}"/>

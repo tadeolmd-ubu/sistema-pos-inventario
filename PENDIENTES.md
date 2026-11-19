@@ -59,7 +59,6 @@
 - La restauración reemplaza toda la base actual y reinicia la aplicación; no
   combina datos de dos bases.
 - Sin facturación ni impuestos.
-- Sin clientes ni ventas a crédito.
 
 ---
 
@@ -408,9 +407,14 @@
     ticket, reportes, CSV/Excel e importación con columna `unidad`.
   - **Tamaño:** L.
 
-- [ ] **5.2 Clientes y ventas a crédito**
+- [x] **5.2 Clientes y ventas a crédito**
   - **Qué:** clientes, límite de crédito, cuenta por cobrar y abonos.
   - **Cuándo:** el negocio fía.
+  - **Hecho en:** rama `feat/clientes-credito` (df25552): catálogo de clientes,
+    venta opcional con cliente (sin cliente queda **Público**), ventas a
+    crédito con validación de límite, cuenta por cobrar por venta, abonos en
+    efectivo/tarjeta/transferencia y devoluciones que reducen el saldo. Los
+    abonos en efectivo entran a la caja y el corte separa crédito.
   - **Tamaño:** L.
 
 - [ ] **5.3 IVA y facturación (CFDI)**

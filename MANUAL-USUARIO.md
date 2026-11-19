@@ -22,7 +22,7 @@ secciones en orden la primera vez y usa el índice como referencia después.
 7. [Devoluciones](#7-devoluciones)
 8. [Movimientos de efectivo](#8-movimientos-de-efectivo)
 9. [Cerrar la caja](#9-cerrar-la-caja)
-10. [Catálogos: productos y proveedores](#10-catálogos-productos-y-proveedores)
+10. [Catálogos: productos, proveedores y clientes](#10-catálogos-productos-proveedores-y-clientes)
 11. [Inventario](#11-inventario)
 12. [Compras](#12-compras)
 13. [Historial de ventas](#13-historial-de-ventas)
@@ -162,7 +162,7 @@ Roles disponibles:
 La ventana tiene tres zonas:
 
 - **Menú lateral izquierdo:** Inicio, Caja y, si eres administrador,
-  Productos, Proveedores, Inventario, Compras, Ventas, Reportes, Usuarios y
+  Productos, Proveedores, Clientes, Inventario, Compras, Ventas, Reportes, Usuarios y
   Configuración.
 - **Panel Comandos:** debajo del menú, muestra los atajos de teclado que
   aplican a la pantalla actual. **F1** abre la ayuda completa.
@@ -214,15 +214,18 @@ final. Solo puede existir **una caja abierta** en todo el sistema.
 
 Con la caja abierta, en la tarjeta **Venta**:
 
-1. El cursor ya está en la búsqueda. **Escanea el código de barras** o escribe
+1. En **Cliente (opcional)** elige **Público general** o un cliente. Si no
+   eliges ninguno, la venta queda a público y el ticket no muestra cliente.
+   Si eliges un cliente, verás su crédito disponible.
+2. El cursor ya está en la búsqueda. **Escanea el código de barras** o escribe
    el **SKU** y presiona **Enter**.
-2. También puedes presionar **Agregar** después de escribir el código.
-3. Para buscar sin código, presiona **Seleccionar productos** (o **F3**):
+3. También puedes presionar **Agregar** después de escribir el código.
+4. Para buscar sin código, presiona **Seleccionar productos** (o **F3**):
    escribe parte del nombre o SKU, elige el producto y presiona **Enter**.
    Las flechas **←/→** cambian de página.
-4. Cada producto aparece en la tabla con **Producto, SKU, Precio, Cantidad,
+5. Cada producto aparece en la tabla con **Producto, SKU, Precio, Cantidad,
    Subtotal** y botones de acción.
-5. Si el producto se vende **por peso**, el sistema abre una ventana para
+6. Si el producto se vende **por peso**, el sistema abre una ventana para
    capturar los kilogramos. Escribe el peso o usa un botón rápido
    (**0.250, 0.500, 1.000 o 2.000**) y presiona **Agregar**. La ventana muestra
    el precio por kg, el stock disponible y el subtotal antes de confirmar.
@@ -244,8 +247,8 @@ código…"**. Revisa el código o da de alta el producto en **Productos**.
 
 ### 6.3 Cobrar
 
-1. Elige **Método de pago**: **Efectivo**, **Tarjeta**, **Transferencia** o
-   **Mixto**.
+1. Elige **Método de pago**: **Efectivo**, **Tarjeta**, **Transferencia**,
+   **Crédito** o **Mixto**.
 2. Según el método:
    - **Efectivo:** escribe en **Paga con** el billete o monto recibido. Puedes
      usar los botones rápidos **20, 50, 100, 200, 500**. El sistema calcula
@@ -255,6 +258,9 @@ código…"**. Revisa el código o da de alta el producto en **Productos**.
    - **Mixto:** captura cuánto se pagó con **Efectivo**, **Tarjeta** y
      **Transferencia**. La suma debe cubrir el total; tarjeta y transferencia
      no pueden superarlo, y el excedente en efectivo se devuelve como cambio.
+   - **Crédito:** requiere un cliente seleccionado. El total se carga a su
+     cuenta, no entra al efectivo de la caja y queda pendiente de abono. El
+     sistema valida que el cliente tenga crédito disponible.
 3. Presiona **Realizar venta** (o **F4**, **Ctrl+Enter** o **Enter** en el
    campo de pago).
 4. Si falta dinero verás **Faltante** en rojo y la venta no se registra hasta
@@ -309,6 +315,9 @@ Puedes devolver una venta completa o solo algunos productos o unidades.
      **Devolver todo**.
 5. Revisa **Cantidad a devolver** y **Reembolso estimado**.
 6. Presiona **Devolver**.
+
+Si la venta fue a **crédito**, la devolución reduce el saldo pendiente del
+cliente y no mueve efectivo de la caja.
 
 ### 7.2 Desde el historial de ventas (administrador)
 
@@ -397,7 +406,7 @@ Después del cierre:
 
 ---
 
-## 10. Catálogos: productos y proveedores
+## 10. Catálogos: productos, proveedores y clientes
 
 > Estas pantallas son solo para **Administrador**.
 
@@ -437,7 +446,35 @@ Otros botones:
 - **Ver archivados:** muestra los productos ocultos.
 - **Buscar por SKU o nombre**.
 
-### 10.2 Proveedores
+### 10.2 Clientes
+
+> Solo para **Administrador** para modificar el catálogo. El cajero puede
+> seleccionar un cliente al vender.
+
+Entra a **Clientes** para crear la cuenta de un cliente que compra fiado.
+
+1. Captura **Nombre**, **Teléfono**, **Correo**, **Dirección** y **Límite de
+   crédito**.
+2. Presiona **Guardar**.
+3. Selecciona un cliente de la lista para ver su **estado de cuenta**:
+   - saldo pendiente,
+   - límite de crédito,
+   - crédito disponible,
+   - ventas a crédito pendientes,
+   - abonos recientes.
+
+Para registrar un abono:
+
+1. Selecciona la venta pendiente.
+2. Presiona **Registrar abono**.
+3. Captura el monto y el método: **Efectivo**, **Tarjeta** o
+   **Transferencia**.
+4. Si el abono es en efectivo, debe haber una caja abierta; el ingreso se
+   refleja en el efectivo esperado de la caja.
+
+No se puede desactivar un cliente con saldo pendiente.
+
+### 10.3 Proveedores
 
 1. Entra a **Proveedores**.
 2. Captura **Nombre** (mínimo 3 caracteres), **Teléfono** (mínimo 3),
@@ -446,7 +483,7 @@ Otros botones:
 4. Usa **Desactivar** / **Activar** para ocultarlo o recuperarlo, y
    **Ver inactivos** para ver los desactivados.
 
-### 10.3 Importar productos y proveedores desde Excel
+### 10.4 Importar productos y proveedores desde Excel
 
 Para un negocio nuevo no hace falta capturar cientos de productos a mano.
 Puedes preparar una hoja de Excel y cargarla de una vez.
@@ -594,15 +631,16 @@ Entra a **Ventas** para consultar todas las ventas.
 Filtros (se combinan entre sí):
 
 - **Desde** y **Hasta**.
-- **Método:** efectivo, tarjeta, transferencia o mixto.
+- **Método:** efectivo, tarjeta, transferencia, crédito o mixto.
 - **Cajero:** quién realizó la venta.
 - **Buscar:** número de ticket o cajero.
 - **Ver anuladas:** incluye ventas totalmente devueltas.
 - Botón **Buscar**.
 
-La tabla muestra **Ticket** (`V-000123`), **Fecha**, **Cajero**, **Método**,
-**Estado** y **Total**. Si hubo devoluciones, debajo del total aparece
-**Devuelto** y el total neto.
+La tabla muestra **Ticket** (`V-000123`), **Fecha**, **Cajero**, **Cliente**,
+**Método**, **Estado** y **Total**. Si no se eligió cliente, aparece
+**Público**. Si hubo devoluciones, debajo del total aparece **Devuelto** y el
+total neto.
 
 Acciones:
 
@@ -636,7 +674,7 @@ Verás:
   **Ventas**, ya descontando devoluciones.
 - **Ventas por período:** tickets, neto, devuelto, utilidad y una barra de
   tendencia.
-- **Ventas por método:** efectivo, tarjeta y transferencia con monto,
+- **Ventas por método:** efectivo, tarjeta, transferencia y crédito con monto,
   cantidad y porcentaje.
 - **Productos más vendidos:** top 10 por ventas netas, con SKU, cantidad y
   unidad, ventas y utilidad.

@@ -27,11 +27,12 @@ public class ExportadorCsvTests
             .Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(
-            "Ticket,Fecha,Cajero,Método,Estado,Subtotal,Descuento,Total,Devuelto,Neto",
+            "Ticket,Fecha,Cajero,Cliente,Método,Estado,Subtotal," +
+            "Descuento,Total,Devuelto,Neto",
             lineas[0]);
         Assert.Equal(
-            "V-000032,12/11/2026 14:30,Laura Gómez,Efectivo,Completada," +
-            "900.00,50.00,850.00,100.00,750.00",
+            "V-000032,12/11/2026 14:30,Laura Gómez,Público,Efectivo," +
+            "Completada,900.00,50.00,850.00,100.00,750.00",
             lineas[1]);
     }
 

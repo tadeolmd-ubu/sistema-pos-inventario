@@ -42,12 +42,13 @@ PosInventario/
 │                              Paginador (navegación de páginas)
 ├── Data/                      AppDbContext, AppDbContextFactory
 ├── Migrations/                generadas con dotnet-ef (InitialCreate)
-├── Models/                    Usuario, Producto, Proveedor, Compra, Venta, Caja, enums
+├── Models/                    Usuario, Producto, Proveedor, Cliente, Abono,
+│                              Compra, Venta, Caja, enums
 ├── Service/                   Resultado, RespaldoService,
 │                              RespaldoAutomaticoService, ConfiguracionAppService,
 │                              RegistroApp, InstanciaUnica, SesionActual,
 │                              VersionService, Usuario/Producto/Proveedor/
-│                              Inventario/Compra/Caja/Venta/ReporteService,
+│                              Cliente/Inventario/Compra/Caja/Venta/ReporteService,
 │                              Linea*, ResumenPagosCaja, GeneradorTicketTexto,
 │                              GeneradorCorteCajaTexto, ExportadorCsv,
 │                              ExportadorReporteExcel, Cantidades,
@@ -247,6 +248,12 @@ instalador) está ordenado por fases y prioridades en `PENDIENTES.md`.
   producto por peso abre `CantidadPesoWindow` antes de agregarse al carrito.
 - Compras: `CompraService` con líneas y actualización de stock; acepta
   cantidades decimales para productos por peso.
+- Clientes y crédito: `ClienteService` administra el catálogo, calcula el
+  saldo pendiente a partir de ventas a crédito, devoluciones y abonos, y
+  registra abonos. `Venta.IdCliente` es opcional; sin cliente la venta queda a
+  **Público**. `Venta.TipoVenta` distingue contado de crédito. Una venta a
+  crédito no genera pagos ni efectivo de caja: crea una deuda y se liquida con
+  abonos. Los abonos en efectivo entran como ingreso a la caja abierta.
 - Historial de ventas: `VentasViewModel` con filtros por fecha, búsqueda,
   método de pago y cajero (se combinan en la misma consulta), paginación y
   reimpresión. `VentaService.ObtenerHistorialPaginadoAsync` recibe el método y

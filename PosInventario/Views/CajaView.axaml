@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="using:PosInventario.Styles"
              xmlns:dt="using:PosInventario.Views.DesignTime"
              xmlns:enums="using:PosInventario.Models.Enums"
              xmlns:models="using:PosInventario.Models"
@@ -10,6 +11,10 @@
              d:DataContext="{x:Static dt:DesignTimeData.Caja}"
              x:DataType="vm:CajaViewModel"
              x:Class="PosInventario.Views.CajaView">
+
+    <UserControl.Resources>
+        <conv:MetodoPagoNombreConverter x:Key="MetodoPagoNombre"/>
+    </UserControl.Resources>
 
     <Border Background="{StaticResource ContentBackgroundBrush}" Padding="28,22">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -94,6 +99,30 @@
                                         Classes="secondary"
                                         ToolTip.Tip="F3"
                                         Command="{Binding SeleccionarProductosCommand}"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Cliente (opcional)" Classes="fieldLabel"/>
+                                    <ComboBox ItemsSource="{Binding ClientesItems}"
+                                              SelectedItem="{Binding ClienteSeleccionado}"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:OpcionCliente">
+                                                <TextBlock Text="{Binding Nombre}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1"
+                                            Spacing="2"
+                                            VerticalAlignment="Bottom"
+                                            IsVisible="{Binding !EsPublico}">
+                                    <TextBlock Text="Crédito disponible" Classes="caption"/>
+                                    <TextBlock Text="{Binding CreditoDisponibleTexto}"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
                             </Grid>
 
                             <TextBlock Text="Atajos: F2 buscar · F3 productos · F4 cobrar · F1 ayuda · Esc limpiar"
@@ -184,7 +213,7 @@
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="enums:MetodoPago">
-                                                <TextBlock Text="{Binding}"/>
+                                                <TextBlock Text="{Binding Converter={StaticResource MetodoPagoNombre}}"/>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
@@ -201,6 +230,11 @@
                                 </StackPanel>
                             </Grid>
 
+                            <TextBlock Text="Venta a crédito: el total se cargará a la cuenta del cliente seleccionado."
+                                       Classes="caption"
+                                       TextWrapping="Wrap"
+                                       IsVisible="{Binding EsPagoCredito}"/>
+
                             <StackPanel Spacing="8" IsVisible="{Binding EsPagoMixto}">
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Método de pago" Classes="fieldLabel"/>
@@ -209,7 +243,7 @@
                                               SelectedItem="{Binding MetodoPagoSeleccionado}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="enums:MetodoPago">
-                                                <TextBlock Text="{Binding}"/>
+                                                <TextBlock Text="{Binding Converter={StaticResource MetodoPagoNombre}}"/>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
@@ -274,7 +308,8 @@
                                         CommandParameter="500"/>
                             </StackPanel>
 
-                            <Grid ColumnDefinitions="*,Auto">
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{Binding !EsPagoCredito}">
                                 <TextBlock Text="Recibido" Classes="caption"/>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding TotalRecibidoTexto}"

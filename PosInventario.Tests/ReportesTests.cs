@@ -171,6 +171,12 @@ public class ReportesTests
                 Assert.Equal(MetodoPago.Transferencia, transferencia.Metodo);
                 Assert.Equal(160m, transferencia.Monto);
                 Assert.Equal(1, transferencia.CantidadVentas);
+            },
+            credito =>
+            {
+                Assert.Equal(MetodoPago.Credito, credito.Metodo);
+                Assert.Equal(0m, credito.Monto);
+                Assert.Equal(0, credito.CantidadVentas);
             });
 
         Assert.Equal(
@@ -428,7 +434,7 @@ public class ReportesTests
         Assert.Equal("100.00", vm.UtilidadTexto);
         Assert.Equal("50.0%", vm.MargenTexto);
         Assert.Single(vm.Periodos);
-        Assert.Equal(3, vm.Metodos.Count);
+        Assert.Equal(4, vm.Metodos.Count);
         Assert.Single(vm.Productos);
         Assert.StartsWith("Reporte actualizado", vm.MensajeOperacion);
     }

@@ -61,7 +61,7 @@
                         CornerRadius="10"
                         Padding="12">
                     <Grid ColumnDefinitions="*,Auto"
-                          RowDefinitions="Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
                           RowSpacing="3">
                         <TextBlock Grid.Row="0" Text="Efectivo" Classes="caption"/>
                         <TextBlock Grid.Row="0" Grid.Column="1"
@@ -74,6 +74,10 @@
                         <TextBlock Grid.Row="2" Text="Transferencia" Classes="caption"/>
                         <TextBlock Grid.Row="2" Grid.Column="1"
                                    Text="{Binding TotalTransferenciaTexto}"/>
+
+                        <TextBlock Grid.Row="3" Text="Crédito" Classes="caption"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   Text="{Binding TotalCreditoTexto}"/>
                     </Grid>
                 </Border>
 
