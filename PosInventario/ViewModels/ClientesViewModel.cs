@@ -32,7 +32,7 @@ public partial class ClientesViewModel : OperacionViewModel
     [ObservableProperty] private string telefono = string.Empty;
     [ObservableProperty] private string email = string.Empty;
     [ObservableProperty] private string direccion = string.Empty;
-    [ObservableProperty] private string limiteCreditoTexto = "0.00";
+    [ObservableProperty] private string limiteCreditoTexto = string.Empty;
 
     public bool EsModoCreacion => SelectedCliente is null;
 
@@ -144,8 +144,9 @@ public partial class ClientesViewModel : OperacionViewModel
         Telefono = value?.Telefono ?? string.Empty;
         Email = value?.Email ?? string.Empty;
         Direccion = value?.Direccion ?? string.Empty;
-        LimiteCreditoTexto = (value?.LimiteCredito ?? 0m)
-            .ToString("0.00", Cultura);
+        LimiteCreditoTexto = value is { LimiteCredito: not 0m }
+            ? value.LimiteCredito.ToString("0.00", Cultura)
+            : string.Empty;
 
         OnPropertyChanged(nameof(EsModoCreacion));
         OnPropertyChanged(nameof(PuedeActivar));
@@ -169,7 +170,7 @@ public partial class ClientesViewModel : OperacionViewModel
         Telefono = string.Empty;
         Email = string.Empty;
         Direccion = string.Empty;
-        LimiteCreditoTexto = "0.00";
+        LimiteCreditoTexto = string.Empty;
         VentasPendientes.Clear();
         AbonosItems.Clear();
         SelectedVentaPendiente = null;
@@ -182,7 +183,12 @@ public partial class ClientesViewModel : OperacionViewModel
     {
         if (_clienteService is null) return;
 
-        if (!TryParseDecimal(LimiteCreditoTexto, out var limite) || limite < 0)
+        var textoLimite = (LimiteCreditoTexto ?? string.Empty).Trim();
+        var limite = 0m;
+
+        // Vacío significa límite 0.00: el campo muestra 0.00 como marcador.
+        if (textoLimite.Length > 0 &&
+            (!TryParseDecimal(textoLimite, out limite) || limite < 0))
         {
             MensajeOperacion = Notificar(
                 "El límite de crédito debe ser un número mayor o igual a 0.");

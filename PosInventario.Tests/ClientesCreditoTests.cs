@@ -337,4 +337,26 @@ public class ClientesCreditoTests
         Assert.True(vm.PagosValidos);
         Assert.False(vm.EsPublico);
     }
+
+    [Fact]
+    public async Task LimiteVacioGuardaCeroYElCampoNoTraeTextoPorDefecto()
+    {
+        await using var prueba = await PruebaCredito.CrearAsync();
+        await prueba.CrearAdministradorEnSesionAsync();
+
+        var vm = new ClientesViewModel(prueba.ClienteService);
+
+        Assert.Equal(string.Empty, vm.LimiteCreditoTexto);
+
+        vm.Nombre = "María López";
+        vm.Telefono = "555-123-4567";
+        vm.LimiteCreditoTexto = "   ";
+
+        await vm.GuardarCommand.ExecuteAsync(null);
+
+        var clientes = await prueba.ClienteService.ObtenerTodosAsync();
+        var cliente = Assert.Single(clientes, c => c.Nombre == "María López");
+
+        Assert.Equal(0m, cliente.LimiteCredito);
+    }
 }
