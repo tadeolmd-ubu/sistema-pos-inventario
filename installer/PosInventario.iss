@@ -50,8 +50,16 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; GroupDescription: "Accesos directos:"; Flags: unchecked
 
+[InstallDelete]
+; La publicación ahora es un único ejecutable. Al actualizar se eliminan los
+; archivos del formato anterior para que no queden DLL sueltas que Windows
+; pueda bloquear.
+Type: files; Name: "{app}\*.dll"
+Type: files; Name: "{app}\*.json"
+Type: files; Name: "{app}\*.pdb"
+
 [Files]
-; Se copia todo el publish self-contained (incluye el runtime de .NET).
+; Se copia el ejecutable único self-contained (incluye el runtime de .NET).
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

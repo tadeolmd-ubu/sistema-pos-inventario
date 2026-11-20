@@ -266,10 +266,13 @@ Los importes son netos de devoluciones y se muestran con dos decimales.
 ## Publicación
 
 El workflow `.github/workflows/deploy.yml` ejecuta las pruebas, publica
-`win-x64` self-contained, compila el instalador con Inno Setup y crea una
-release en cada push a `main` (repositorio
-`tadeolmd-ubu/sistema-pos-inventario`). En los pull requests solo compila y
-prueba, sin publicar release.
+`win-x64` self-contained **en un solo archivo** (`PublishSingleFile`), compila
+el instalador con Inno Setup y crea una release en cada push a `main`
+(repositorio `tadeolmd-ubu/sistema-pos-inventario`). En los pull requests solo
+compila y prueba, sin publicar release.
+
+Publicar en un archivo único evita que el Control de aplicaciones de Windows
+bloquee las DLL nuevas al actualizar: solo se reemplaza `PosInventario.exe`.
 
 Cada release publica un único archivo instalable:
 

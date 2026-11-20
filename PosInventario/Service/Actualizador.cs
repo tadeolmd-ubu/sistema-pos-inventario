@@ -159,6 +159,7 @@ public static class Actualizador
 Start-Sleep -Milliseconds 800
 $p = Get-Process -Id {{proceso}} -ErrorAction SilentlyContinue
 if ($p) { [void]$p.WaitForExit(30000) }
+Get-ChildItem -Path '{{destino}}' -File | Where-Object { $_.Name -notlike 'unins*' } | Remove-Item -Force -ErrorAction SilentlyContinue
 Copy-Item -Path '{{staging}}\*' -Destination '{{destino}}' -Recurse -Force
 Start-Process -FilePath '{{ejecutable}}'
 """
