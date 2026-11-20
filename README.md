@@ -316,3 +316,9 @@ installer/              script de Inno Setup para el instalador de Windows
 ```
 
 Reglas de capas y convenciones: ver `ARQUITECTURA-BASE.md` y `COLABORACION.md`.
+
+## Documentos comerciales
+
+- [Contrato de implementación y soporte](documentos/contrato-implementacion-soporte.pdf)
+- [Lista de precios](documentos/lista-precios.pdf)
+- [Checklist de entrega](ENTREGA-CLIENTE.md)
