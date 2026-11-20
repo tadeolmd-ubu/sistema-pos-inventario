@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PosInventario.Views.ActualizacionWindow"
+        Title="Actualización disponible"
+        Width="500"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Border Classes="card" Margin="18" Padding="24">
+        <StackPanel Spacing="14">
+
+            <TextBlock Classes="subsection"
+                       Text="Hay una versión nueva disponible"
+                       TextWrapping="Wrap"/>
+
+            <TextBlock x:Name="MensajeTexto"
+                       Classes="caption"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel x:Name="PanelProgreso"
+                        Spacing="8"
+                        IsVisible="False">
+
+                <ProgressBar x:Name="Progreso"
+                             Minimum="0"
+                             Maximum="100"
+                             Height="10"/>
+
+                <TextBlock x:Name="EstadoTexto"
+                           Classes="caption"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <TextBlock x:Name="ErrorTexto"
+                       TextWrapping="Wrap"
+                       Foreground="#E4573D"
+                       IsVisible="False"/>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="10"
+                        HorizontalAlignment="Right">
+
+                <Button x:Name="BotonLuego"
+                        Content="Más tarde"
+                        Classes="secondary"
+                        Click="Luego_Click"/>
+
+                <Button x:Name="BotonActualizar"
+                        Content="Actualizar ahora"
+                        IsDefault="True"
+                        Click="Actualizar_Click"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

@@ -163,6 +163,9 @@ public partial class App : Application
                     if (!await IniciarSesionAsync(
                             mainWindow, desktop, sesion, usuarioService, mainViewModel))
                         return;
+
+                    _ = ComprobarActualizacionAsync(
+                        mainWindow, desktop, respaldoService, carpetaRespaldos);
                 }
                 catch (Exception ex)
                 {
@@ -243,6 +246,70 @@ public partial class App : Application
         _ = mainViewModel.ActualizarVersionAsync();
 
         return true;
+    }
+
+    /// <summary>
+    /// Consulta en segundo plano si hay una versión nueva y ofrece instalarla.
+    /// Si el usuario acepta, se descarga el instalador, se crea un respaldo y
+    /// la aplicación se cierra para que el instalador la reemplace y la vuelva
+    /// a abrir. En una copia portable solo se muestra el enlace de descarga.
+    /// </summary>
+    private static async Task ComprobarActualizacionAsync(
+        Window ventana,
+        IClassicDesktopStyleApplicationLifetime desktop,
+        RespaldoService respaldos,
+        string carpetaRespaldos)
+    {
+#if !DEBUG
+        try
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            if (Environment.GetEnvironmentVariable("POSINVENTARIO_SIN_ACTUALIZACIONES") == "1")
+                return;
+
+            var servicio = new ActualizacionService();
+            var actualizacion = await servicio.BuscarAsync();
+
+            if (actualizacion is null)
+                return;
+
+            var ejecutable = Environment.ProcessPath ?? string.Empty;
+
+            var programas = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Programs",
+                "Sistema de inventario");
+
+            var instalada = ejecutable.StartsWith(
+                programas, StringComparison.OrdinalIgnoreCase);
+
+            if (Environment.GetEnvironmentVariable("POSINVENTARIO_ACTUALIZAR_AUTO") == "1")
+            {
+                var automatica = await Actualizador.PrepararAsync(
+                    servicio, actualizacion, respaldos, carpetaRespaldos);
+
+                if (automatica.Correcta)
+                    desktop.Shutdown();
+
+                return;
+            }
+
+            var aceptada = await new ActualizacionWindow(
+                    servicio, actualizacion, respaldos, carpetaRespaldos, instalada)
+                .ShowDialog<bool>(ventana);
+
+            if (aceptada)
+                desktop.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            RegistroApp.Escribir("No se pudo comprobar la actualización.", ex);
+        }
+#else
+        await Task.CompletedTask;
+#endif
     }
 
     /// <summary>
