@@ -145,8 +145,8 @@ de error sin cortarse.
 
 **Esperado:**
 
-- La ventana principal se abre en **pantalla completa**; **F11** alterna entre
-  pantalla completa y maximizada. Todo el menú queda visible.
+- La ventana principal se abre **maximizada** (se ve la barra de tareas);
+  **F11** alterna con pantalla completa. Todo el menú queda visible.
 - En 1920x1080 al 125 % la ventana conserva un tamaño cómodo y centrado.
 - El panel **Comandos** no tapa el nombre del usuario ni el botón **Cerrar
   sesión**; si hace falta, el menú lateral tiene desplazamiento propio.

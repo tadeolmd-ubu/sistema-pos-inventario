@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using PosInventario.Service;
 using PosInventario.ViewModels;
 using PosInventario.Views.DesignTime;
 
@@ -32,6 +33,38 @@ public partial class ProductosView : UserControl
         // Código nuevo: el foco pasa a Nombre para capturar el resto.
         if (viewModel.EsModoCreacion && !string.IsNullOrWhiteSpace(viewModel.Sku))
             NombreBox.Focus();
+    }
+
+    private async void Exportar_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ProductosViewModel viewModel)
+            return;
+
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        try
+        {
+            var ruta = await ExportadorCsvArchivo.GuardarAsync(
+                ventana,
+                "Exportar productos a CSV",
+                viewModel.NombreArchivoExportacion,
+                viewModel.GenerarCsvProductos());
+
+            if (ruta is null)
+                return;
+
+            viewModel.NotificarExportacion(
+                $"Se exportaron {viewModel.CantidadExportable} productos a:\n{ruta}");
+        }
+        catch (Exception ex)
+        {
+            RegistroApp.Escribir("No se pudo exportar el catálogo de productos.", ex);
+
+            viewModel.NotificarExportacion(
+                $"No se pudo exportar el catálogo: {ex.Message}",
+                correcta: false);
+        }
     }
 
     private async void Importar_Click(object? sender, RoutedEventArgs e)

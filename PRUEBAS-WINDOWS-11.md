@@ -218,6 +218,8 @@ Marca cada punto. Si algo no aplica, escribe **N/A**.
 - [ ] Restaurar un producto archivado.
 - [ ] Cambiar unidad de pieza a kilo sin historial funciona.
 - [ ] Cambiar unidad con stock o historial se bloquea.
+- [ ] **Exportar CSV** genera un archivo con las columnas de la plantilla y se
+      puede volver a importar sin editarlo.
 
 ### 6.2 Inventario
 
@@ -293,6 +295,7 @@ Marca cada punto. Si algo no aplica, escribe **N/A**.
 ### 6.7 Historial de ventas
 
 - [ ] Filtrar por fecha.
+- [ ] La tabla se actualiza sola al cambiar cualquier filtro, sin botón Buscar.
 - [ ] Buscar por ticket.
 - [ ] Buscar por cajero.
 - [ ] Filtrar por método, incluido **Crédito**.

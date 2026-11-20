@@ -38,6 +38,10 @@
                                     Classes="secondary small"
                                     Margin="0,0,8,0"
                                     Click="Importar_Click"/>
+                            <Button Content="Exportar CSV"
+                                    Classes="secondary small"
+                                    Margin="0,0,8,0"
+                                    Click="Exportar_Click"/>
                             <Button Content="Descargar plantilla"
                                     Classes="secondary small"
                                     Click="Plantilla_Click"/>

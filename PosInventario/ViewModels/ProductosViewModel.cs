@@ -109,6 +109,17 @@ public partial class ProductosViewModel : OperacionViewModel
     public static string GenerarPlantillaImportacion()
         => ImportadorCsv.Plantilla;
 
+    public int CantidadExportable => ProductosItems.Count;
+
+    public string NombreArchivoExportacion =>
+        $"productos_{DateTime.Now:yyyy-MM-dd}.csv";
+
+    /// <summary>
+    /// El archivo usa las columnas de la plantilla de importación para que se
+    /// pueda volver a importar sin editarlo.
+    /// </summary>
+    public string GenerarCsvProductos() => ExportadorCsv.Productos(ProductosItems);
+
     public void NotificarPlantillaGuardada(string ruta)
         => MensajeOperacion = $"Plantilla guardada en:\n{ruta}";
 

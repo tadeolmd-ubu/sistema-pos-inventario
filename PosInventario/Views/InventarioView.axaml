@@ -127,31 +127,32 @@
                                           IsChecked="{Binding VerTodosLosMovimientos}"/>
                             </Grid>
 
-                            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="Desde" Classes="fieldLabel"/>
-                                    <DatePicker SelectedDate="{Binding Desde}"/>
-                                </StackPanel>
+                            <StackPanel Spacing="10">
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Desde" Classes="fieldLabel"/>
+                                        <DatePicker SelectedDate="{Binding Desde}"
+                                                    HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="1" Spacing="6">
-                                    <TextBlock Text="Hasta" Classes="fieldLabel"/>
-                                    <DatePicker SelectedDate="{Binding Hasta}"/>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Text="Hasta" Classes="fieldLabel"/>
+                                        <DatePicker SelectedDate="{Binding Hasta}"
+                                                    HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Grid>
 
-                                <StackPanel Grid.Column="2"
-                                            Orientation="Horizontal"
-                                            Spacing="10"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Bottom">
+                                <WrapPanel Orientation="Horizontal">
                                     <Button Content="Buscar"
                                             Classes="primary"
+                                            Margin="0,0,10,0"
                                             Command="{Binding BuscarMovimientosCommand}"/>
                                     <Button Content="Exportar CSV"
                                             Classes="secondary"
                                             ToolTip.Tip="Exporta solo la página visible"
                                             Click="Exportar_Click"/>
-                                </StackPanel>
-                            </Grid>
+                                </WrapPanel>
+                            </StackPanel>
 
                             <TextBlock Text="No hay movimientos en el rango seleccionado."
                                        Classes="caption"

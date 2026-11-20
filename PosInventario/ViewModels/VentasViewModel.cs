@@ -60,6 +60,30 @@ public partial class VentasViewModel : OperacionViewModel
 
     public bool HayVentas => VentasItems.Count > 0;
 
+    /// <summary>
+    /// Los filtros recargan el historial por sí solos; la vista ya no tiene
+    /// botón "Buscar". Cada cambio vuelve a la primera página.
+    /// </summary>
+    partial void OnDesdeChanged(DateTimeOffset? value) => RecargarFiltros();
+
+    partial void OnHastaChanged(DateTimeOffset? value) => RecargarFiltros();
+
+    partial void OnBusquedaChanged(string value) => RecargarFiltros();
+
+    partial void OnMetodoSeleccionadoChanged(string value) => RecargarFiltros();
+
+    partial void OnCajeroSeleccionadoChanged(OpcionCajero? value) => RecargarFiltros();
+
+    partial void OnVerAnuladasChanged(bool value) => RecargarFiltros();
+
+    private void RecargarFiltros()
+    {
+        if (_ventaService is null)
+            return;
+
+        _ = CargarAsync();
+    }
+
     public bool SinVentas => !HayVentas;
 
     public int CantidadVentas => Paginacion.TotalRegistros;

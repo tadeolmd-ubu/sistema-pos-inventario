@@ -522,6 +522,9 @@ Columnas de la plantilla:
 | `proveedor_email` | No | `ventas@proveedor.com` | Opcional. |
 | `proveedor_direccion` | No | `Av. Principal 123` | Opcional. |
 
+> **Exportar CSV** guarda el catálogo que ves con estas mismas columnas, así
+> que el archivo se puede volver a importar sin editarlo.
+
 Pasos:
 
 1. Entra a **Productos** y presiona **Descargar plantilla**.
@@ -648,7 +651,9 @@ Filtros (se combinan entre sí):
 - **Cajero:** quién realizó la venta.
 - **Buscar:** número de ticket o cajero.
 - **Ver anuladas:** incluye ventas totalmente devueltas.
-- Botón **Buscar**.
+
+La tabla se actualiza sola cada vez que cambias un filtro; ya no hay botón
+**Buscar**.
 
 La tabla muestra **Ticket** (`V-000123`), **Fecha**, **Cajero**, **Cliente**,
 **Método**, **Estado** y **Total**. Si no se eligió cliente, aparece

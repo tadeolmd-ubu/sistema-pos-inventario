@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        WindowState = WindowState.FullScreen;
+        WindowState = WindowState.Maximized;
     }
 
     private void ConectarViewModel(MainViewModel? viewModel)

@@ -93,6 +93,36 @@ public static class ExportadorCsv
         return contenido.ToString();
     }
 
+    /// <summary>
+    /// Exporta el catálogo con las mismas columnas de la plantilla de
+    /// importación, de modo que el archivo se pueda importar tal cual.
+    /// </summary>
+    public static string Productos(IEnumerable<Producto> productos)
+    {
+        var contenido = new StringBuilder();
+
+        contenido.Append(ImportadorCsv.EncabezadoPlantilla).Append(FinLinea);
+
+        foreach (var producto in productos)
+        {
+            contenido.Append(Linea(
+                producto.Sku,
+                producto.Nombre,
+                producto.UnidadMedida.EsPorPeso() ? "kg" : "pieza",
+                producto.Descripcion ?? string.Empty,
+                Monto(producto.PrecioVenta),
+                Monto(producto.Costo),
+                producto.UnidadMedida.Formatear(producto.StockMinimo),
+                producto.UnidadMedida.Formatear(producto.Stock),
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty));
+        }
+
+        return contenido.ToString();
+    }
+
     public static string NombreArchivo(
         string prefijo, DateTime desde, DateTime hasta, int pagina = 1)
     {
