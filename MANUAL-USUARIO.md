@@ -873,6 +873,7 @@ diálogo o el ticket, regresa a la búsqueda para seguir escaneando.
 | **F8** | Devolver venta |
 | **F9** | Registrar movimiento de efectivo |
 | **F10** | Cerrar caja |
+| **F11** | Alternar pantalla completa y maximizada |
 | **Esc** | Limpiar venta o cerrar diálogo |
 | **Enter** en búsqueda | Agregar producto por SKU |
 | **Enter** en pago | Cobrar |

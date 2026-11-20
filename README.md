@@ -148,6 +148,7 @@ listado completo.
 | **F8** | Devolver venta | Abrir el selector de ventas para devolución |
 | **F9** | Registrar movimiento | Ingreso o retiro de efectivo |
 | **F10** | Cerrar caja | Abrir la ventana de cierre |
+| **F11** | Pantalla completa | Alternar entre pantalla completa y maximizada |
 | **Esc** | Limpiar venta / cerrar diálogo | Cancelar la captura actual; pide confirmación si hay productos |
 | **Enter en búsqueda** | Agregar producto por SKU | Escanear o teclear un código |
 | **Enter en pago** | Cobrar | Confirmar la venta desde el campo de pago |

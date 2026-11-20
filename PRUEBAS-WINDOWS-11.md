@@ -234,6 +234,7 @@ Marca cada punto. Si algo no aplica, escribe **N/A**.
 ### 6.3 Compras
 
 - [ ] Crear compra con proveedor.
+- [ ] Las fechas **Desde** y **Hasta** se ven una arriba de otra, sin encimarse.
 - [ ] Agregar `PZA-001` con cantidad 10 y costo 12.
 - [ ] Agregar `KG-001` con cantidad `1.250` y costo 80.
 - [ ] El subtotal de la línea por peso se calcula bien.

@@ -27,28 +27,7 @@ public partial class MainWindow : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        AjustarAlAreaDeTrabajo();
-    }
-
-    /// <summary>
-    /// El tamaño de diseño es 1280x800. En pantallas donde no cabe (por
-    /// ejemplo, 1366x768) se abre maximizada; en 1920x1080 con 125 % de escala
-    /// conserva el tamaño de ventana.
-    /// </summary>
-    private void AjustarAlAreaDeTrabajo()
-    {
-        var pantalla = Screens.ScreenFromWindow(this) ?? Screens.Primary;
-
-        if (pantalla is null)
-            return;
-
-        var escala = pantalla.Scaling > 0 ? pantalla.Scaling : 1;
-        var anchoDisponible = pantalla.WorkingArea.Width / escala;
-        var altoDisponible = pantalla.WorkingArea.Height / escala;
-
-        if (AjusteVentana.DebeMaximizar(
-                Width, Height, anchoDisponible, altoDisponible))
-            WindowState = WindowState.Maximized;
+        WindowState = WindowState.FullScreen;
     }
 
     private void ConectarViewModel(MainViewModel? viewModel)
@@ -258,7 +237,20 @@ public partial class MainWindow : Window
     /// </summary>
     private async void MainWindow_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Handled || e.Key != Key.F1 || _viewModel is null)
+        if (e.Handled)
+            return;
+
+        if (e.Key == Key.F11)
+        {
+            WindowState = WindowState == WindowState.FullScreen
+                ? WindowState.Maximized
+                : WindowState.FullScreen;
+
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key != Key.F1 || _viewModel is null)
             return;
 
         e.Handled = true;

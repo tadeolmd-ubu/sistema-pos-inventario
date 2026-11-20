@@ -9,6 +9,7 @@
         x:Class="PosInventario.MainWindow"
         Title="Sistema de inventario"
         Width="1280" Height="800"
+        WindowState="FullScreen"
         MinWidth="900" MinHeight="560"
         Background="{StaticResource ContentBackgroundBrush}">
 

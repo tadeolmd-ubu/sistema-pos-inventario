@@ -27,17 +27,19 @@
                             <TextBlock Text="Historial por rango de fechas" Classes="caption"/>
                         </StackPanel>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <StackPanel Spacing="8">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Desde" Classes="fieldLabel"/>
-                                <DatePicker SelectedDate="{Binding Desde}"/>
+                                <DatePicker SelectedDate="{Binding Desde}"
+                                            HorizontalAlignment="Stretch"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Spacing="6">
+                            <StackPanel Spacing="6">
                                 <TextBlock Text="Hasta" Classes="fieldLabel"/>
-                                <DatePicker SelectedDate="{Binding Hasta}"/>
+                                <DatePicker SelectedDate="{Binding Hasta}"
+                                            HorizontalAlignment="Stretch"/>
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button Content="Buscar"
