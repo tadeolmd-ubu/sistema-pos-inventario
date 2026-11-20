@@ -234,13 +234,20 @@
     `RespaldoQueNoPasaLaVerificacionNoSeGuarda` cubre el rechazo y
     `ArchivoCorruptoNoSeRestaura` cubre la detección de corrupción.
 
-- [ ] **2.6 Actualizaciones de la app**
+- [x] **2.6 Actualizaciones de la app**
   - **Qué:** avisar cuando hay una versión nueva y descargarla/instalarla de
     forma segura.
   - **Depende de:** 0.2 y 4.1.
   - **Criterio:** el cliente puede actualizar sin borrar datos ni reinstalar a
     mano.
   - **Tamaño:** L.
+  - **Implementado:** al abrir la aplicación, `ActualizacionService` consulta
+    `releases/latest` (con límite de 5 segundos), compara versiones, elige el
+    activo `*-win-x64-installer.exe` y verifica tamaño y SHA-256 contra el
+    `digest` de GitHub. `ActualizacionWindow` pide confirmación y `Actualizador`
+    crea un respaldo, instala en silencio y reabre la aplicación. En una copia
+    portable solo se abre la página de descarga. Cubierto por
+    `PosInventario.Tests/ActualizacionTests.cs`.
 
 ---
 

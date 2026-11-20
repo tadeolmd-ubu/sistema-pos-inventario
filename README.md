@@ -279,6 +279,20 @@ El ZIP portable se genera en cada ejecución del workflow y queda como
 artefacto de CI (`PosInventario-<versión>-win-x64`) para pruebas; no se
 adjunta a la release.
 
+### Actualización automática
+
+Al abrirse, la aplicación consulta la última release pública y, si hay una
+versión más nueva, muestra el aviso **Actualización disponible** con la
+versión instalada y la disponible. Si el usuario elige **Actualizar ahora**,
+se crea un respaldo, se descarga el instalador, se verifica su tamaño y su
+SHA-256 contra el `digest` que publica GitHub, se instala en silencio y la
+aplicación se vuelve a abrir. La base, los respaldos y la configuración no se
+modifican.
+
+En una copia portable (sin instalador) solo se abre la página de descarga.
+Para pruebas: `POSINVENTARIO_SIN_ACTUALIZACIONES=1` omite la comprobación y
+`POSINVENTARIO_ACTUALIZAR_AUTO=1` actualiza sin preguntar.
+
 ## Instalador de Windows
 
 El instalador vive en `installer/PosInventario.iss`. Es **por usuario**, así

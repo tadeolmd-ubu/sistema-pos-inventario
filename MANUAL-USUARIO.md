@@ -115,10 +115,20 @@ Los datos del negocio **no** se guardan ahí, sino en:
 
 ### 2.4 Actualizar
 
-1. Descarga el instalador de la versión nueva.
-2. Ejecútalo sobre la instalación actual. No es necesario desinstalar antes.
-3. Tus datos, usuarios y respaldos se conservan.
-4. Al abrir la versión nueva, el sistema actualiza la base de datos
+La aplicación revisa si hay una versión nueva cada vez que se abre, siempre
+que haya internet.
+
+1. Si hay una versión nueva, aparece la ventana **Actualización disponible**
+   con la versión instalada y la que está disponible.
+2. Elige **Actualizar ahora** para instalarla o **Más tarde** para seguir
+   trabajando.
+3. Si aceptas, el sistema crea un respaldo, descarga el instalador, lo
+   instala y vuelve a abrir la aplicación sola. Los datos, usuarios y
+   respaldos se conservan.
+4. También puedes actualizar a mano: descarga el instalador de la versión
+   nueva y ejecútalo sobre la instalación actual. No es necesario desinstalar
+   antes.
+5. Al abrir la versión nueva, el sistema actualiza la base de datos
    automáticamente. Antes de hacerlo crea un respaldo de seguridad.
 
 ### 2.5 Desinstalar
