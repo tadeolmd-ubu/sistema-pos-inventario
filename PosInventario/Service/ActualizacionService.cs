@@ -9,15 +9,18 @@ namespace PosInventario.Service;
 
 /// <summary>
 /// Describe una versión publicada en GitHub que se puede instalar.
+/// <paramref name="EsZip"/> indica que la descarga es el paquete portable
+/// (se copian archivos) en lugar del instalador.
 /// </summary>
 public sealed record ActualizacionDisponible(
     string Version,
-    string UrlInstalador,
+    string UrlDescarga,
     long Tamano,
-    string? Sha256);
+    string? Sha256,
+    bool EsZip);
 
 /// <summary>
-/// Consulta la última release pública del repositorio y descarga su instalador.
+/// Consulta la última release pública del repositorio y descarga su paquete.
 /// Nunca lanza: si no hay red, el repositorio no responde o el JSON cambia,
 /// devuelve null y la aplicación sigue funcionando con normalidad.
 /// </summary>
@@ -25,10 +28,15 @@ public sealed class ActualizacionService
 {
     internal const string Repositorio = "tadeolmd-ubu/sistema-pos-inventario";
 
+    internal const string UrlReleases =
+        $"https://github.com/{Repositorio}/releases/latest";
+
     private const string UrlUltimaRelease =
         $"https://api.github.com/repos/{Repositorio}/releases/latest";
 
     private const string SufijoInstalador = "-win-x64-installer.exe";
+
+    private const string SufijoPaquete = "-win-x64.zip";
 
     private static readonly HttpClient Cliente = new() { Timeout = TimeSpan.FromSeconds(10) };
 
@@ -81,11 +89,12 @@ public sealed class ActualizacionService
                 activos.ValueKind != JsonValueKind.Array)
                 return null;
 
+            ActualizacionDisponible? instalador = null;
+
             foreach (var activo in activos.EnumerateArray())
             {
                 if (!activo.TryGetProperty("name", out var nombre) ||
-                    nombre.GetString() is not { Length: > 0 } nombreArchivo ||
-                    !EsInstaladorDeWindows(nombreArchivo))
+                    nombre.GetString() is not { Length: > 0 } nombreArchivo)
                     continue;
 
                 if (!activo.TryGetProperty("browser_download_url", out var url) ||
@@ -103,14 +112,20 @@ public sealed class ActualizacionService
                     textoDigest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
                     sha256 = textoDigest["sha256:".Length..];
 
-                return new ActualizacionDisponible(
-                    versionRemota.Trim().TrimStart('v', 'V'),
-                    direccion,
-                    tamano,
-                    sha256);
+                var version = versionRemota.Trim().TrimStart('v', 'V');
+
+                // El paquete portable se prefiere porque no necesita ejecutar un
+                // instalador nuevo, que es lo que suele bloquear el Control de
+                // aplicaciones de Windows.
+                if (EsPaquetePortable(nombreArchivo))
+                    return new ActualizacionDisponible(version, direccion, tamano, sha256, true);
+
+                if (instalador is null && EsInstaladorDeWindows(nombreArchivo))
+                    instalador = new ActualizacionDisponible(
+                        version, direccion, tamano, sha256, false);
             }
 
-            return null;
+            return instalador;
         }
         catch
         {
@@ -119,8 +134,8 @@ public sealed class ActualizacionService
     }
 
     /// <summary>
-    /// Descarga el instalador y comprueba tamaño y hash SHA-256 cuando GitHub
-    /// los publica. Si algo no coincide, borra el archivo y devuelve error.
+    /// Descarga el paquete y comprueba tamaño y hash SHA-256 cuando GitHub los
+    /// publica. Si algo no coincide, borra el archivo y devuelve error.
     /// </summary>
     public async Task<Resultado<string>> DescargarAsync(
         ActualizacionDisponible actualizacion,
@@ -131,7 +146,7 @@ public sealed class ActualizacionService
         try
         {
             using var respuesta = await ClienteDescarga.GetAsync(
-                actualizacion.UrlInstalador,
+                actualizacion.UrlDescarga,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancelacion);
 
@@ -202,6 +217,13 @@ public sealed class ActualizacionService
     public static bool EsInstaladorDeWindows(string? nombreArchivo)
         => !string.IsNullOrWhiteSpace(nombreArchivo) &&
            nombreArchivo.EndsWith(SufijoInstalador, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// True cuando el nombre del activo es el paquete portable.
+    /// </summary>
+    public static bool EsPaquetePortable(string? nombreArchivo)
+        => !string.IsNullOrWhiteSpace(nombreArchivo) &&
+           nombreArchivo.EndsWith(SufijoPaquete, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Compara versiones numéricas separadas por puntos. Ignora el prefijo "v"

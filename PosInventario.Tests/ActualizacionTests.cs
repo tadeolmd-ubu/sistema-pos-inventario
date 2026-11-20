@@ -38,4 +38,14 @@ public class ActualizacionTests
     [InlineData(null, false)]
     public void SoloAceptaElInstaladorDeWindows(string? nombre, bool esperado)
         => Assert.Equal(esperado, ActualizacionService.EsInstaladorDeWindows(nombre));
+
+    [Theory]
+    [InlineData("PosInventario-1.0.20-win-x64.zip", true)]
+    [InlineData("posinventario-1.0.20-win-x64.ZIP", true)]
+    [InlineData("PosInventario-1.0.20-win-x64-installer.exe", false)]
+    [InlineData("PosInventario-1.0.20-win-x64.zip.sha256", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void SoloAceptaElPaquetePortable(string? nombre, bool esperado)
+        => Assert.Equal(esperado, ActualizacionService.EsPaquetePortable(nombre));
 }

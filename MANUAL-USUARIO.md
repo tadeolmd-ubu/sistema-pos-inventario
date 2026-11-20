@@ -122,9 +122,9 @@ que haya internet.
    con la versión instalada y la que está disponible.
 2. Elige **Actualizar ahora** para instalarla o **Más tarde** para seguir
    trabajando.
-3. Si aceptas, el sistema crea un respaldo, descarga el instalador, lo
-   instala y vuelve a abrir la aplicación sola. Los datos, usuarios y
-   respaldos se conservan.
+3. Si aceptas, el sistema crea un respaldo, descarga la actualización,
+   reemplaza los archivos y vuelve a abrir la aplicación sola. Los datos,
+   usuarios y respaldos se conservan.
 4. También puedes actualizar a mano: descarga el instalador de la versión
    nueva y ejecútalo sobre la instalación actual. No es necesario desinstalar
    antes.

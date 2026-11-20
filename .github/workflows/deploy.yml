@@ -171,4 +171,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.value }}
-          files: dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe
+          files: |
+            dist/PosInventario-${{ steps.version.outputs.value }}-win-x64-installer.exe
+            PosInventario-${{ steps.version.outputs.value }}-win-x64.zip

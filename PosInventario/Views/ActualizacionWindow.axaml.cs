@@ -54,7 +54,7 @@ public partial class ActualizacionWindow : Window
         {
             try
             {
-                Process.Start(new ProcessStartInfo(_actualizacion.UrlInstalador)
+                Process.Start(new ProcessStartInfo(_actualizacion.UrlDescarga)
                 {
                     UseShellExecute = true
                 });
