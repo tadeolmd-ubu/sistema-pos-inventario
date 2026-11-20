@@ -157,11 +157,28 @@ public static class Actualizador
             var contenido = actualizacion.EsZip && staging is not null
                 ? $$"""
 Start-Sleep -Milliseconds 800
+$log = '{{carpeta}}\actualizacion.log'
 $p = Get-Process -Id {{proceso}} -ErrorAction SilentlyContinue
 if ($p) { [void]$p.WaitForExit(30000) }
-Get-ChildItem -Path '{{destino}}' -File | Where-Object { $_.Name -notlike 'unins*' } | Remove-Item -Force -ErrorAction SilentlyContinue
+$exe = '{{ejecutable}}'
+if (Test-Path $exe) { Copy-Item $exe "$exe.anterior" -Force }
+Get-ChildItem -Path '{{destino}}' -File | Where-Object { $_.Name -notlike 'unins*' -and $_.Name -ne 'PosInventario.exe.anterior' } | Remove-Item -Force -ErrorAction SilentlyContinue
 Copy-Item -Path '{{staging}}\*' -Destination '{{destino}}' -Recurse -Force
-Start-Process -FilePath '{{ejecutable}}'
+$arranco = $false
+try {
+    $nuevo = Start-Process -FilePath $exe -PassThru
+    Start-Sleep -Seconds 12
+    $arranco = -not $nuevo.HasExited
+} catch { $arranco = $false }
+if ($arranco) {
+    Add-Content -Path $log -Value ("[" + (Get-Date -Format s) + "] actualizado a {{actualizacion.Version}}")
+} else {
+    Add-Content -Path $log -Value ("[" + (Get-Date -Format s) + "] fallo al abrir {{actualizacion.Version}}; restaurando")
+    if (Test-Path "$exe.anterior") {
+        Copy-Item "$exe.anterior" $exe -Force
+        Start-Process -FilePath $exe
+    }
+}
 """
                 : $$"""
 Start-Sleep -Milliseconds 1500

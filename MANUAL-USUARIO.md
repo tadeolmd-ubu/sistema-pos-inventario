@@ -131,9 +131,8 @@ que haya internet.
 5. Al abrir la versión nueva, el sistema actualiza la base de datos
    automáticamente. Antes de hacerlo crea un respaldo de seguridad.
 
-> Mientras la aplicación no esté firmada, el aviso solo ofrece **Descargar**:
-> abre la página de la versión nueva y la instalas como cualquier programa.
-> La actualización dentro de la app se habilita cuando exista firma de código.
+> Si la versión nueva no llegara a abrirse, la aplicación restaura sola la
+> versión anterior para que puedas seguir trabajando.
 
 ### 2.5 Desinstalar
 
