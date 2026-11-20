@@ -377,7 +377,8 @@ IMP-002,Producto a granel,kg,,35,20,1.5,2.5,,,,
 - [ ] Con internet, al abrir una versión anterior aparece el aviso
       **Actualización disponible** con la versión instalada y la disponible.
 - [ ] **Más tarde** cierra el aviso sin cambiar nada.
-- [ ] **Actualizar ahora** descarga, crea un respaldo, instala y reabre la app.
+- [ ] **Actualizar ahora** descarga, crea un respaldo, reemplaza los archivos
+      y reabre la app.
 - [ ] La versión mostrada en el menú corresponde a la release nueva.
 - [ ] La base, los respaldos y la configuración siguen disponibles.
 - [ ] Se agregó un respaldo nuevo en `Respaldos` con la fecha del cambio.
