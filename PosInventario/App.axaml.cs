@@ -160,12 +160,13 @@ public partial class App : Application
 
                     await dbContext.Database.MigrateAsync();
 
+                    if (await ComprobarActualizacionAsync(
+                            mainWindow, desktop, respaldoService, carpetaRespaldos))
+                        return;
+
                     if (!await IniciarSesionAsync(
                             mainWindow, desktop, sesion, usuarioService, mainViewModel))
                         return;
-
-                    _ = ComprobarActualizacionAsync(
-                        mainWindow, desktop, respaldoService, carpetaRespaldos);
                 }
                 catch (Exception ex)
                 {
@@ -249,12 +250,13 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Consulta en segundo plano si hay una versión nueva y ofrece instalarla.
-    /// Si el usuario acepta, se descarga el instalador, se crea un respaldo y
-    /// la aplicación se cierra para que el instalador la reemplace y la vuelva
-    /// a abrir. En una copia portable solo se muestra el enlace de descarga.
+    /// Consulta si hay una versión nueva y ofrece instalarla antes de pedir la
+    /// sesión. Si el usuario acepta, se descarga el instalador, se crea un
+    /// respaldo y la aplicación se cierra para que el instalador la reemplace y
+    /// la vuelva a abrir. Devuelve true cuando la aplicación debe cerrarse.
+    /// En una copia portable solo se muestra el enlace de descarga.
     /// </summary>
-    private static async Task ComprobarActualizacionAsync(
+    private static async Task<bool> ComprobarActualizacionAsync(
         Window ventana,
         IClassicDesktopStyleApplicationLifetime desktop,
         RespaldoService respaldos,
@@ -264,16 +266,18 @@ public partial class App : Application
         try
         {
             if (!OperatingSystem.IsWindows())
-                return;
+                return false;
 
             if (Environment.GetEnvironmentVariable("POSINVENTARIO_SIN_ACTUALIZACIONES") == "1")
-                return;
+                return false;
 
             var servicio = new ActualizacionService();
-            var actualizacion = await servicio.BuscarAsync();
+
+            using var limite = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var actualizacion = await servicio.BuscarAsync(limite.Token);
 
             if (actualizacion is null)
-                return;
+                return false;
 
             var ejecutable = Environment.ProcessPath ?? string.Empty;
 
@@ -291,9 +295,12 @@ public partial class App : Application
                     servicio, actualizacion, respaldos, carpetaRespaldos);
 
                 if (automatica.Correcta)
+                {
                     desktop.Shutdown();
+                    return true;
+                }
 
-                return;
+                return false;
             }
 
             var aceptada = await new ActualizacionWindow(
@@ -301,14 +308,21 @@ public partial class App : Application
                 .ShowDialog<bool>(ventana);
 
             if (aceptada)
+            {
                 desktop.Shutdown();
+                return true;
+            }
+
+            return false;
         }
         catch (Exception ex)
         {
             RegistroApp.Escribir("No se pudo comprobar la actualización.", ex);
+            return false;
         }
 #else
         await Task.CompletedTask;
+        return false;
 #endif
     }
 
