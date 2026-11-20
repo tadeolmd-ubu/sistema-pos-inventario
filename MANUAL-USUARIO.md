@@ -131,6 +131,10 @@ que haya internet.
 5. Al abrir la versión nueva, el sistema actualiza la base de datos
    automáticamente. Antes de hacerlo crea un respaldo de seguridad.
 
+> Mientras la aplicación no esté firmada, el aviso solo ofrece **Descargar**:
+> abre la página de la versión nueva y la instalas como cualquier programa.
+> La actualización dentro de la app se habilita cuando exista firma de código.
+
 ### 2.5 Desinstalar
 
 1. Abre **Configuración de Windows → Aplicaciones → Aplicaciones instaladas**.

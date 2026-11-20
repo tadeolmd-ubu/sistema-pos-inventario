@@ -11,6 +11,7 @@ using PosInventario.Models;
 using PosInventario.Service;
 using PosInventario.ViewModels;
 using PosInventario.Views;
+using System.Security.Cryptography.X509Certificates;
 
 namespace PosInventario;
 
@@ -289,7 +290,13 @@ public partial class App : Application
             var instalada = ejecutable.StartsWith(
                 programas, StringComparison.OrdinalIgnoreCase);
 
-            if (Environment.GetEnvironmentVariable("POSINVENTARIO_ACTUALIZAR_AUTO") == "1")
+            // Solo se instala sola una versión firmada. Con binarios sin firma,
+            // el Control de aplicaciones de Windows puede bloquear los archivos
+            // recién copiados y dejar la aplicación sin abrir.
+            var puedeInstalar = instalada && EstaFirmado(ejecutable);
+
+            if (puedeInstalar &&
+                Environment.GetEnvironmentVariable("POSINVENTARIO_ACTUALIZAR_AUTO") == "1")
             {
                 var automatica = await Actualizador.PrepararAsync(
                     servicio, actualizacion, respaldos, carpetaRespaldos);
@@ -304,7 +311,7 @@ public partial class App : Application
             }
 
             var aceptada = await new ActualizacionWindow(
-                    servicio, actualizacion, respaldos, carpetaRespaldos, instalada)
+                    servicio, actualizacion, respaldos, carpetaRespaldos, puedeInstalar)
                 .ShowDialog<bool>(ventana);
 
             if (aceptada)
@@ -324,6 +331,25 @@ public partial class App : Application
         await Task.CompletedTask;
         return false;
 #endif
+    }
+
+    /// <summary>
+    /// True cuando el ejecutable tiene una firma Authenticode legible. Es la
+    /// condición para instalar actualizaciones de forma automática.
+    /// </summary>
+    private static bool EstaFirmado(string ruta)
+    {
+        try
+        {
+#pragma warning disable SYSLIB0057 // API vigente para leer la firma Authenticode de un PE.
+            using var certificado = X509Certificate.CreateFromSignedFile(ruta);
+#pragma warning restore SYSLIB0057
+            return certificado is not null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>

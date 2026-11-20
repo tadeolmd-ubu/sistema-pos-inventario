@@ -384,6 +384,10 @@ IMP-002,Producto a granel,kg,,35,20,1.5,2.5,,,,
 - [ ] Se agregó un respaldo nuevo en `Respaldos` con la fecha del cambio.
 - [ ] Sin internet el aviso no aparece y la app abre normal.
 - [ ] Una copia portable abre la página de descarga en lugar de instalar.
+- [ ] Sin firma de código el botón dice **Descargar** y abre la página de la
+      release; no reemplaza archivos.
+- [ ] Con el ejecutable firmado el botón dice **Actualizar ahora** y el flujo
+      completo reemplaza los archivos y reabre la app.
 
 ---
 

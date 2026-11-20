@@ -36,8 +36,9 @@ public partial class ActualizacionWindow : Window
               "se modifican."
             : $"Versión actual: v{servicio.VersionActual}\n" +
               $"Versión disponible: v{actualizacion.Version}\n\n" +
-              "Esta copia no está instalada, así que se abrirá la página de " +
-              "descarga para que instales la versión nueva.";
+              "Esta copia no puede actualizarse sola porque la aplicación no " +
+              "está firmada. Se abrirá la página de descarga para que instales " +
+              "la versión nueva manualmente.";
 
         if (!puedeInstalar)
             BotonActualizar.Content = "Descargar";

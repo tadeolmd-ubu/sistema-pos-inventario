@@ -290,8 +290,12 @@ instalación y la aplicación se vuelve a abrir. La base, los respaldos y la
 configuración no se modifican.
 
 En una copia portable (sin instalador) solo se abre la página de descarga.
-Para pruebas: `POSINVENTARIO_SIN_ACTUALIZACIONES=1` omite la comprobación y
-`POSINVENTARIO_ACTUALIZAR_AUTO=1` actualiza sin preguntar.
+La instalación automática se habilita únicamente en compilaciones firmadas:
+mientras el ejecutable no tenga firma de código, el aviso ofrece **Descargar**
+y abre la página de la release, porque el Control de aplicaciones de Windows
+puede bloquear los archivos recién copiados. Para pruebas:
+`POSINVENTARIO_SIN_ACTUALIZACIONES=1` omite la comprobación y
+`POSINVENTARIO_ACTUALIZAR_AUTO=1` actualiza sin preguntar (solo si está firmada).
 
 ## Instalador de Windows
 
