@@ -37,6 +37,51 @@ public partial class ConfiguracionView : UserControl
             viewModel.SeleccionarCarpetaRespaldo(carpeta);
     }
 
+    private async void CrearRespaldo_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ConfiguracionViewModel viewModel)
+            return;
+
+        if (TopLevel.GetTopLevel(this) is not Window ventana)
+            return;
+
+        var carpeta = viewModel.CarpetaDestinoRespaldo;
+
+        var confirmacion = new ConfirmacionWindow(
+            "Crear respaldo",
+            $"Se creará un respaldo de la base de datos en:\n\n" +
+            $"{carpeta}\n\n" +
+            "El respaldo no modifica la base actual y se verifica antes de " +
+            "darlo por bueno.\n\n" +
+            "¿Crear el respaldo ahora?");
+
+        if (!await confirmacion.ShowDialog<bool>(ventana))
+            return;
+
+        var resultado = await viewModel.CrearRespaldoAsync(carpeta);
+
+        // Sin resultado significa que el ViewModel ya explicó el motivo en
+        // pantalla (sin permisos o carpeta inválida).
+        if (resultado is null)
+            return;
+
+        if (!resultado.Correcta)
+        {
+            await new MensajeWindow(new MensajeDialogo(
+                "No se pudo crear el respaldo",
+                resultado.Mensaje,
+                TipoMensajeOperacion.Error)).ShowDialog(ventana);
+
+            return;
+        }
+
+        await new MensajeWindow(new MensajeDialogo(
+            "Respaldo creado",
+            "El respaldo se creó y se verificó correctamente.\n\n" +
+            $"{resultado.Valor}",
+            TipoMensajeOperacion.Exito)).ShowDialog(ventana);
+    }
+
     private async void RestaurarRespaldo_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not ConfiguracionViewModel viewModel)

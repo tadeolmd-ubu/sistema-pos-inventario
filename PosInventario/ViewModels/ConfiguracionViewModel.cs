@@ -105,31 +105,39 @@ public partial class ConfiguracionViewModel : OperacionViewModel
     private Task CrearRespaldoEnDestinoAsync()
         => CrearRespaldoAsync(CarpetaDestinoRespaldo);
 
-    public Task CrearRespaldoAsync(string carpetaDestino) => EjecutarSeguroAsync(async () =>
+    public async Task<Resultado<string>?> CrearRespaldoAsync(string carpetaDestino)
     {
-        if (_respaldoService is null) return;
+        Resultado<string>? salida = null;
 
-        if (!EsAdministrador())
+        await EjecutarSeguroAsync(async () =>
         {
-            MensajeOperacion = Notificar("Solo un administrador puede crear respaldos.");
-            return;
-        }
+            if (_respaldoService is null) return;
 
-        if (string.IsNullOrWhiteSpace(carpetaDestino))
-        {
-            MensajeOperacion = Notificar("Selecciona una carpeta para el respaldo.");
-            return;
-        }
+            if (!EsAdministrador())
+            {
+                MensajeOperacion = Notificar("Solo un administrador puede crear respaldos.");
+                return;
+            }
 
-        var resultado = await _respaldoService.CrearRespaldoAsync(carpetaDestino);
+            if (string.IsNullOrWhiteSpace(carpetaDestino))
+            {
+                MensajeOperacion = Notificar("Selecciona una carpeta para el respaldo.");
+                return;
+            }
 
-        MensajeOperacion = resultado.Correcta
-            ? resultado.Mensaje
-            : Notificar(resultado.Mensaje);
+            var resultado = await _respaldoService.CrearRespaldoAsync(carpetaDestino);
+            salida = resultado;
 
-        if (resultado.Correcta && resultado.Valor is not null)
-            UltimoRespaldoTexto = resultado.Valor;
-    });
+            MensajeOperacion = resultado.Correcta
+                ? resultado.Mensaje
+                : Notificar(resultado.Mensaje);
+
+            if (resultado.Correcta && resultado.Valor is not null)
+                UltimoRespaldoTexto = resultado.Valor;
+        });
+
+        return salida;
+    }
 
     [RelayCommand]
     private void GuardarConfiguracion()

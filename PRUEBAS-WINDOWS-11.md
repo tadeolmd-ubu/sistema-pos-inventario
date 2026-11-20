@@ -347,7 +347,9 @@ IMP-002,Producto a granel,kg,,35,20,1.5,2.5,,,,
 
 ### 6.11 Configuración y respaldos
 
-- [ ] Crear respaldo manual.
+- [ ] Crear respaldo manual: aparece la confirmación con la carpeta y, al
+      aceptar, una ventana con la ruta del respaldo creado.
+- [ ] Cancelar en la confirmación no crea ningún archivo.
 - [ ] El respaldo se valida y muestra la ruta.
 - [ ] Copiar el respaldo a USB.
 - [ ] Activar/desactivar respaldos automáticos.

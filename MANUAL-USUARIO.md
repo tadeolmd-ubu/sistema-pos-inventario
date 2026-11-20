@@ -775,7 +775,10 @@ Para cambiar la configuración:
 3. Si quieres guardarlo en otro lado (USB, carpeta de red), presiona
    **Elegir carpeta…** y selecciona el destino.
 4. Presiona **Crear respaldo**.
-5. El sistema verifica el archivo y muestra la ruta en **Último respaldo**.
+5. Aparece una confirmación con la carpeta de destino. Elige **Confirmar**
+   para continuar o **Cancelar** para no crear nada.
+6. Al terminar, el sistema verifica el archivo y muestra una ventana con la
+   ruta del respaldo creado. También queda anotada en **Último respaldo**.
 
 Cada respaldo se valida antes de darlo por bueno: se comprueba que el archivo
 abra, que pase la revisión de integridad de SQLite y que tenga las tablas del

@@ -77,7 +77,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="Crear respaldo"
                                     Classes="primary"
-                                    Command="{Binding CrearRespaldoEnDestinoCommand}"/>
+                                    Click="CrearRespaldo_Click"/>
                             <Button Content="Elegir carpeta..."
                                     Classes="secondary"
                                     Click="ElegirCarpeta_Click"/>

@@ -15,6 +15,35 @@ public static class Actualizador
 {
     private const string NombreCarpeta = "Actualizaciones";
 
+    /// <summary>
+    /// Borra las carpetas de intentos anteriores sin tocar la del proceso
+    /// actual. Si alguna sigue en uso, se ignora.
+    /// </summary>
+    private static void LimpiarCarpetasAnteriores(string carpetaBase, string actual)
+    {
+        try
+        {
+            foreach (var carpeta in Directory.EnumerateDirectories(carpetaBase))
+            {
+                if (string.Equals(carpeta, actual, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                try
+                {
+                    Directory.Delete(carpeta, true);
+                }
+                catch
+                {
+                    // Un intento anterior puede seguir usándola.
+                }
+            }
+        }
+        catch
+        {
+            // La limpieza no debe bloquear la actualización.
+        }
+    }
+
     public static async Task<Resultado<string>> PrepararAsync(
         ActualizacionService servicio,
         ActualizacionDisponible actualizacion,
@@ -37,12 +66,18 @@ public static class Actualizador
 
         try
         {
+            // Una carpeta por proceso evita que dos intentos simultáneos se
+            // bloqueen el archivo de descarga.
             carpeta = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "SistemaInventario",
-                NombreCarpeta);
+                NombreCarpeta,
+                Environment.ProcessId.ToString());
 
             Directory.CreateDirectory(carpeta);
+
+            LimpiarCarpetasAnteriores(
+                Path.GetDirectoryName(carpeta)!, carpeta);
         }
         catch (Exception ex)
         {
