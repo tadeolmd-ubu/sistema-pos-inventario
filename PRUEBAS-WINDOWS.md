@@ -13,6 +13,10 @@ resoluciones, escalados DPI y versiones de Windows.
 - **Fuera de ámbito:** rendimiento, impresión ESC/POS directa, apertura de
   cajón, tablets y pantallas táctiles.
 
+> Para la prueba funcional completa en Windows 11, incluida instalación,
+> migración, respaldos, impresión y evidencias, usa
+> [`PRUEBAS-WINDOWS-11.md`](PRUEBAS-WINDOWS-11.md).
+
 ---
 
 ## 1. Entornos de prueba

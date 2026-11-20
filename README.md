@@ -71,9 +71,10 @@ registro de errores.
 Lo que falta para llevarlo a un negocio real está ordenado por fases en
 `PENDIENTES.md`. Para instalar y operar el sistema paso a paso, consulta
 [`MANUAL-USUARIO.md`](MANUAL-USUARIO.md); la matriz de pruebas de interfaz en
-Windows está en [`PRUEBAS-WINDOWS.md`](PRUEBAS-WINDOWS.md). Para instalar y
-entregar el sistema a un cliente, usa el
-[`ENTREGA-CLIENTE.md`](ENTREGA-CLIENTE.md).
+Windows está en [`PRUEBAS-WINDOWS.md`](PRUEBAS-WINDOWS.md); la guía completa
+para probar en Windows 11 está en
+[`PRUEBAS-WINDOWS-11.md`](PRUEBAS-WINDOWS-11.md). Para instalar y entregar el
+sistema a un cliente, usa el [`ENTREGA-CLIENTE.md`](ENTREGA-CLIENTE.md).
 
 ## Requisitos
 
