@@ -210,6 +210,15 @@ public partial class VentasViewModel : OperacionViewModel
         var seleccionado = CajeroSeleccionado?.Id;
         var usuarios = await _ventaService.ObtenerCajerosConVentasAsync();
 
+        var nuevos = usuarios
+            .Select(usuario => new OpcionCajero(usuario.Id, usuario.Nombre))
+            .ToList();
+
+        // Si la lista es la misma, no se toca la colección. Reconstruirla hace
+        // que el ComboBox pierda la selección y su texto se vea vacío.
+        if (MismosCajeros(nuevos))
+            return;
+
         _cargandoCajeros = true;
 
         try
@@ -217,8 +226,8 @@ public partial class VentasViewModel : OperacionViewModel
             Cajeros.Clear();
             Cajeros.Add(TodosLosCajeros);
 
-            foreach (var usuario in usuarios)
-                Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+            foreach (var cajero in nuevos)
+                Cajeros.Add(cajero);
 
             CajeroSeleccionado = Cajeros
                 .FirstOrDefault(c => c.Id == seleccionado) ?? TodosLosCajeros;
@@ -227,6 +236,23 @@ public partial class VentasViewModel : OperacionViewModel
         {
             _cargandoCajeros = false;
         }
+    }
+
+    private bool MismosCajeros(IReadOnlyList<OpcionCajero> nuevos)
+    {
+        if (Cajeros.Count - 1 != nuevos.Count)
+            return false;
+
+        for (var i = 0; i < nuevos.Count; i++)
+        {
+            var actual = Cajeros[i + 1];
+
+            if (actual.Id != nuevos[i].Id ||
+                !string.Equals(actual.Nombre, nuevos[i].Nombre, StringComparison.Ordinal))
+                return false;
+        }
+
+        return true;
     }
 
     [RelayCommand(CanExecute = nameof(PuedeVerTicket))]
