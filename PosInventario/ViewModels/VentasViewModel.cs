@@ -26,6 +26,8 @@ public partial class VentasViewModel : OperacionViewModel
 
     private readonly VentaService? _ventaService;
     private decimal _totalVendido;
+    private bool _cargandoCajeros;
+    private int _versionCarga;
 
     public VentasViewModel()
     {
@@ -72,7 +74,12 @@ public partial class VentasViewModel : OperacionViewModel
 
     partial void OnMetodoSeleccionadoChanged(string value) => RecargarFiltros();
 
-    partial void OnCajeroSeleccionadoChanged(OpcionCajero? value) => RecargarFiltros();
+    partial void OnCajeroSeleccionadoChanged(OpcionCajero? value)
+    {
+        // Al reconstruir la lista el combo pasa por null; no debe recargar.
+        if (!_cargandoCajeros)
+            RecargarFiltros();
+    }
 
     partial void OnVerAnuladasChanged(bool value) => RecargarFiltros();
 
@@ -151,6 +158,7 @@ public partial class VentasViewModel : OperacionViewModel
     {
         if (_ventaService is null) return;
 
+        var version = ++_versionCarga;
         var desdeFecha = DesdeFecha;
         var hastaFecha = HastaFecha;
 
@@ -177,6 +185,10 @@ public partial class VentasViewModel : OperacionViewModel
             MetodoFiltro,
             CajeroSeleccionado?.Id);
 
+        // Si ya hay una carga más reciente, no se pisa su resultado.
+        if (version != _versionCarga)
+            return;
+
         ReemplazarItems(VentasItems, pagina.Items);
         _totalVendido = pagina.Total;
         Paginacion.EstablecerTotal(pagina.TotalRegistros);
@@ -198,14 +210,23 @@ public partial class VentasViewModel : OperacionViewModel
         var seleccionado = CajeroSeleccionado?.Id;
         var usuarios = await _ventaService.ObtenerCajerosConVentasAsync();
 
-        Cajeros.Clear();
-        Cajeros.Add(TodosLosCajeros);
+        _cargandoCajeros = true;
 
-        foreach (var usuario in usuarios)
-            Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+        try
+        {
+            Cajeros.Clear();
+            Cajeros.Add(TodosLosCajeros);
 
-        CajeroSeleccionado = Cajeros
-            .FirstOrDefault(c => c.Id == seleccionado) ?? TodosLosCajeros;
+            foreach (var usuario in usuarios)
+                Cajeros.Add(new OpcionCajero(usuario.Id, usuario.Nombre));
+
+            CajeroSeleccionado = Cajeros
+                .FirstOrDefault(c => c.Id == seleccionado) ?? TodosLosCajeros;
+        }
+        finally
+        {
+            _cargandoCajeros = false;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(PuedeVerTicket))]
